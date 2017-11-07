@@ -2,52 +2,56 @@
 <html>
 
 <head>
-  <title>main.html</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <script type="text/javascript" src="https://raw.githubusercontent.com/sensese/view/master/src/view.js"></script>
-  <script type="text/javascript">
-    $(function () {
-      new view({
-        view: ".todo-list",
-        modle: {
-          newTodo: "输入点什么?",
-          list: [{
-            title: "test"
-          }],
-          count: 0
-        },
-        controller: function (modle) {
-            query(".new-todo").on("change", function () {
-                if (this.value != '')
-                    modle.list.push({
-                        title: this.value
+    <title>main.html</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="./view.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            new view({
+                view: ".todo-list",
+                model: {
+                    newTodo: "输入点什么?",
+                    list: [{
+                        title: "test"
+                    }],
+                    count: 0
+                },
+                controller: function (model) {
+                    query(".new-todo").on("mouseenter", function () {
+                        this.value="";
+                    })
+                    query(".new-todo").on("change", function () {
+                        if (this.value != '')
+                            model.list.push({
+                                title: this.value
+                            });
+                        model.list[0] = {
+                            title: "1111111"
+                        };
+                        console.log(model);
                     });
-                modle.list[0] = {
-                    title: "1111111"
-                };
-                console.log(modle);
+                }
             });
-        }
-      });
-    })
-  </script>
+        })
+    </script>
 </head>
 <!-- 项目文档地址  https://github.com/sensese/view -->
 
-<body style="margin-top:500px">
-    <div class="todo-list">
+<body>
+    <div class="todo-list" style="margin-top:200px;margin:0 auto;">
         <ul>
-          @each(todo:list,{
-            <li>
-              @when(newTodo=="1",{
-                1111111111111
-                @else
-                {{todo.title}}
-              })
-            </li>
-          })
+            @each(todo:list,{
+                <li>
+                    @when(newTodo=="1",{ 
+                        hello wold ! 
+                        @else 
+                        {{todo.title}} 
+                    })
+                </li>
+            })
         </ul>
-      <input class="new-todo" value="{{newTodo}}"/>
+        <input class="new-todo" value="{{newTodo}}" />
     </div>
 </body>
+
 </html>
