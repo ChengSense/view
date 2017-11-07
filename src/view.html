@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>main.html</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" src="https://raw.githubusercontent.com/sensese/view/master/src/view.js"></script>
+  <script type="text/javascript">
+    $(function () {
+      new view({
+        view: ".todo-list",
+        modle: {
+          newTodo: "输入点什么?",
+          list: [{
+            title: "test"
+          }],
+          count: 0
+        },
+        controller: function (modle) {
+            query(".new-todo").on("change", function () {
+                if (this.value != '')
+                    modle.list.push({
+                        title: this.value
+                    });
+                modle.list[0] = {
+                    title: "1111111"
+                };
+                console.log(modle);
+            });
+        }
+      });
+    })
+  </script>
+</head>
+<!-- 项目文档地址  https://github.com/sensese/view -->
+
+<body style="margin-top:500px">
+    <div class="todo-list">
+        <ul>
+          @each(todo:list,{
+            <li>
+              @when(newTodo=="1",{
+                1111111111111
+                @else
+                {{todo.title}}
+              })
+            </li>
+          })
+        </ul>
+      <input class="new-todo" value="{{newTodo}}"/>
+    </div>
+</body>
+</html>
