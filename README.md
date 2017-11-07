@@ -56,17 +56,17 @@
 示例：  
   js   ：   
 
-    	new view({
-        view:"body"
-        model:{
-           massage ： "输入点什么？"
-           list :[1,2]，
-           ul :[{
-             a:1,
-             b:2
-           }]
-        }
-    	});   
+        new view({
+            view:"body"
+            model:{
+               massage ： "输入点什么？"
+               list :[1,2]，
+               ul :[{
+                 a:1,
+                 b:2
+               }]
+            }
+        });   
 
   html ：    
 
@@ -83,8 +83,8 @@
                 </li>   
             </ul>   
         })   
-    	<div>{{name}}</div>    
-    	<input type="text" value="{{name}}">    
+        <div>{{name}}</div>    
+        <input type="text" value="{{name}}">    
   完整示例：   
 
         <!DOCTYPE html>   
