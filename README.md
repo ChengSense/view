@@ -56,17 +56,17 @@
 示例：  
   js   ：   
 
-    	new view({
-        view:"body"
-        model:{
-           massage ： "输入点什么？"
-           list :[1,2]，
-           ul :[{
-             a:1,
-             b:2
-           }]
-        }
-    	});   
+        new view({
+            view: "body",
+            model: {
+                massage: "输入点什么？",
+                list: [1, 2],
+                ul: [{
+                    a: 1,
+                    b: 2
+                }]
+            }
+        });  
 
   html ：    
 
@@ -87,40 +87,43 @@
     	<input type="text" value="{{name}}">    
   完整示例：   
 
-        <!DOCTYPE html>   
-        <html>   
-        	<head>  
-        	<title>sense-index</title>  
-        	<script type="text/javascript" src="../view.js"></script>  
-        	<script type="text/javascript">  
-        	$(function() {  
-            new view({
-              view:"body"
-              model:{
-                 massage ： "输入点什么？",
-                 list :[1,2]，
-                 ul :[{
-                   a:1,
-                   b:2
-                 }]  
-              }
-          	});   
-        	})   
-        	</script>   
-        	</head>   
-          <body>   
-            @each(item:list,{   
-                @when(true,{   
-                    <ul>   
-                        <li each="li:ul">   
-                        {{li.a + li.b}}   
-                        </li>   
-                    </ul>   
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <title>sense-index</title>
+            <script type="text/javascript" src="../view.js"></script>
+            <script type="text/javascript">  
+                $(function () {
+                    new view({
+                        view: "body",
+                        model: {
+                            massage: "输入点什么？",
+                            list: [1, 2],
+                            ul: [{
+                                a: 1,
+                                b: 2
+                            }]
+                        }
+                    });
                 })   
-            })   
-          	<div>{{massage}}</div>    
-          	<input type="text" value="{{massage}}">    
-          </body>   
+            </script>
+        </head>
+
+        <body>
+            @each(item:list,{ 
+                @when(true,{
+                    <ul>
+                        <li each="li:ul">
+                            {{li.a + li.b}}
+                        </li>
+                    </ul>
+                }) 
+            })
+            <div>{{massage}}</div>
+            <input type="text" value="{{massage}}">
+        </body>
+
         </html>  
 
 说明：  
