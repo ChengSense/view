@@ -632,7 +632,7 @@
 							methd.call(node, event);
 						})
 					}, bol);
-					return this;
+					break;
 				default:
 					this.addEventListener(type, manager["@" + type] = function (event) {
 						var node = event.target;
@@ -644,8 +644,9 @@
 								})
 						})
 					}, bol);
-					return this;
+					break;
 			}
+			return this;
 		},
 		off: function (type, call) {
 			try {
