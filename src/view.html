@@ -40,17 +40,13 @@
 <body>
     <div class="todo-list" style="margin-top:200px;margin:0 auto;">
         <ul>
-            @each(todo:list,{
-                <li>
-                    @when(newTodo=="1",{ 
-                        hello wold ! 
-                        @else 
-                        {{todo.title}} 
-                    })
-                </li>
-            })
+            <li each="todo:list">
+                @when(newTodo=="1",{
+                    hello wold ! @else {{todo.title}}
+                })
+            </li>
         </ul>
-        <input class="new-todo" value="{{newTodo}}" />
+        <input class="new-todo" value="{{newTodo}}"/>
     </div>
 </body>
 
