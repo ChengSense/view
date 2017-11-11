@@ -141,37 +141,13 @@
 		function code(_express, _scope) {
 			try {
 				with (_scope) {
-					_express = _express.replace($word1, function (express) {
-						var value = _scope[express];
-						if (typeof (value) == 'string') {
-							if (/@path:/.test(value))
-								return path(value);
-							if (/@index/.test(value))
-								return index(value);
-						}
-						return express;
-					});
-					if (new RegExp($express).test(_express))
+					if ($express.test(_express))
 						_express = "'" + _express.replace($express, "'+($1)+'") + "'";
 					$path = undefined;
 					return eval(_express);
 				}
 			} catch (e) {
 				return undefined;
-			}
-		}
-		function path(_express) {
-			try {
-				return _express.replace("@path:", "").replace(/\.(\w+)?/g, "['$1']");
-			} catch (err) {
-				console.log(err)
-			}
-		}
-		function index(_express) {
-			try {
-				return "'" + _express.replace("@index:", "") + "'";;
-			} catch (err) {
-				console.log(err)
 			}
 		}
 		function codes(_express, _scope) {
@@ -352,6 +328,13 @@
 				childNodes: []
 			};
 		}
+		function setVariable(scope, variable, data, index) {
+			Object.defineProperty(scope, variable, {
+				get: function () {
+					return data[index];
+				}
+			});
+		}
 		function compiler(node, iscope, childNodes, content) {
 			each(childNodes, function (child, index, childNodes) {
 				if (new RegExp($break).test(child.clas.nodeValue))
@@ -361,7 +344,7 @@
 						if (child.clas.hasAttribute("each")) {
 							var expreses = child.clas.getAttribute("each").split(":");
 							child.clas.variable = expreses.shift().trim(), child.clas.dataSource = expreses.pop().trim();
-							var dataSource = code(child.clas.dataSource, iscope) || [];
+							var dataSource = code(child.clas.dataSource, iscope);
 
 							node.appendChild(document.createComment($path));
 							var clas = classNode(null, child);
@@ -370,8 +353,8 @@
 
 							each(dataSource, function (item, index) {
 								var scope = Object.create(iscope || {});
-								scope[child.clas.variable] = "@path:" + $path;
-								if (expreses[0]) scope[expreses[0].trim()] = "@index:" + index;
+								setVariable(scope, child.clas.variable, dataSource, index);
+								if (expreses[0]) scope[expreses[0].trim()] = index.toString();
 								var newNode = child.clas.cloneNode();
 								newNode.removeAttribute("each");
 								node.appendChild(newNode);
@@ -393,7 +376,7 @@
 						if (new RegExp($each).test(child.clas.nodeValue)) {
 							var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
 							child.clas.variable = expreses.shift().trim(), child.clas.dataSource = expreses.pop().trim();
-							var dataSource = code(child.clas.dataSource, iscope) || [];
+							var dataSource = code(child.clas.dataSource, iscope);
 
 							node.appendChild(document.createComment($path));
 							var clas = classNode(null, child);
@@ -402,8 +385,8 @@
 
 							each(dataSource, slice(child.children), function (item, index, children) {
 								var scope = Object.create(iscope || {});
-								scope[child.clas.variable] = "@path:" + $path;
-								if (expreses[0]) scope[expreses[0].trim()] = "@index:" + index;
+								setVariable(scope, child.clas.variable, dataSource, index);
+								if (expreses[0]) scope[expreses[0].trim()] = index.toString();
 								var clasNodes = classNode(null, child);
 								clas.childNodes.push(clasNodes);
 								compiler(node, scope, slice(children), clasNodes);
