@@ -1,0 +1,48 @@
+
+.navbar-brand{
+	margin-left: 150px;
+}
+
+.nav-left{
+	height: calc(100vh - 96px);
+	border-right-width:1px ;
+	border-right-color: rgba(233, 225, 225, 0.5);
+}
+nav{
+	box-shadow: 0 0 1px rgba(0,0,0,0.25);
+	transition: background-color 0.3s ease-in-out;
+}
+main{
+	background-color: rgba(255, 255, 255, 0.555);
+	height: calc(100vh - 96px);
+}
+.tab-pane{
+  width: 800px;
+  margin: 0px auto;
+}
+footer{
+	bottom: 0;
+	position: fixed;
+	text-align-last: center;
+	padding: 20px 20px;
+	width: 100%;
+	box-shadow: 0 0 1px rgba(0,0,0,0.25);
+	transition: background-color 0.3s ease-in-out;
+}
+
+.html:before {
+	content: "HTML:";
+	color: rgba(150, 148, 148, 0.555);
+}
+.code:before {
+	content: "JS:";
+	color: rgba(150, 148, 148, 0.555);
+}
+.text:before {
+	content: " 显示:";
+	color: rgba(150, 148, 148, 0.555);
+}
+
+.tab-pane{
+	margin-bottom: 100px;
+}
