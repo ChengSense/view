@@ -328,10 +328,13 @@
 				childNodes: []
 			};
 		}
-		function setVariable(scope, variable, data, index) {
+		function setVariable(scope, variable, obj, index) {
 			Object.defineProperty(scope, variable, {
+				set: function (value) {
+					return obj[index] = value;
+				},
 				get: function () {
-					return data[index];
+					return obj[index];
 				}
 			});
 		}
@@ -343,8 +346,8 @@
 					case 1:
 						if (child.clas.hasAttribute("each")) {
 							var expreses = child.clas.getAttribute("each").split(":");
-							child.clas.variable = expreses.shift().trim(), child.clas.dataSource = expreses.pop().trim();
-							var dataSource = code(child.clas.dataSource, iscope);
+							var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
+							var dataSource = code(source, iscope);
 
 							node.appendChild(document.createComment($path));
 							var clas = classNode(null, child);
@@ -353,8 +356,8 @@
 
 							each(dataSource, function (item, index) {
 								var scope = Object.create(iscope || {});
-								setVariable(scope, child.clas.variable, dataSource, index);
-								if (expreses[0]) scope[expreses[0].trim()] = index.toString();
+								setVariable(scope, variable, dataSource, index);
+								if (id) scope[id.trim()] = index.toString();
 								var newNode = child.clas.cloneNode();
 								newNode.removeAttribute("each");
 								node.appendChild(newNode);
@@ -375,8 +378,8 @@
 					default:
 						if (new RegExp($each).test(child.clas.nodeValue)) {
 							var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-							child.clas.variable = expreses.shift().trim(), child.clas.dataSource = expreses.pop().trim();
-							var dataSource = code(child.clas.dataSource, iscope);
+							var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
+							var dataSource = code(source, iscope);
 
 							node.appendChild(document.createComment($path));
 							var clas = classNode(null, child);
@@ -385,8 +388,8 @@
 
 							each(dataSource, slice(child.children), function (item, index, children) {
 								var scope = Object.create(iscope || {});
-								setVariable(scope, child.clas.variable, dataSource, index);
-								if (expreses[0]) scope[expreses[0].trim()] = index.toString();
+								setVariable(scope, variable, dataSource, index);
+								if (id) scope[id.trim()] = index.toString();
 								var clasNodes = classNode(null, child);
 								clas.childNodes.push(clasNodes);
 								compiler(node, scope, slice(children), clasNodes);
