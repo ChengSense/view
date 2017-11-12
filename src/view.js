@@ -901,4 +901,3 @@
 	window.slice = slice;
 	window.$ = ready;
 })(window);
-<div>asdasd{{newTodo}}</div>
