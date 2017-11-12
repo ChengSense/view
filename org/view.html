@@ -133,6 +133,30 @@
 </code>
 </pre>
 <h6>
+    插入html片段
+</h6>
+<pre>
+<code class="html">
+    &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
+</code>
+</pre>
+<pre>
+<code class="code">
+    new View({
+        view: "span.msg",
+        model: {
+            show "&lt;div&gt;{{msg}}&lt;/div&gt;"
+            msg: "输入点什么?"
+        }
+    });
+</code>
+</pre>
+<pre>
+<code class="text">
+     输入点什么?
+</code>
+</pre>
+<h6>
     条件 @when
 </h6>
 <pre>
@@ -396,6 +420,9 @@ new view({
                             语法
                             <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
                                 插值
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                插入html片段
                             </a>
                             <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
                                 条件
