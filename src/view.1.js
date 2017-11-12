@@ -1,6 +1,8 @@
 (function () {
-	var $express = /\{\s*\{([^\{\}]*)\}\s*\}/g;
+	var $express = /\{\s*\{>?([^\{\}]*)\}\s*\}/g;
 	var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
+	var $express2 = /\{\s*\{([^>\{\}]*)\}\s*\}/g;
+	var $html = /\{\s*\{>([^\{\}]*)\}\s*\}/;
 	var $each = /(@each)\s*\((.*)\s*,\s*\{/g;
 	var $when = /(@when)\s*\((.*)\s*,\s*\{/g;
 	var $else = /(@else)/g;
@@ -46,6 +48,24 @@
 					var childNodes = children.get(node.clas);
 					childNodes.clear();
 					setComCache(newNode, scope, node.clas);
+				} catch (e) {
+					console.log(e);
+				}
+			},
+			html: function (node, scope) {
+				try {
+					var insert = insertion([node]);
+					var html = query(code(node.clas.nodeValue, scope));
+					var comment = document.createComment(">" + $path);
+					insert.parentNode.replaceChild(comment, insert);
+					clearEachNode([node], node);
+					node.childNodes = [];
+					var nodes = initCompiler(init(slice(html)));
+					var doc = document.createDocumentFragment();
+					compiler(doc, scope, nodes, { childNodes: node.childNodes, childNode: node.childNode });
+					setComCache(comment, scope, node);
+					comment.after(doc);
+					console.log(cache);
 				} catch (e) {
 					console.log(e);
 				}
@@ -235,8 +255,19 @@
 				binding(node, scope);
 			switch (clas.clas != undefined) {
 				case true:
-					if (node.nodeValue)
-						node.nodeValue.replace($express, function (key) {
+					if (clas.clas.nodeValue) {
+						clas.clas.nodeValue.replace($html, function (key) {
+							key.replace($word, function (key) {
+								if (code(key, scope) == undefined || $path == undefined) return;
+								var caches = codes($path, cache);
+								clas.resolver = "html";
+								clas.scope = scope;
+								clas.path = $path;
+								clas.node = node;
+								caches.setting(clas);
+							});
+						});
+						clas.clas.nodeValue.replace($express2, function (key) {
 							key.replace($word, function (key) {
 								if (code(key, scope) == undefined || $path == undefined) return;
 								var caches = codes($path, cache);
@@ -247,6 +278,7 @@
 								caches.setting(clas);
 							});
 						});
+					}
 					break;
 				default:
 					if (clas.name)
@@ -313,7 +345,9 @@
 				}
 				commom(child, scope, (clas.clas || clas).getAttributeNode(child.name));
 			});
-			if (new RegExp($express1).test(node.nodeValue)) {
+			if (new RegExp($html).test(node.nodeValue)) {
+				resolver.html(clas, scope);
+			} else if (new RegExp($express2).test(node.nodeValue)) {
 				setComCache(node, scope, clas);
 				node.nodeValue = code(node.nodeValue, scope);
 			}
@@ -454,7 +488,7 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				code(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'", scope);
+				scope[owner._express] = owner.value;
 			});
 		}
 		observe(app.model, function callSet(name, path) {
@@ -463,6 +497,8 @@
 				var node = childNodes[0];
 				if (node && node.resolver == "each")
 					return resolver[node.resolver](node, node.scope, childNodes, path);
+				if (node && node.resolver == "html")
+					return resolver[node.resolver](node, node.scope);
 				slice(childNodes).forEach(function (node) {
 					resolver[node.resolver](node, node.scope, childNodes, path);
 				});
@@ -483,7 +519,7 @@
 				throw new Error();
 			return doc;
 		} catch (e) {
-			var newNode = document.createDocumentFragment();
+			var newNode = document.createElement("div");
 			newNode.innerHTML = express;
 			return newNode.childNodes;
 		}
@@ -671,6 +707,16 @@
 							node.addEventListener(type, handler, false);
 					});
 					return node;
+			}
+		},
+		after: function (node) {
+			switch (this.nextSibling) {
+				case undefined:
+					this.parentNode.appendChild(node);
+					break;
+				default:
+					this.parentNode.insertBefore(node, this.nextSibling);
+					break;
 			}
 		},
 		clear: function (node) {
@@ -901,4 +947,3 @@
 	window.slice = slice;
 	window.$ = ready;
 })(window);
-<div>asdasd{{newTodo}}</div>
