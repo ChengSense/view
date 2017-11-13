@@ -18,32 +18,19 @@
             var main = new view({
                 view: "view",
                 model: {
-                    chapters: {
-                        chapter21: "2.1.html",
-                        chapter22: "2.2.html",
-                        chapter23: "2.3.html",
-                        chapter24: "2.4.html",
-                        chapter25: "2.5.html",
-                        chapter26: "2.6.html",
-                        chapter27: "2.7.html",
-                        chapter28: "2.8.html"
-                    }
+                    chapters: {}
                 },
                 controller: function (model) {
-                    each(model.chapters, function (chapter, name) {
-                        $.ajax({
-                            type: "GET",
-                            url: "/chapters/" + chapter,
-                            dataType: "html",
-                            success: function (data) {
-                                model.chapters[name] = data;
-                                if (name == "chapter28") {
-                                    $('pre code').each(function (i, block) {
-                                        hljs.highlightBlock(block);
-                                    });
-                                }
-                            }
-                        });
+                    $.ajax({
+                        type: "GET",
+                        url: "/chapters/json",
+                        dataType: "json",
+                        success: function (data) {
+                            main.model.chapters = data;
+                            $('pre code').each(function (i, block) {
+                                hljs.highlightBlock(block);
+                            });
+                        }
                     });
                 }
             });
@@ -134,9 +121,7 @@
                             </p>
                         </div>
                         <view>
-                            @each(chapter:chapters,{ 
-                                {{>chapter}} 
-                            })
+                            @each(chapter:chapters,{ {{>chapter}} })
                         </view>
                     </div>
                     <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">
