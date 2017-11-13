@@ -580,10 +580,10 @@
 		each: function (k, n) {
 			var childNodes = this.get(k.clas);
 			if (childNodes) {
-				k.node = n.childNodes[0];
+				k.node = n.childNodes[n.childNodes.length - 1];
 				childNodes.push(k);
 			} else {
-				k.node = n.childNodes[0];
+				k.node = n.childNodes[n.childNodes.length - 1];
 				this.set(k.clas, [k]);
 			}
 		},
