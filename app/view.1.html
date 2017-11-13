@@ -23,7 +23,7 @@
                 controller: function (model) {
                     $.ajax({
                         type: "GET",
-                        url: "/chapters/json",
+                        url: "/chapters",
                         dataType: "json",
                         success: function (data) {
                             main.model.chapters = data;

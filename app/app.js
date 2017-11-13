@@ -7,15 +7,14 @@ app.use(express.static(__dirname + '/view'));
 
 var chapters = [];
 fs.readdir(__dirname + "/view/chapters", function (err, files) {
-  if (err)
-    return console.error(err);
+  if (err) return console.error(err);
   files.forEach(function (file) {
     var data = fs.readFileSync(__dirname + "/view/chapters/" + file);
     chapters.push(data.toString());
   });
 });
 
-app.get('/chapters/json', function (req, res) {
+app.get('/chapters', function (req, res) {
   res.send(chapters);
 })
 app.get('/', function (req, res) {
