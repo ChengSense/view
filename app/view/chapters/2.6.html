@@ -1,0 +1,35 @@
+
+<div>
+<h6 id="循环">
+    循环属性 each
+</h6>
+<pre>
+    <code class="html">
+    &lt;ul id=&quot;ul&quot;&gt;
+        &lt;li each=&quot;text:index:ul&quot;&gt;
+            {{ index + 1 }}. {{ text }}
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    </code>
+</pre>
+<pre>
+    <code class="code">
+    new View({
+        view: "ul#ul",
+        model: {
+            ul: ["View.js","Vue.js","React.js"]
+        }
+    });
+    </code>
+</pre>
+<pre>
+    <code class="text">
+    <ul>
+        <li>1.View.js</li>
+        <li>2.Vue.js</li>
+        <li>3.React.js</li>
+    </ul>
+    </code>
+</pre>
+</div>
+

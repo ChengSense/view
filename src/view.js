@@ -899,5 +899,4 @@
 	window.query = query;
 	window.each = each;
 	window.slice = slice;
-	window.$ = ready;
 })(window);

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>main.html</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="./css/view.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./css/highlight/atom-one-light.css">
+    <script src="./js/highlight.pack.js"></script>  
+    <script type="text/javascript" src="../src/view.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        $(function () {
+            $('pre code').each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">view.js</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">官网
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">学习</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        生态系统
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        实例
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">团队</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">搜索</button>
+            </form>
+        </div>
+    </nav>
+    <main class="container-fluid">
+        <div class="row">
+            <div class="col-md-10">
+                <div class="tab-content" id="v-pills-tabContent">
+                    <div class="tab-pane fade" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+                            <p>
+                                <h5>View.js 是什么</h5>
+                                <p>
+                                    View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue
+                                    也完全能够为复杂的单页应用程序提供驱动。 如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+                                </p>
+                            </p>
+                            <pre>
+                                <code class="html">
+                                    &lt;div class=&quot;massage&quot;&gt;{{massage}}&lt;/div&gt;
+                                </code>
+                            </pre>
+                            <pre>
+                                <code class="code">
+                                    new View({
+                                        view: "div.massage",
+                                        model: {
+                                            massage: "输入点什么?"
+                                        }
+                                    });
+                                </code>
+                            </pre>
+                    </div>
+                    <div class="tab-pane fade  show active" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                        <p>
+                            <h5>基础语法</h5>
+                            <p>
+                                View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。另一方面，当与单文件组件和 View 生态系统支持的库结合使用时，View
+                                也完全能够为复杂的单页应用程序提供驱动。 如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+                            </p>
+                        </p>
+<h6>
+    插值
+</h6>
+<pre>
+<code class="html">
+    &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+</code>
+</pre>
+<pre>
+<code class="code">
+    new View({
+        view: "span#msg",
+        model: {
+            msg: "输入点什么?"
+        }
+    });
+</code>
+</pre>
+<pre>
+<code class="text">
+     输入点什么?
+</code>
+</pre>
+
+
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">
+                            <p>
+                                <h5>View.js 是什么</h5>
+                                <p>
+                                    View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue
+                                    也完全能够为复杂的单页应用程序提供驱动。 如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+                                </p>
+                            </p>
+                            <pre>
+                                <code class="html">
+                                    &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
+                                </code>
+                            </pre>
+                            <pre>
+                                <code class="code">
+                                    new View({
+                                        view: "div.massage",
+                                        model: {
+                                            massage: "输入点什么?"
+                                        }
+                                    });
+                                </code>
+                            </pre>
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">
+                        <p>
+                            <h5>View.js 是什么</h5>
+                            <p>
+                                View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue
+                                也完全能够为复杂的单页应用程序提供驱动。 如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+                            </p>
+                        </p>
+                        <pre>
+                            <code class="html">
+                                &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+                            </code>
+                        </pre>
+                        <pre>
+                            <code class="code">
+                                new View({
+                                    view: "span.msg",
+                                    model: {
+                                        massage: "输入点什么?"
+                                    }
+                                });
+                            </code>
+                        </pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                    <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical" style="margin-top: 100px;">
+                        <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">介绍</a>
+                        <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                            语法
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                插值
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                插值html片段
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                条件
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                条件分支
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                循环
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                循环属性
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                嵌套
+                            </a>
+                            <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                                用户输入
+                            </a>
+                        </a>
+                        <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">Messages</a>
+                        <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a>
+                    </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        遵循 MIT 开源协议 Copyright © 2014-2017 Evan You
+    </footer>
+</body>
+
+</html>

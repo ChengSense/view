@@ -185,7 +185,7 @@
 		}
 		function init(dom) {
 			each(dom, function (node) {
-				if (node.childNodes[0] && node.nodeName != "SCRIPT")
+				if (node.childNodes[0] && !(node.nodeName == "SCRIPT" || node.nodeName == "CODE"))
 					init(slice(node.childNodes));
 				if (node.nodeType == 3)
 					node.nodeValue.replace($lang, function (tag) {
@@ -400,12 +400,22 @@
 								commom(newNode, scope, child.clas);
 							});
 						} else {
-							var newNode = child.clas.cloneNode();
-							node.appendChild(newNode);
-							var clasNodes = classNode(newNode, child);
-							content.childNodes.push(clasNodes);
-							compiler(newNode, iscope, slice(child.children), clasNodes);
-							commom(newNode, iscope, clasNodes);
+							switch (new RegExp(/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
+								case true:
+									var newNode = child.clas.cloneNode(true);
+									node.appendChild(newNode);
+									var clasNodes = classNode(newNode, child);
+									content.childNodes.push(clasNodes);
+									break;
+								default:
+									var newNode = child.clas.cloneNode();
+									node.appendChild(newNode);
+									var clasNodes = classNode(newNode, child);
+									content.childNodes.push(clasNodes);
+									compiler(newNode, iscope, slice(child.children), clasNodes);
+									commom(newNode, iscope, clasNodes);
+									break;
+							}
 						}
 						break;
 					default:

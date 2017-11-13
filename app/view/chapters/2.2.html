@@ -1,0 +1,26 @@
+<div>
+<h6>
+    插值html片段
+</h6>
+<pre>
+    <code class="html">
+    &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
+    </code>
+</pre>
+<pre>
+    <code class="code">
+    new View({
+        view: "span#msg",
+        model: {
+            show "&lt;div&gt;{{msg}}&lt;/div&gt;"
+            msg: "输入点什么?"
+        }
+    });
+    </code>
+</pre>
+<pre>
+    <code class="text">
+    输入点什么?
+    </code>
+</pre>
+</div>

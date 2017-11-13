@@ -1,0 +1,44 @@
+
+<div>
+<h6 id="循环">
+    多层嵌套
+</h6>
+<pre>
+    <code class="html">
+    @each(item:ul,{
+        &lt;ul id=&quot;ul&quot;&gt;
+            &lt;li each=&quot;text:index:ul&quot;&gt;
+                @when(index==1,{
+                    {{index + "." + text }}
+                    @else
+                    {{index}}. hello wold ！
+                })
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    })
+    </code>
+</pre>
+<pre>
+    <code class="code">
+    new View({
+        view: "ul#ul",
+        model: {
+            ul: ["View.js","Vue.js"]
+        }
+    });
+    </code>
+</pre>
+<pre>
+    <code class="text">
+    <ul>
+        <li>0.View.js</li>
+        <li>1.hello wold !</li>
+    </ul>
+    <ul>
+        <li>0.View.js</li>
+        <li>1.hello wold !</li>
+    </ul>
+    </code>
+</pre>
+</div>
+
