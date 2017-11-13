@@ -14,7 +14,7 @@ fs.readdir(__dirname + "/view/chapters", function (err, files) {
   });
 });
 
-app.get('/chapters', function (req, res) {
+app.get('/chapters.json', function (req, res) {
   res.send(chapters);
 })
 app.get('/', function (req, res) {
@@ -26,6 +26,6 @@ var server = app.listen(80, function () {
   var host = server.address().address
   var port = server.address().port
 
-  console.log("应用实例，访问地址为 http://%s:%s", host, port)
+  console.log("应用实例，访问地址为 http://%s:%s","127.0.0.1", port)
 
 })
