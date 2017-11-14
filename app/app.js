@@ -18,7 +18,7 @@ app.get('/chapters.json', function (req, res) {
   res.send(chapters);
 })
 app.get('/', function (req, res) {
-  res.sendFile(__dirname + "/view.1.html");
+  res.sendFile(__dirname + "/index.html");
 })
 
 var server = app.listen(8081, function () {
