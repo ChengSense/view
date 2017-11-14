@@ -22,7 +22,7 @@ footer{
 .tab-pane{
 	width: 800px;
 	margin: 0px auto;
-  }
+}
 .nav-left{
 	height: calc(100vh - 96px);
 	border-right-width:1px ;

@@ -26,6 +26,12 @@
                         $('pre code').each(function (i, block) {
                             hljs.highlightBlock(block);
                         });
+                        new view({
+                            view: "div#input",
+                            model: {
+                                text: "输入点什么?"
+                            }
+                        });
                     });
                 }
             });
