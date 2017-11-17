@@ -939,7 +939,7 @@
 					}
 					if (target.hasOwnProperty(prop)) {
 						var path = root ? root + "." + prop : prop;
-						if (!(value instanceof view) && value == "object") {
+						if (!(value instanceof view) && typeof value == "object") {
 							_observe(value, callSet, callGet, path, oldValue);
 						}
 						_watch(target, prop, path);
