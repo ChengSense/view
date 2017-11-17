@@ -4,6 +4,7 @@ var fs = require("fs");
 
 app.use(express.static(__dirname + '/resources'));
 app.use(express.static(__dirname + '/view'));
+app.use(express.static(__dirname + '/app'));
 
 var chapters = [];
 fs.readdir(__dirname + "/view/chapters", function (err, files) {
@@ -21,7 +22,7 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + "/index.html");
 })
 
-var server = app.listen(80, function () {
+var server = app.listen(8081, function () {
 
   var host = server.address().address
   var port = server.address().port

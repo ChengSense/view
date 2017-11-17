@@ -1,8 +1,9 @@
 (function () {
 	var $express = /\{\s*\{>?([^\{\}]*)\}\s*\}/g;
 	var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
-	var $express2 = /\{\s*\{([^>\{\}]*)\}\s*\}/g;
+	var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
 	var $html = /\{\s*\{>([^\{\}]*)\}\s*\}/;
+	var $view = /\{\s*\{@([^\{\}]*)\}\s*\}/;
 	var $each = /(@each)\s*\((.*)\s*,\s*\{/g;
 	var $when = /(@when)\s*\((.*)\s*,\s*\{/g;
 	var $else = /(@else)/g;
@@ -65,6 +66,32 @@
 					compiler(doc, scope, nodes, { childNodes: node.childNodes, childNode: node.childNode });
 					setComCache(comment, scope, node);
 					comment.after(doc);
+					console.log(cache);
+				} catch (e) {
+					console.log(e);
+				}
+			},
+			view: function (node, scope) {
+				try {
+					var insert = insertion([node]);
+					var views = code(node.clas.nodeValue, scope);
+					var comment = document.createComment("@" + $path);
+					insert.parentNode.replaceChild(comment, insert);
+					clearEachNode([node], node);
+					node.childNodes = [];
+					extend(views.model, scope);
+					views.view(views["@view"], views.model);
+					var doc = views.view;
+					setComCache(comment, scope, node);
+					comment.after(doc);
+					console.log(cache);
+				} catch (e) {
+					console.log(e);
+				}
+			},
+			"@view": function (node, scope) {
+				try {
+					app.view = resolver.init;
 					console.log(cache);
 				} catch (e) {
 					console.log(e);
@@ -160,6 +187,8 @@
 		function code(_express, _scope) {
 			try {
 				with (_scope) {
+					if ($view.test(_express))
+						return _scope[_express.replace($view, "$1").trim()];
 					if ($express.test(_express))
 						_express = "'" + _express.replace($express, "'+($1)+'") + "'";
 					$path = undefined;
@@ -345,11 +374,13 @@
 				}
 				commom(child, scope, (clas.clas || clas).getAttributeNode(child.name));
 			});
-			if (new RegExp($html).test(node.nodeValue)) {
-				resolver.html(clas, scope);
-			} else if (new RegExp($express2).test(node.nodeValue)) {
+			if (new RegExp($express2).test(node.nodeValue)) {
 				setComCache(node, scope, clas);
 				node.nodeValue = code(node.nodeValue, scope);
+			} else if (new RegExp($html).test(node.nodeValue)) {
+				resolver.html(clas, scope);
+			} else if (new RegExp($view).test(node.nodeValue)) {
+				resolver.view(clas, scope);
 			}
 		}
 		function classNode(newNode, child) {
@@ -363,10 +394,10 @@
 		}
 		function setVariable(scope, variable, obj, index) {
 			Object.defineProperty(scope, variable, {
-				set: function (value) {
+				set(value) {
 					return obj[index] = value;
 				},
-				get: function () {
+				get() {
 					return obj[index];
 				}
 			});
@@ -516,8 +547,13 @@
 		}, function callGet(name, path) {
 			$path = path;
 		});
-		resolver["init"](app.view, app.model);
-		return app;
+		resolver[app.view ? "init" : "@view"](app.view, app.model);
+		extend(this, app);
+		return this;
+	}
+	function extend(object, parent) {
+		object.__proto__ = parent;
+		return object;
 	}
 	window.view = view;
 })(window);
@@ -533,24 +569,6 @@
 			newNode.innerHTML = express;
 			return newNode.childNodes;
 		}
-	}
-	function ready(func) {
-		var done = false;
-		var init = function () {
-			if (done) {
-				document.removeEventListener("DOMContentLoaded", init, false);
-				window.removeEventListener("load", init, false);
-				func();
-				return;
-			}
-			if (document.readyState == "complete") {
-				done = true;
-				init();
-			}
-		};
-		document.addEventListener("DOMContentLoaded", init, false);
-		window.addEventListener("load", init, false);
-		init();
 	}
 	function extend(object, src) {
 		var prototype = object.prototype || object.__proto__;
@@ -921,7 +939,7 @@
 					}
 					if (target.hasOwnProperty(prop)) {
 						var path = root ? root + "." + prop : prop;
-						if (typeof value == "object") {
+						if (!(value instanceof view) && value == "object") {
 							_observe(value, callSet, callGet, path, oldValue);
 						}
 						_watch(target, prop, path);
@@ -933,11 +951,11 @@
 		var _watch = function (target, prop, path) {
 			var value = target[prop];
 			Object.defineProperty(target, prop, {
-				get: function () {
+				get() {
 					callGet.call(this, prop, path);
 					return value;
 				},
-				set: function (val) {
+				set(val) {
 					if (typeof value == "object") {
 						var oldValue = value;
 						_observe(value = val, callSet, callGet, path, oldValue);
