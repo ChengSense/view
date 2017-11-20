@@ -4,13 +4,13 @@
 	var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
 	var $html = /\{\s*\{>([^\{\}]*)\}\s*\}/;
 	var $view = /\{\s*\{@([^\{\}]*)\}\s*\}/;
-	var $each = /(@each)\s*\((.*)\s*,\s*\{/g;
-	var $when = /(@when)\s*\((.*)\s*,\s*\{/g;
-	var $else = /(@else)/g;
-	var $chen = /(@each|@when)\s*\((.*)\s*,\s*\{/g;
+	var $each = /(@each)\s*\((.*)\s*,\s*\{/;
+	var $when = /(@when)\s*\((.*)\s*,\s*\{/;
+	var $else = /(@else)/;
+	var $chen = /(@each|@when)\s*\((.*)\s*,\s*\{/;
 	var $lang = /((@each|@when)\s*\((.*)\s*,\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*\)|@else)/g;
-	var $close = /\}\s*\)\s*/g;
-	var $break = /\}\s*\)|(@else)/g;
+	var $close = /\}\s*\)\s*/;
+	var $break = /\}\s*\)|(@else)/;
 	var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
 	var $word1 = /\w+/g;
 	function view(app) {
@@ -353,7 +353,7 @@
 		function initCompiler(node, children) {
 			return each(node, children || [], function (child, i, list) {
 				node.shift();
-				if (new RegExp($close).test(child.nodeValue))
+				if ($close.test(child.nodeValue))
 					return true;
 				var item = { clas: child, children: [] };
 				list.push(item);
@@ -371,7 +371,7 @@
 		}
 		function commom(node, scope, clas) {
 			each(node.attributes, function (child) {
-				if (new RegExp($express1).test(child.name)) {
+				if ($express1.test(child.name)) {
 					try {
 						var node = document.createAttribute(code(child.name, scope));
 						node.nodeValue = child.nodeValue;
@@ -388,9 +388,9 @@
 			if (new RegExp($express2).test(node.nodeValue)) {
 				setComCache(node, scope, clas);
 				node.nodeValue = code(node.nodeValue, scope);
-			} else if (new RegExp($html).test(node.nodeValue)) {
+			} else if ($html.test(node.nodeValue)) {
 				resolver.html(clas, scope);
-			} else if (new RegExp($view).test(node.nodeValue)) {
+			} else if ($view.test(node.nodeValue)) {
 				resolver.view(clas, scope);
 			}
 		}
@@ -404,17 +404,19 @@
 			};
 		}
 		function setVariable(scope, variable, path) {
-			path = path.replace(/\.(\w+)?/g, "['$1']");
 			Object.defineProperty(scope, variable, {
 				get() {
-					with (scope)
-					return eval(path);
+					var value = scope;
+					path.replace($word1, function (express) {
+						value = value[express];
+					});
+					return value;
 				}
 			});
 		}
 		function compiler(node, iscope, childNodes, content) {
 			each(childNodes, function (child, index, childNodes) {
-				if (new RegExp($break).test(child.clas.nodeValue))
+				if ($break.test(child.clas.nodeValue))
 					return childNodes.clear();
 				switch (child.clas.nodeType) {
 					case 1:
@@ -460,7 +462,7 @@
 						}
 						break;
 					default:
-						if (new RegExp($each).test(child.clas.nodeValue)) {
+						if ($each.test(child.clas.nodeValue)) {
 							var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
 							var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
 							var dataSource = code(source, iscope);
@@ -478,16 +480,16 @@
 								clas.childNodes.push(clasNodes);
 								compiler(node, scope, slice(children), clasNodes);
 							});
-						} else if (new RegExp($when).test(child.clas.nodeValue)) {
+						} else if ($when.test(child.clas.nodeValue)) {
 							var clas = classNode(null, child);
 							content.childNodes.push(clas);
 							setCache(null, iscope, clas, content, node);
 							var when = code(child.clas.nodeValue.replace($when, "$2"), iscope);
 							if (when) {
 								each(slice(child.children), function (child, index, childNodes) {
-									if (new RegExp($break).test(child.clas.nodeValue))
+									if ($break.test(child.clas.nodeValue))
 										return true;
-									switch (child.clas.nodeType == 1 || new RegExp($chen).test(child.clas.nodeValue)) {
+									switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
 										case true:
 											compiler(node, iscope, childNodes, clas);
 											break;
@@ -504,9 +506,9 @@
 							} else {
 								each(slice(child.children), function (child, index, childNodes) {
 									childNodes.shift();
-									if (new RegExp($else).test(child.clas.nodeValue)) {
+									if ($else.test(child.clas.nodeValue)) {
 										each(childNodes, function (child, index, childNodes) {
-											switch (new RegExp($chen).test(child.clas.nodeValue) || child.clas.nodeType == 1) {
+											switch ($chen.test(child.clas.nodeValue) || child.clas.nodeType == 1) {
 												case true:
 													compiler(node, iscope, childNodes, clas);
 													break;
@@ -539,7 +541,7 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				with (scope){
+				with (scope) {
 					eval(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'");
 				}
 			});

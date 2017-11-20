@@ -404,11 +404,13 @@
 			};
 		}
 		function setVariable(scope, variable, path) {
-			path = path.replace(/\.(\w+)?/g, "['$1']");
 			Object.defineProperty(scope, variable, {
 				get() {
-					with (scope)
-					return eval(path);
+					var value = scope;
+					path.replace($word1, function (express) {
+						value = value[express];
+					});
+					return value;
 				}
 			});
 		}
