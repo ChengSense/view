@@ -285,6 +285,17 @@
 			switch (clas.clas != undefined) {
 				case true:
 					if (clas.clas.nodeValue) {
+						clas.clas.nodeValue.replace($express2, function (key) {
+							key.replace($word, function (key) {
+								if (code(key, scope) == undefined || $path == undefined) return;
+								var caches = codes($path, cache);
+								clas.resolver = "express";
+								clas.scope = scope;
+								clas.path = $path;
+								clas.node = node;
+								caches.setting(clas);
+							});
+						});
 						clas.clas.nodeValue.replace($html, function (key) {
 							key.replace($word, function (key) {
 								if (code(key, scope) == undefined || $path == undefined) return;
@@ -296,11 +307,11 @@
 								caches.setting(clas);
 							});
 						});
-						clas.clas.nodeValue.replace($express2, function (key) {
+						clas.clas.nodeValue.replace($view, function (key) {
 							key.replace($word, function (key) {
 								if (code(key, scope) == undefined || $path == undefined) return;
 								var caches = codes($path, cache);
-								clas.resolver = "express";
+								clas.resolver = "view";
 								clas.scope = scope;
 								clas.path = $path;
 								clas.node = node;
@@ -392,13 +403,12 @@
 				childNodes: []
 			};
 		}
-		function setVariable(scope, variable, obj, index) {
+		function setVariable(scope, variable, path) {
+			path = path.replace(/\.(\w+)?/g, "['$1']");
 			Object.defineProperty(scope, variable, {
-				set(value) {
-					return obj[index] = value;
-				},
 				get() {
-					return obj[index];
+					with (scope)
+					return eval(path);
 				}
 			});
 		}
@@ -420,7 +430,7 @@
 
 							each(dataSource, function (item, index) {
 								var scope = Object.create(iscope || {});
-								setVariable(scope, variable, dataSource, index);
+								setVariable(scope, variable, $path);
 								if (id) scope[id.trim()] = index.toString();
 								var newNode = child.clas.cloneNode();
 								newNode.removeAttribute("each");
@@ -462,7 +472,7 @@
 
 							each(dataSource, slice(child.children), function (item, index, children) {
 								var scope = Object.create(iscope || {});
-								setVariable(scope, variable, dataSource, index);
+								setVariable(scope, variable, $path);
 								if (id) scope[id.trim()] = index.toString();
 								var clasNodes = classNode(null, child);
 								clas.childNodes.push(clasNodes);
@@ -529,7 +539,9 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				scope[owner._express] = owner.value;
+				with (scope){
+					eval(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'");
+				}
 			});
 		}
 		observe(app.model, function callSet(name, path) {
@@ -539,6 +551,8 @@
 				if (node && node.resolver == "each")
 					return resolver[node.resolver](node, node.scope, childNodes, path);
 				if (node && node.resolver == "html")
+					return resolver[node.resolver](node, node.scope);
+				if (node && node.resolver == "view")
 					return resolver[node.resolver](node, node.scope);
 				slice(childNodes).forEach(function (node) {
 					resolver[node.resolver](node, node.scope, childNodes, path);
