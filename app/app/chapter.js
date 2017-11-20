@@ -12,11 +12,11 @@ var form = new view({
 var chapter = new view({
     view: "view",
     model: {
-        chapters: {},
+        chapters: "",
         form: form
     },
     controller(model) {
-        $.getJSON("/chapters.json", function (data) {
+        $.get("/chapter.html", function (data) {
             model.chapters = data;
             $('pre code').each(function (i, block) {
                 hljs.highlightBlock(block);

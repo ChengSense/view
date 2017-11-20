@@ -1,0 +1,299 @@
+<div>
+    <h6>
+        插值
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+        </code>
+    </pre>
+    <pre>
+    <code class="code">
+    new View({
+        view: "span#msg",
+        model: {
+            msg: "输入点什么?"
+        }
+    });
+    </code>
+</pre>
+    <pre>
+    <code class="text">
+    输入点什么?
+    </code>
+</pre>
+</div>
+
+
+
+
+<div>
+    <h6>
+        插值html片段
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "span#msg",
+            model: {
+                show "&lt;div&gt;{{msg}}&lt;/div&gt;"
+                msg: "输入点什么?"
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+        输入点什么?
+        </code>
+    </pre>
+</div>
+
+
+
+<div>
+    <h6>
+        条件 @when
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;div id=&quot;msg&quot;&gt;
+            @when(show,{
+                &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
+            })
+        &lt;/div&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "div#msg",
+            model: {
+                msg: "输入点什么?",
+                show : true
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+        输入点什么?
+        </code>
+    </pre>
+</div>
+
+
+
+<div>
+    <h6 id="条件分支">
+        条件分支 @else
+
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;div id=&quot;msg&quot;&gt;
+            @when(show,{
+                &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
+                @else
+                hello wold ！
+            })
+        &lt;/div&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "div#msg",
+            model: {
+                msg: "输入点什么?",
+                show : true
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+        hello wold ！
+        </code>
+    </pre>
+</div>
+
+
+
+
+
+
+<div>
+    <h6 id="循环">
+        循环 @each
+    </h6>
+    <pre>
+        <code class="html">
+            &lt;ul id=&quot;ul&quot;&gt;
+                @each(li:ul,{
+                    &lt;li&gt;
+                        {{ li.text }}
+                    &lt;/li&gt;
+                })
+            &lt;/ul&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "ul#ul",
+            model: {
+                ul: [{
+                    text :"View.js"
+                },{
+                    text :"Vue.js"
+                },{
+                    text :"React.js"
+                }]
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+                <ul>
+                    <li>View.js</li>
+                    <li>Vue.js</li>
+                    <li>React.js</li>
+                </ul>
+        </code>
+    </pre>
+    </p>
+</div>
+
+
+
+
+
+<div>
+    <h6 id="循环">
+        循环属性 each
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;ul id=&quot;ul&quot;&gt;
+            &lt;li each=&quot;text:index:ul&quot;&gt;
+                {{ index + 1 }}. {{ text }}
+            &lt;/li&gt;
+        &lt;/ul&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "ul#ul",
+            model: {
+                ul: ["View.js","Vue.js","React.js"]
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+        <ul>
+            <li>1.View.js</li>
+            <li>2.Vue.js</li>
+            <li>3.React.js</li>
+        </ul>
+        </code>
+    </pre>
+</div>
+
+
+
+
+<div>
+    <h6 id="循环">
+        多层嵌套
+    </h6>
+    <pre>
+        <code class="html">
+        @each(item:ul,{
+            &lt;ul id=&quot;ul&quot;&gt;
+                &lt;li each=&quot;text:index:ul&quot;&gt;
+                    @when(index==1,{
+                        {{index + "." + text }}
+                        @else
+                        {{index}}. hello wold ！
+                    })
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        })
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "ul#ul",
+            model: {
+                ul: ["View.js","Vue.js"]
+            }
+        });
+        </code>
+    </pre>
+    <pre>
+        <code class="text">
+        <ul>
+            <li>0.View.js</li>
+            <li>1.hello wold !</li>
+        </ul>
+        <ul>
+            <li>0.View.js</li>
+            <li>1.hello wold !</li>
+        </ul>
+        </code>
+    </pre>
+</div>
+
+
+
+
+
+
+<div>
+    <h6 id="用户输入">
+        用户输入
+    </h6>
+    <pre>
+        <code class="html">
+        &lt;div id=&quot;input&quot;&gt;
+            &lt;div&gt; {{text}} &lt;/div&gt;
+            &lt;input value=&quot;{{text}}&quot;/&gt;
+        &lt;/div&gt;
+        </code>
+    </pre>
+    <pre>
+        <code class="code">
+        new View({
+            view: "div#input",
+            model: {
+                text:"输入点什么?"
+            }
+        });
+        </code>
+    </pre>
+    <!-- <code>
+    <div id="input">
+        <div> {{ text }} </div>
+        <input class="form-control" value="{{text}}" />
+    </div>
+    <script>
+        new view({
+            view: "div#input",
+            model: {
+                text: "输入点什么?"
+            }
+        });
+    </script>
+    </code> -->
+</div>
