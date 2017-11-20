@@ -488,7 +488,8 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				scope[owner._express] = owner.value;
+				with (scope)
+				eval(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'");
 			});
 		}
 		observe(app.model, function callSet(name, path) {
