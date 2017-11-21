@@ -32,7 +32,7 @@
 			},
 			express: function (node, scope) {
 				try {
-					node.node.nodeValue = code(node.clas.nodeValue, scope);
+					node.node.nodeValue = codex(node.clas.nodeValue, scope);
 					if (node.node.name == "value")
 						node.node.ownerElement.value = node.node.nodeValue;
 				} catch (e) {
@@ -41,7 +41,7 @@
 			},
 			attribute: function (node, scope) {
 				try {
-					var newNode = document.createAttribute(code(node.clas.name, scope));
+					var newNode = document.createAttribute(codex(node.clas.name, scope));
 					newNode.nodeValue = node.clas.nodeValue;
 					node.node.ownerElement.setAttributeNode(newNode);
 					node.node.ownerElement.removeAttributeNode(node.node);
@@ -187,11 +187,18 @@
 		function code(_express, _scope) {
 			try {
 				with (_scope) {
-					if ($view.test(_express))
-						return _scope[_express.replace($view, "$1").trim()];
-					if ($express.test(_express))
-						_express = "'" + _express.replace($express, "'+($1)+'") + "'";
+					_express = _express.replace($view, "$1");
 					$path = undefined;
+					return eval(_express);
+				}
+			} catch (e) {
+				return undefined;
+			}
+		}
+		function codex(_express, _scope) {
+			try {
+				with (_scope) {
+					_express = "'" + _express.replace($express, "'+($1)+'") + "'";
 					return eval(_express);
 				}
 			} catch (e) {
@@ -373,7 +380,7 @@
 			each(node.attributes, function (child) {
 				if ($express1.test(child.name)) {
 					try {
-						var node = document.createAttribute(code(child.name, scope));
+						var node = document.createAttribute(codex(child.name, scope));
 						node.nodeValue = child.nodeValue;
 						child.ownerElement.setAttributeNode(node);
 						child.ownerElement.removeAttributeNode(child);
@@ -387,7 +394,7 @@
 			});
 			if (new RegExp($express2).test(node.nodeValue)) {
 				setComCache(node, scope, clas);
-				node.nodeValue = code(node.nodeValue, scope);
+				node.nodeValue = codex(node.nodeValue, scope);
 			} else if ($html.test(node.nodeValue)) {
 				resolver.html(clas, scope);
 			} else if ($view.test(node.nodeValue)) {
@@ -541,7 +548,7 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				with (scope) {
+				with (scope){
 					eval(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'");
 				}
 			});
