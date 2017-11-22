@@ -1,9 +1,9 @@
 (function () {
-	var $express = /\{\s*\{>?([^\{\}]*)\}\s*\}/g;
+	var $express = /\{\s*\{>?@?([^\{\}]*)\}\s*\}/g;
 	var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
 	var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
-	var $html = /\{\s*\{>([^\{\}]*)\}\s*\}/;
-	var $view = /\{\s*\{@([^\{\}]*)\}\s*\}/;
+	var $html = /\{\s*\{\s*>([^\{\}]*)\}\s*\}/;
+	var $view = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
 	var $each = /(@each)\s*\((.*)\s*,\s*\{/;
 	var $when = /(@when)\s*\((.*)\s*,\s*\{/;
 	var $else = /(@else)/;
@@ -187,7 +187,7 @@
 		function code(_express, _scope) {
 			try {
 				with (_scope) {
-					_express = _express.replace($view, "$1");
+					_express = _express.replace($express, "$1");
 					$path = undefined;
 					return eval(_express);
 				}
