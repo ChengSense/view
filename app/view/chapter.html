@@ -1,11 +1,24 @@
 <div>
-    <h6>
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
+        基础语法
+    </h2>
+    <p>
+        View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
+        View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
+        另一方面，当与单文件组件和 View 生态系统支持的库结合使用时，View 也完全能够为复杂的单页应用程序提供驱动。
+        如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+    </p>
+</div>
+
+
+<div id="插值">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         插值
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-        &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
-        </code>
+    <code class="html">
+    &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+    </code>
     </pre>
     <pre>
     <code class="code">
@@ -16,69 +29,69 @@
         }
     });
     </code>
-</pre>
+    </pre>
     <pre>
     <code class="text">
     输入点什么?
     </code>
-</pre>
+    </pre>
 </div>
 
 
 
 
-<div>
-    <h6>
+<div id="插值html片段">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         插值html片段
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-        &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
-        </code>
+    <code class="html">
+    &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "span#msg",
-            model: {
-                show "&lt;div&gt;{{msg}}&lt;/div&gt;"
-                msg: "输入点什么?"
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "span#msg",
+        model: {
+            show "&lt;div&gt;{{msg}}&lt;/div&gt;"
+            msg: "输入点什么?"
+        }
+    });
+    </code>
     </pre>
     <pre>
-        <code class="text">
-        输入点什么?
-        </code>
+    <code class="text">
+    输入点什么?
+    </code>
     </pre>
 </div>
 
 
 
-<div>
-    <h6>
+<div id="条件">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         条件 @when
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-        &lt;div id=&quot;msg&quot;&gt;
-            @when(show,{
-                &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
-            })
-        &lt;/div&gt;
-        </code>
+    <code class="html">
+    &lt;div id=&quot;msg&quot;&gt;
+        @when(show,{
+            &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
+        })
+    &lt;/div&gt;
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "div#msg",
-            model: {
-                msg: "输入点什么?",
-                show : true
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "div#msg",
+        model: {
+            msg: "输入点什么?",
+            show : true
+        }
+    });
+    </code>
     </pre>
     <pre>
         <code class="text">
@@ -89,32 +102,32 @@
 
 
 
-<div>
-    <h6 id="条件分支">
+<div id="条件分支">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         条件分支 @else
 
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-        &lt;div id=&quot;msg&quot;&gt;
-            @when(show,{
-                &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
-                @else
-                hello wold ！
-            })
-        &lt;/div&gt;
-        </code>
+    <code class="html">
+    &lt;div id=&quot;msg&quot;&gt;
+        @when(show,{
+            &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
+            @else
+            hello wold ！
+        })
+    &lt;/div&gt;
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "div#msg",
-            model: {
-                msg: "输入点什么?",
-                show : true
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "div#msg",
+        model: {
+            msg: "输入点什么?",
+            show : true
+        }
+    });
+    </code>
     </pre>
     <pre>
         <code class="text">
@@ -128,45 +141,45 @@
 
 
 
-<div>
-    <h6 id="循环">
+<div id="循环">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         循环 @each
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-            &lt;ul id=&quot;ul&quot;&gt;
-                @each(li:ul,{
-                    &lt;li&gt;
-                        {{ li.text }}
-                    &lt;/li&gt;
-                })
-            &lt;/ul&gt;
-        </code>
+    <code class="html">
+        &lt;ul id=&quot;ul&quot;&gt;
+            @each(li:ul,{
+                &lt;li&gt;
+                    {{ li.text }}
+                &lt;/li&gt;
+            })
+        &lt;/ul&gt;
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "ul#ul",
-            model: {
-                ul: [{
-                    text :"View.js"
-                },{
-                    text :"Vue.js"
-                },{
-                    text :"React.js"
-                }]
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "ul#ul",
+        model: {
+            ul: [{
+                text :"View.js"
+            },{
+                text :"Vue.js"
+            },{
+                text :"React.js"
+            }]
+        }
+    });
+    </code>
     </pre>
     <pre>
-        <code class="text">
-                <ul>
-                    <li>View.js</li>
-                    <li>Vue.js</li>
-                    <li>React.js</li>
-                </ul>
-        </code>
+    <code class="text">
+            <ul>
+                <li>View.js</li>
+                <li>Vue.js</li>
+                <li>React.js</li>
+            </ul>
+    </code>
     </pre>
     </p>
 </div>
@@ -175,83 +188,83 @@
 
 
 
-<div>
-    <h6 id="循环">
+<div id="循环属性">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         循环属性 each
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
+    <code class="html">
+    &lt;ul id=&quot;ul&quot;&gt;
+        &lt;li each=&quot;text:index:ul&quot;&gt;
+            {{ index + 1 }}. {{ text }}
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    </code>
+    </pre>
+    <pre>
+    <code class="code">
+    new View({
+        view: "ul#ul",
+        model: {
+            ul: ["View.js","Vue.js","React.js"]
+        }
+    });
+    </code>
+    </pre>
+    <pre>
+    <code class="text">
+    <ul>
+        <li>1.View.js</li>
+        <li>2.Vue.js</li>
+        <li>3.React.js</li>
+    </ul>
+    </code>
+    </pre>
+</div>
+
+
+
+
+<div id="多层嵌套">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
+        多层嵌套
+    </h2>
+    <pre>
+    <code class="html">
+    @each(item:ul,{
         &lt;ul id=&quot;ul&quot;&gt;
             &lt;li each=&quot;text:index:ul&quot;&gt;
-                {{ index + 1 }}. {{ text }}
+                @when(index==1,{
+                    {{index + "." + text }}
+                    @else
+                    {{index}}. hello wold ！
+                })
             &lt;/li&gt;
         &lt;/ul&gt;
-        </code>
+    })
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "ul#ul",
-            model: {
-                ul: ["View.js","Vue.js","React.js"]
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "ul#ul",
+        model: {
+            ul: ["View.js","Vue.js"]
+        }
+    });
+    </code>
     </pre>
     <pre>
-        <code class="text">
-        <ul>
-            <li>1.View.js</li>
-            <li>2.Vue.js</li>
-            <li>3.React.js</li>
-        </ul>
-        </code>
-    </pre>
-</div>
-
-
-
-
-<div>
-    <h6 id="循环">
-        多层嵌套
-    </h6>
-    <pre>
-        <code class="html">
-        @each(item:ul,{
-            &lt;ul id=&quot;ul&quot;&gt;
-                &lt;li each=&quot;text:index:ul&quot;&gt;
-                    @when(index==1,{
-                        {{index + "." + text }}
-                        @else
-                        {{index}}. hello wold ！
-                    })
-                &lt;/li&gt;
-            &lt;/ul&gt;
-        })
-        </code>
-    </pre>
-    <pre>
-        <code class="code">
-        new View({
-            view: "ul#ul",
-            model: {
-                ul: ["View.js","Vue.js"]
-            }
-        });
-        </code>
-    </pre>
-    <pre>
-        <code class="text">
-        <ul>
-            <li>0.View.js</li>
-            <li>1.hello wold !</li>
-        </ul>
-        <ul>
-            <li>0.View.js</li>
-            <li>1.hello wold !</li>
-        </ul>
-        </code>
+    <code class="text">
+    <ul>
+        <li>0.View.js</li>
+        <li>1.hello wold !</li>
+    </ul>
+    <ul>
+        <li>0.View.js</li>
+        <li>1.hello wold !</li>
+    </ul>
+    </code>
     </pre>
 </div>
 
@@ -260,40 +273,75 @@
 
 
 
-<div>
-    <h6 id="用户输入">
+<div id="用户输入">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         用户输入
-    </h6>
+    </h2>
     <pre>
-        <code class="html">
-        &lt;div id=&quot;input&quot;&gt;
-            &lt;div&gt; {{text}} &lt;/div&gt;
-            &lt;input value=&quot;{{text}}&quot;/&gt;
-        &lt;/div&gt;
-        </code>
+    <code class="html">
+    &lt;div id=&quot;input&quot;&gt;
+        &lt;div&gt; {{text}} &lt;/div&gt;
+        &lt;input value=&quot;{{text}}&quot;/&gt;
+    &lt;/div&gt;
+    </code>
     </pre>
     <pre>
-        <code class="code">
-        new View({
-            view: "div#input",
-            model: {
-                text:"输入点什么?"
-            }
-        });
-        </code>
+    <code class="code">
+    new View({
+        view: "div#input",
+        model: {
+            text:"输入点什么?"
+        }
+    });
+    </code>
     </pre>
-    <!-- <code>
+     <code class="text">
     <div id="input">
         <div> {{ text }} </div>
         <input class="form-control" value="{{text}}" />
     </div>
-    <script>
+    <!--<script>
         new view({
             view: "div#input",
             model: {
                 text: "输入点什么?"
             }
         });
-    </script>
-    </code> -->
+    </script> -->
+    </code>
+</div>
+
+
+
+<div id="组件">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
+        组件
+    </h2>
+    <pre>
+    <code class="html">
+    &lt;view&gt; {{@ form }} &lt;/view&gt;
+    </code>
+    </pre>
+    <pre>
+    <code class="code">
+    var form = new View({
+        "@view": "&lt;input class='form-control' value='{{msg}}' /&gt;",
+        model: {
+            msg: "输入点什么?"
+        }
+    });
+
+    var chapter = new View({
+        view: "view",
+        model: {
+            form: form
+        }
+    });
+    </code>
+    </pre>
+    <pre>
+    <code class="text">
+    输入点什么?
+    </code>
+    </pre>
 </div>
