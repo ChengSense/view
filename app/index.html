@@ -10,8 +10,6 @@
     <script src="https://cdn.bootcss.com/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/highlight/atom-one-light.css">
-    <script src="https://res.wx.qq.com/open/libs/weuijs/1.0.0/weui.min.js"></script>
-    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
     <script src="/js/highlight.pack.js"></script>
     <script src="/js/jquery-3.2.1.js"></script>
     <script src="/js/view.2.9.js"></script>
@@ -19,7 +17,7 @@
 
 <body>
     <nav class="navbar navbar-expand-lg fixed-top nav-header">
-        <a class="navbar-brand" href="">view.js</a>
+        <a class="navbar-brand" href=""><h1>view.js</h1></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -69,339 +67,73 @@
         <div class="row">
             <div class="col-md-9 col-main" style="min-height: calc(100vh - 96px);">
                 <div class="tab-content" id="v-pills-tabContent">
-                    <div class="tab-pane fade" id="v-pills-home">
-                        <p>
-                            <h5>View.js 是什么</h5>
-                            <p>
-                                View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
-                                View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
-                                另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue 也完全能够为复杂的单页应用程序提供驱动。 
-                                如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
-                            </p>
-                        </p>
-                        <pre>
-                            <code class="html">
-                                &lt;div class=&quot;massage&quot;&gt;{{massage}}&lt;/div&gt;
-                            </code>
-                        </pre>
-                        <pre>
-                            <code class="code">
-                                new View({
-                                    view: "div.massage",
-                                    model: {
-                                        massage: "输入点什么?"
-                                    }
-                                });
-                            </code>
-                        </pre>
+                    <div class="tab-pane fade show active" id="v-pills-home">
+                        <chapter-1>
+                            {{>chapter1}} 
+                        </chapter-1>
                     </div>
-                    <div class="tab-pane fade show active" id="v-pills-profile">
-                        <view>
-                            {{>chapters}} 
-                        </view>
+                    <div class="tab-pane fade" id="v-pills-profile">
+                        <chapter-2>
+                            {{>chapter2}} 
+                        </chapter-2>
                     </div>
-                    <div class="tab-pane fade" id="v-pills-messages">
-                        <p>
-                            <h5>View.js 是什么</h5>
-                            <p>
-                                View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
-                                View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
-                                另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue 也完全能够为复杂的单页应用程序提供驱动。
-                                如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
-                            </p>
-                        </p>
-                        <pre>
-                            <code class="html">
-                                &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
-                            </code>
-                        </pre>
-                        <pre>
-                            <code class="code">
-                                new View({
-                                    view: "div.massage",
-                                    model: {
-                                        massage: "输入点什么?"
-                                    }
-                                });
-                            </code>
-                        </pre>
-                    </div>
-                    <div class="tab-pane fade" id="v-pills-settings">
-                        <p>
-                            <h5>View.js 是什么</h5>
-                            <p>
-                                View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
-                                View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
-                                另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue 也完全能够为复杂的单页应用程序提供驱动。
-                                如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
-                            </p>
-                        </p>
-                        <pre>
-                            <code class="html">
-                                &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
-                            </code>
-                        </pre>
-                        <pre>
-                            <code class="code">
-                                new View({
-                                    view: "span.msg",
-                                    model: {
-                                        massage: "输入点什么?"
-                                    }
-                                });
-                            </code>
-                        </pre>
+                    <div class="tab-pane fade" id="v-pills-advanced">
+                        <chapter-3>
+                            {{>chapter3}} 
+                        </chapter-3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <ul class="nav flex-column nav-pills nav-list" style="margin-top: 100px;">
+                <ul id="nav-list" class="nav flex-column nav-pills nav-list" style="margin-top: 100px;">
                     <li>
                         <a class="nav-link" data-toggle="pill" href="#v-pills-home">
-                            介绍
+                            <span data-toggle="collapse" data-parent="#nav-list" href="#nav-link1" class="dropdown-toggle">
+                                介绍
+                            </span>
                         </a>
+                        <div id="nav-link1" class="collapse show" style="list-style-type:none;padding-left: 0px;">
+                            <a class="nav-link-item" href="#插值">什么是View.js</a>
+                            <a class="nav-link-item" href="#插值">开始</a>
+                        </div>
                     </li>
                     <li>
                         <a class="nav-link" data-toggle="pill" href="#v-pills-profile">
-                            <span data-toggle="collapse" href="#nav-link">
+                            <span data-toggle="collapse" data-parent="#nav-list" href="#nav-link2" class="dropdown-toggle">
                                 语法
                             </span>
                         </a>
-                        <ul id="nav-link" class="collapse" style="list-style-type:none;">
-                            <li>
-                                <a class="nav-link" href="#插值">插值</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#插值html片段">插值html片段</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#条件">条件</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#条件分支">条件分支</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#循环">循环</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#循环属性">循环属性</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#多层嵌套">多层嵌套</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#用户输入">用户输入</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="#组件">组件</a>
-                            </li>
-                        </ul>
+                        <div id="nav-link2" class="collapse" style="list-style-type:none;padding-left: 0px;">
+                            <a class="nav-link-item" href="#插值">插值</a>
+                            <a class="nav-link-item" href="#插值html片段">插值html片段</a>
+                            <a class="nav-link-item" href="#条件">条件</a>
+                            <a class="nav-link-item" href="#条件分支">条件分支</a>
+                            <a class="nav-link-item" href="#循环">循环</a>
+                            <a class="nav-link-item" href="#循环属性">循环属性</a>
+                            <a class="nav-link-item" href="#多层嵌套">多层嵌套</a>
+                            <a class="nav-link-item" href="#用户输入">用户输入</a>
+                            <a class="nav-link-item" href="#组件">组件</a>
+                        </div>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-toggle="pill" href="#v-pills-advanced">
+                            <span data-toggle="collapse" data-parent="#nav-list" href="#nav-link3" class="dropdown-toggle">
+                                高级
+                            </span>
+                        </a>
+                        <div id="nav-link3" class="collapse" style="list-style-type:none;padding-left: 0px;">
+                            <a class="nav-link-item" href="#插值">插值</a>
+                            <a class="nav-link-item" href="#插值html片段">插值html片段</a>
+                            <a class="nav-link-item" href="#条件">条件</a>
+                            <a class="nav-link-item" href="#条件分支">条件分支</a>
+                            <a class="nav-link-item" href="#循环">循环</a>
+                            <a class="nav-link-item" href="#循环属性">循环属性</a>
+                            <a class="nav-link-item" href="#多层嵌套">多层嵌套</a>
+                            <a class="nav-link-item" href="#用户输入">用户输入</a>
+                            <a class="nav-link-item" href="#组件">组件</a>
+                        </div>
                     </li>
                 </ul>
-
-
-                <ul>
-                        <li class="">
-                            <div class="weui-flex js_category">
-                                <p class="weui-flex__item">表单</p>
-                                <img src="./images/icon_nav_form.png" alt="">
-                            </div>
-                            <div class="page__category js_categoryInner" data-height="225" style="">
-                                <div class="weui-cells page__category-content">
-                                    <a class="weui-cell weui-cell_access js_item" data-id="button" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Button</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="input" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Input</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="list" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>List</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="slider" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Slider</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="uploader" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Uploader</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="">
-                            <div class="weui-flex js_category">
-                                <p class="weui-flex__item">基础组件</p>
-                                <img src="./images/icon_nav_layout.png" alt="">
-                            </div>
-                            <div class="page__category js_categoryInner" data-height="495" style="">
-                                <div class="weui-cells page__category-content">
-                                    <a class="weui-cell weui-cell_access js_item" data-id="article" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Article</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="badge" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Badge</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="flex" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Flex</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="footer" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Footer</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="gallery" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Gallery</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="grid" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Grid</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="icons" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Icons</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="loadmore" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Loadmore</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="panel" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Panel</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="preview" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Preview</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="progress" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Progress</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="">
-                            <div class="weui-flex js_category">
-                                <p class="weui-flex__item">操作反馈</p>
-                                <img src="./images/icon_nav_feedback.png" alt="">
-                            </div>
-                            <div class="page__category js_categoryInner" data-height="225" style="">
-                                <div class="weui-cells page__category-content">
-                                    <a class="weui-cell weui-cell_access js_item" data-id="actionsheet" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Actionsheet</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="dialog" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Dialog</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="msg" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Msg</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="picker" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Picker</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="toast" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Toast</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="">
-                            <div class="weui-flex js_category">
-                                <p class="weui-flex__item">导航相关</p>
-                                <img src="./images/icon_nav_nav.png" alt="">
-                            </div>
-                            <div class="page__category js_categoryInner">
-                                <div class="weui-cells page__category-content">
-                                    <a class="weui-cell weui-cell_access js_item" data-id="navbar" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Navbar</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                    <a class="weui-cell weui-cell_access js_item" data-id="tabbar" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Tabbar</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="">
-                            <div class="weui-flex js_category">
-                                <p class="weui-flex__item">搜索相关</p>
-                                <img src="./images/icon_nav_search.png" alt="">
-                            </div>
-                            <div class="page__category js_categoryInner">
-                                <div class="weui-cells page__category-content">
-                                    <a class="weui-cell weui-cell_access js_item" data-id="searchbar" href="javascript:;">
-                                        <div class="weui-cell__bd">
-                                            <p>Search Bar</p>
-                                        </div>
-                                        <div class="weui-cell__ft"></div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="">
-                            <div class="weui-flex js_item" data-id="layers">
-                                <p class="weui-flex__item">层级规范</p>
-                                <img src="./images/icon_nav_z-index.png" alt="">
-                            </div>
-                        </li>
-                    </ul>
             </div>
         </div>
     </main>
@@ -409,5 +141,5 @@
         遵循 MIT 开源协议 Copyright © 2014-2017 Evan You
     </footer>
 </body>
-<script src="/chapter.js"></script>
+<script src="/index.js"></script>
 </html>
