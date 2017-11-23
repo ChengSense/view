@@ -1,25 +1,29 @@
-<div id="高级">
-    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">View.js 是什么</h2>
+<div id="介绍">
+    <h3 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">view.js 是什么</h3>
     <p>
-        View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
-        View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
-        另一方面，当与单文件组件和 Vue 生态系统支持的库结合使用时，Vue 也完全能够为复杂的单页应用程序提供驱动。
-        如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+        view.js 是一个轻量级构建用户界面的MVVM框架。与其他框架的不同是，它及其简单，无复杂的指令，以原生的的HTML代码或者文本为模板，以数据驱动视图。
+        小而美，模板既html代码，自然无违和感，如泼墨山水；HTML，JS和分离便于后期代码的维护，缩短维护的成本。
+        借用面向对象的语言，一切皆对象，view.js里一切皆插值，非常容易与第三方库或既有项目整合。
+        支持组件化开发和其他优秀的库结合使用时，View完全能够为复杂的单页应用程序提供驱动。
+    </p>
+</div>
+
+<div id="兼容性">
+    <h3 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">兼容性</h3>
+    <p>
+        由于采用了最新的HTML和es6的某些标准，不支持低版本的浏览器，如IE10以下本版，但是支持最新主流的桌面浏览器，和移动浏览器
+    </p>
+</div>
+
+<div id="开始">
+    <h3 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">开始</h3>
+    <p>
+        在页面的开头引入View类库
     </p>
     <pre>
-        <code class="html">
-            &lt;span&gt;Message: {{ msg }}&lt;/span&gt;
-        </code>
-    </pre>
-    <pre>
-        <code class="code">
-            new View({
-                view: "div.massage",
-                model: {
-                    massage: "输入点什么?"
-                }
-            });
-        </code>
+    <code class="code">
+    &lt;script src="/js/view.2.9.js"&gt;&lt;/script&gt;
+    </code>
     </pre>
 </div>
 
