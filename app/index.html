@@ -16,53 +16,76 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg fixed-top nav-header">
-        <a class="navbar-brand" href=""><h1>view.js</h1></a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="">首页
-                        <span class="sr-only">(current)</span>
+    <header class="container-fluid  fixed-top">
+        <div class="row">
+            <div class="col-md-9">
+                <nav class="navbar navbar-expand-lg" style="max-width: 800px;margin: 0px auto;padding: .5rem 0rem;">
+                    <a class="navbar-brand" href="">
+                        <h2>view.js</h2>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">学习</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        生态系统
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#">Action</a>
-                        <a class="dropdown-item" href="#">Another action</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Something else here</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item active">
+                                <a class="nav-link" href="">首页
+                                    <span class="sr-only">(current)</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">学习</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    生态系统
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="#">Action</a>
+                                    <a class="dropdown-item" href="#">Another action</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#">Something else here</a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    实例
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="#">Action</a>
+                                    <a class="dropdown-item" href="#">Another action</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#">Something else here</a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">团队</a>
+                            </li>
+                        </ul>
+                        <form class="form-inline search-form">
+                            <button class="search-btn" type="submit">搜索</button>
+                            <input class="search-input" type="search" placeholder="" aria-label="Search">
+                        </form>
                     </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        实例
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#">Action</a>
-                        <a class="dropdown-item" href="#">Another action</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Something else here</a>
+                </nav>
+            </div>
+            <div class="col-md-3">
+                <nav class="navbar navbar-expand-lg" style="margin: 0px auto;padding: .5rem 0rem;height: 72px;line-height: 72px;">
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">版本 v2.9</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://github.com/sensese/view">GitHub</a>
+                            </li>
+                        </ul>
                     </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">团队</a>
-                </li>
-            </ul>
-            <form class="form-inline search-form">
-                <button class="search-btn" type="submit">搜索</button>
-                <input class="search-input" type="search" placeholder="" aria-label="Search">
-            </form>
+                </nav>
+            </div>
         </div>
-    </nav>
+    </header>
+    
     <main class="container-fluid">
         <div class="row">
             <div class="col-md-9 col-main" style="min-height: calc(100vh - 96px);">
@@ -105,7 +128,6 @@
                             </span>
                         </a>
                         <div id="nav-link2" class="collapse" style="list-style-type:none;padding-left: 0px;">
-                            <a class="nav-link-item" href="#基础语法">基础语法</a>
                             <a class="nav-link-item" href="#插值">插值</a>
                             <a class="nav-link-item" href="#插值html片段">插值html片段</a>
                             <a class="nav-link-item" href="#条件">条件</a>

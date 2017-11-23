@@ -2,15 +2,15 @@ body{
     overflow-y: scroll;
 }
 
-.nav-header {
+header {
 	background-color: rgb(255, 255, 255);
 	box-shadow: 0 0 1px rgba(0, 0, 0, 0.25);
 	transition: background-color 0.3s ease-in-out;
 }
 
 .nav-list {
-  position: fixed;
-  right: calc(100vw*0.25-200px);
+  	position: fixed;
+  	right: calc(100vw*0.25-200px);
 	width: 200px;
 }
 
@@ -23,7 +23,7 @@ body{
 	color: #2c3e50;
 	outline: none;
 	border-radius: 15px;
-	margin-right: 210px;
+	margin-right: 10px;
 	transition: border-color 0.2s ease;
 	background: #fff url(../images/search.png) 8px 5px no-repeat;
 	background-size: 20px;
@@ -58,7 +58,7 @@ body{
 main {
 	background-color: rgba(255, 255, 255, 0.555);
 	height: calc(100vh - 96px);
-	margin-top: 82px;
+	margin-top: 72px;
 }
 
 .col-main {
@@ -75,10 +75,6 @@ footer {
 	box-shadow: 0 0 1px rgba(0, 0, 0, 0.25);
 	transition: background-color 0.3s ease-in-out;
 	background-color: rgb(255, 255, 255);
-}
-
-.navbar-brand {
-	margin-left: 300px;
 }
 
 .tab-pane {
