@@ -1,22 +1,16 @@
-<div id="介绍">
-    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
-        介绍
+
+
+<div id="属性绑定">
+    <h2>
+        属性绑定
     </h2>
     <p>
-        View.js 是一套构建用户界面的渐进式框架。与其他重量级框架不同的是，View 采用自底向上增量开发的设计。
-        View 的核心库只关注视图层，它不仅易于上手，还便于与第三方库或既有项目整合。
-        另一方面，当与单文件组件和 View 生态系统支持的库结合使用时，View 也完全能够为复杂的单页应用程序提供驱动。
-        如果你是有经验的前端开发者，想知道 View.js 与其它库/框架的区别，查看对比其它框架
+        操作HTML元素的属性的是一个常见的需求，正如一切皆插值的理念一样的，View很简单的赋予你对元素属性操作的能力，然而这一切很简单。
+        让我们展示一个简单的例子，对元素属性绑定控制元素的隐藏和展示。
     </p>
-</div>
-
-<div id="开始">
-    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
-            开始
-    </h2>
     <pre>
     <code class="html">
-    &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+    &lt;span id=&quot;msg&quot; style=&quot;display:{{show?&#39;block&#39;:&#39;none&#39;}}&quot;&gt;Message: {{ msg }}&lt;/span&gt;
     </code>
     </pre>
     <pre>
@@ -25,12 +19,117 @@
         view: "span#msg",
         model: {
             msg: "输入点什么?"
+            show: true
         }
     });
     </code>
     </pre>
     <pre>
-    <code class="text">
+    <code class="html text">
+    输入点什么?
+    </code>
+    </pre>
+    <p>
+        在<code>{{}}</code>指令里你可以使用“可以计算的表达式”，前提是要符合属性的规范，在规范里一切可以工作的很好
+    </p>
+    <P><h5>亦或是</h5></P>
+    <pre>
+    <code class="js cs">
+    .show{
+        display:block;
+    }
+    .hide{
+        display:none;
+    }
+    </code>
+    </pre>
+    <pre>
+    <code class="html">
+    &lt;span id=&quot;msg&quot; class=&quot;bg {{show}} {{some}}&quot;&gt;Message: {{ msg }}&lt;/span&gt;
+    </code>
+    </pre>
+    <pre>
+    <code class="code">
+    new View({
+        view: "span#msg",
+        model: {
+            msg: "输入点什么?"
+            show: "hide",
+            some: ""
+        }
+    });
+    </code>
+    </pre>
+    <pre>
+    <code class="html text">
+    
+    </code>
+    </pre>
+    <p>
+        我们可以看到View如此简单的赋予你，超强的靠控制力，即使你的定义多个变量绑定的class也毫不费力；
+        上面的例子我们定定义了毫无用处的 class：some 然而并不影响最终的展示结果。
+    </p>
+</div>
+
+
+<div id="内联元素">
+    <h2>
+        内联元素
+    </h2>
+    <p>
+        有内联关系的标签如：table > tbody > tr > td之间无法写文本的请用下面指令替代，适用一切标签之间
+    </p>
+    <pre>
+    <code class="html">
+    &lt;!@each( 变量：主键: 数组||对象 ,{&gt;
+
+        业务逻辑
+
+    &lt;!})&gt;
+
+    &lt;!@when( 布尔表达式 ,{&gt; 
+
+        业务逻辑
+
+        &lt;!@else&gt;
+
+        业务逻辑
+
+    &lt;!})&gt;
+
+    </code>
+    </pre>
+</div>
+
+
+<div id="组件">
+    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
+        组件
+    </h2>
+    <pre>
+    <code class="html">
+    &lt;view&gt; {{@ form }} &lt;/view&gt;
+    </code>
+    </pre>
+    <pre>
+    <code class="code">
+    var form = new View({
+        "@view": "&lt;input class='form-control' value='{{msg}}' /&gt;",
+        model: {
+            msg: "输入点什么?"
+        }
+    });
+
+    var chapter = new View({
+        view: "view",
+        model: {
+            form: form
+        }
+    });
+    </code>
+    </pre>
+    <pre>
+    <code class="html text">
     输入点什么?
     </code>
     </pre>

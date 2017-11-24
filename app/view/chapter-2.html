@@ -2,6 +2,20 @@
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         插值
     </h2>
+    <P>
+        插值用于把绑定相应变量的内容以文本的格式输出到视图和其他的框架一样用双大括号来表示。
+    </P>
+    <P>
+        语法
+    </P>
+    <pre>
+    <code class="html">
+    {{ 表达式 }}
+    </code>
+    </pre>
+    <p>
+        示例
+    </p>
     <pre>
     <code class="html">
     &lt;span id=&quot;msg&quot;&gt;Message: {{ msg }}&lt;/span&gt;
@@ -18,17 +32,28 @@
     </code>
     </pre>
     <pre>
-    <code class="text">
+    <code class="html text">
     输入点什么?
     </code>
     </pre>
 </div>
 
 
-<div id="插值html片段">
+<div id="插值HTML">
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
-        插值html片段
+        插值HTML
     </h2>
+    <P>
+        插值指令默认的情况下会将绑定的内容解析成文本的格式；在某些情况下需要向视图输出HTML代码，默认的插值指令不会得到你想要的结果。
+        这里可以使用插值HTML指令。HTML代码里同样可以使用各种指令，View可以将HTML代码纳入其的生命管理周期。
+    </P>
+    <p>语法</p>
+    <pre>
+    <code class="html">
+    {{> show }}
+    </code>
+    </pre>
+    <p>示例</p>
     <pre>
     <code class="html">
     &lt;span id=&quot;msg&quot;&gt;Message: {{> show }}&lt;/span&gt;
@@ -46,10 +71,14 @@
     </code>
     </pre>
     <pre>
-    <code class="text">
+    <code class="html text">
     输入点什么?
     </code>
     </pre>
+    <p>
+        关于<code>{{ }}和{{> }}</code>为什么不合并成统一的一个，<code>{{> }}</code>指令如果滥用可能会有HTML注入的风险，分成两个指令这样可以轻松的控制输出的粒度。
+        可以提升控制的粒度，同时可以避免HTML注入的风险，另外解析文本比解析HTML的代价小很多，有助于性能的提升，细分成两个乐而不为呢。
+    </p>
 </div>
 
 
@@ -57,6 +86,21 @@
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         条件 @when
     </h2>
+    <p>
+        View里的条件指令，相对于其他的js框架的条件的指令更容易理解（View的诞生其实和AngularJS糟糕难用的ng-if指令，多少有点关系。
+        在某个风和日丽的上午或者下午，当然现在记不太清了，当用到ng-if指令实现某个效果的时候，被坑了一些时间，现在想想当时心里估计有1w个曹尼玛奔腾而过，
+        当时就在想设计ng-if指令的人脑子是不是坏掉了，已于常人难以理解。于是对其好感度急剧下降，在想有没有一套更简单的前端框架，百度，谷歌然而并没有找到；
+        随后在某个晚上开始撸起代码）。
+    </p>
+    <P>语法</P>
+    <pre>
+    <code class="html">
+    @when(布尔表达式,{
+        业务逻辑
+    })
+    </code>
+    </pre>
+    <P>示例</P>
     <pre>
     <code class="html">
     &lt;div id=&quot;msg&quot;&gt;
@@ -78,7 +122,7 @@
     </code>
     </pre>
     <pre>
-        <code class="text">
+        <code class="html text">
         输入点什么?
         </code>
     </pre>
@@ -88,8 +132,19 @@
 <div id="条件分支">
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         条件分支 @else
-
     </h2>
+    <p><code>@else</code> 要配合<code>@when</code> 指令一起使用</p>
+    <p>语法</p>
+    <pre>
+    <code class="html">
+    @when(布尔表达式,{
+        业务逻辑
+        @else
+        业务逻辑
+    })
+    </code>
+    </pre>
+    <p>示例</p>
     <pre>
     <code class="html">
     &lt;div id=&quot;msg&quot;&gt;
@@ -113,10 +168,14 @@
     </code>
     </pre>
     <pre>
-        <code class="text">
-        hello wold ！
-        </code>
+    <code class="html text">
+    hello wold ！
+    </code>
     </pre>
+    <p>
+        由于View没有提供，将来也可能不会提供 else if 类似的语法；变通的可以嵌套多个 <code>@when( ,{ @else })</code> 同样可以达到 else if 一样的效果。View的理念就是简单就好，尽量减少指令的数量，
+        减少开发者的脑容量，把学习成本降到最低。
+    </p>
 </div>
 
 
@@ -124,6 +183,14 @@
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         循环 @each
     </h2>
+    <p>语法</p>
+    <pre>
+    <code class="html">
+        @each(变量：主键(可以省略)：数组||对象,{
+            业务逻辑
+        })
+    </code>
+    </pre>
     <pre>
     <code class="html">
         &lt;ul id=&quot;ul&quot;&gt;
@@ -152,14 +219,16 @@
     </code>
     </pre>
     <pre>
-    <code class="text">
-            <ul>
-                <li>View.js</li>
-                <li>Vue.js</li>
-                <li>React.js</li>
-            </ul>
+    <code class="html text">
+        <ul>
+            <li>View.js</li>
+            <li>Vue.js</li>
+            <li>React.js</li>
+        </ul>
     </code>
     </pre>
+    <p>
+         注意点，循环表达式的参数 <code>“变量：数组||对象”</code>，如需要对象的主键这可以写成 <code>“变量：主键(可以省略)：数组||对象”</code> 主键的定义不是必须的，不需要的话可以省略
     </p>
 </div>
 
@@ -168,6 +237,14 @@
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         循环属性 each
     </h2>
+    <p>循环属性 each请参考 @each指令用法并无不同</p>
+    <p>语法</p>
+    <pre>
+    <code class="html">
+        &lt;div each=&quot;item:key:list&quot;&gt;&lt;/ldiv&gt;
+    </code>
+    </pre>
+    <p>示例</p>
     <pre>
     <code class="html">
     &lt;ul id=&quot;ul&quot;&gt;
@@ -188,7 +265,7 @@
     </code>
     </pre>
     <pre>
-    <code class="text">
+    <code class="html text">
     <ul>
         <li>1.View.js</li>
         <li>2.Vue.js</li>
@@ -203,6 +280,8 @@
     <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
         多层嵌套
     </h2>
+    <p>多层嵌套，通过复杂的指令组合，完成想你所想</p>
+    <p>示例</p>
     <pre>
     <code class="html">
     @each(item:ul,{
@@ -229,7 +308,7 @@
     </code>
     </pre>
     <pre>
-    <code class="text">
+    <code class="html text">
     <ul>
         <li>0.View.js</li>
         <li>1.hello wold !</li>
@@ -265,11 +344,11 @@
     });
     </code>
     </pre>
-     <code class="text">
-    <div id="input">
-        <div> {{ text }} </div>
-        <input class="form-control" value="{{text}}" />
-    </div>
+     <code class="html text">
+        <div id="input">
+            <div> {{ text }} </div>
+            <input class="form-control" value="{{text}}" />
+        </div>
     <!--<script>
         new view({
             view: "div#input",
@@ -279,38 +358,4 @@
         });
     </script> -->
     </code>
-</div>
-
-
-<div id="组件">
-    <h2 style="border-bottom: 1px solid #ddd;padding-bottom: .5rem;">
-        组件
-    </h2>
-    <pre>
-    <code class="html">
-    &lt;view&gt; {{@ form }} &lt;/view&gt;
-    </code>
-    </pre>
-    <pre>
-    <code class="code">
-    var form = new View({
-        "@view": "&lt;input class='form-control' value='{{msg}}' /&gt;",
-        model: {
-            msg: "输入点什么?"
-        }
-    });
-
-    var chapter = new View({
-        view: "view",
-        model: {
-            form: form
-        }
-    });
-    </code>
-    </pre>
-    <pre>
-    <code class="text">
-    输入点什么?
-    </code>
-    </pre>
 </div>
