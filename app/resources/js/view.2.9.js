@@ -606,9 +606,8 @@
 		var args = arguments[2] ? arg : obj;
 		if (obj.length != undefined) {
 			var length = obj.length;
-			for (var i = 0; i < length; i++) {
-				if (obj.length != length)
-					i-- , length = obj.length;
+			for (var i = 0; i < length; i = i + 1 - length + obj.length) {
+				length = obj.length;
 				if (obj.hasOwnProperty(i)) {
 					var data = obj[i];
 					if (methd.call(data, data, i, args))
