@@ -137,7 +137,7 @@
 						children.delete(node.clas);
 						childNodes.clear();
 						if (children.size == 0)
-							eval("delete cache" + patha(node.path));
+							delete cache["@" + node.path];
 					}
 				}
 				if (node.childNodes)
@@ -157,7 +157,7 @@
 						children.delete(node.clas);
 						childNodes.clear();
 						if (children.size == 0)
-							eval("delete cache" + patha(node.path));
+							delete cache["@" + node.path];
 					}
 				}
 				if (node.childNodes)
@@ -210,13 +210,6 @@
 				return _scope["@" + _express] = _scope["@" + _express] || new Map();
 			} catch (e) {
 				return undefined;
-			}
-		}
-		function patha(_express) {
-			try {
-				return "['@" + _express + "']";
-			} catch (err) {
-				console.log(err)
 			}
 		}
 		function init(dom) {
@@ -917,8 +910,8 @@
 					var data = method.apply(this, arguments);
 					var watch = this.watch;
 					if (watch) {
-						var params = [];
-						while (i < l) params.push(i++);
+						var params = [], m = new Number(i) + new Number(l);
+						while (i < m) params.push(i++);
 						watch.call(this, name, params);
 					}
 					return data;
