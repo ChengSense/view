@@ -418,6 +418,13 @@
 						value = value[express];
 					});
 					return value;
+				},
+				set(val) {
+					var paths = path.split("."), prop = paths.pop(), value = scope;
+					paths.forEach(function (express) {
+						value = value[express];
+					});
+					value[prop] = val;
 				}
 			});
 		}
@@ -548,12 +555,12 @@
 			var owner = node.ownerElement;
 			owner._express = node.nodeValue.replace($express, "$1");
 			owner.on("change", function handle() {
-				with (scope){
+				with (scope) {
 					eval(owner._express + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "'");
 				}
 			});
 		}
-		observe(app.model, function callSet(name, path) {
+		observe(app.model, function callSet(path) {
 			var nodes = cache["@" + path] || [];
 			slice(nodes).forEach(function (childNodes, clas) {
 				var node = childNodes[0];
@@ -567,7 +574,7 @@
 					resolver[node.resolver](node, node.scope, childNodes, path);
 				});
 			});
-		}, function callGet(name, path) {
+		}, function callGet(path) {
 			$path = path;
 		});
 		resolver[app.view ? "init" : "@view"](app.view, app.model);
@@ -896,15 +903,6 @@
 					return data;
 				};
 				break;
-			case "push":
-				Array.prototype[name] = function () {
-					var data = method.apply(this, arguments);
-					var watch = this.watch;
-					if (watch)
-						watch.call(this, name, [this.length]);
-					return data;
-				};
-				break;
 			case "pop":
 				Array.prototype[name] = function () {
 					var data = method.apply(this, arguments);
@@ -931,65 +929,71 @@
 					var data = method.apply(this, arguments);
 					var watch = this.watch;
 					if (watch)
-						watch.call(this, name);
+						watch.call(this, name, []);
 					return data;
 				};
 				break;
 		}
 	});
-	var observe = function (obj, callSet, callGet) {
-		var _observe = function (target, callSet, callGet, root, oldTarget) {
-			if (Array.isArray(target)) {
-				if (!target.watch)
-					Object.defineProperty(target, "watch", {
-						value: function (name, params) {
-							params.forEach(function (index) {
-								callSet.call(this, index, root + "." + index);
-							}, this);
-							eval("obj" + root.replace(/(\w+)\.?/g, "['$1']") + "=this");
-						}
-					});
-			}
-			if (typeof target == "object" && target != null) {
-				Object.keys(target).forEach(function (prop) {
-					var value = target[prop];
-					var oldValue = oldTarget ? oldTarget[prop] : undefined;
-					if (value == oldValue) {
-						if (value && Object.getOwnPropertyDescriptor(target, prop).set) {
-							return;
-						}
+	var observe = function (target, callSet, callGet) {
+		var _observe = function (object, root, oldObject) {
+			if (Array.isArray(object)) {
+				_array(object, root);
+				for (var prop = 0; prop < object.length; prop++) {
+					if (object.hasOwnProperty(prop)) {
+						_watch(object, prop, root, oldObject);
 					}
-					if (target.hasOwnProperty(prop)) {
-						var path = root ? root + "." + prop : prop;
-						if (!(value instanceof view) && typeof value == "object") {
-							_observe(value, callSet, callGet, path, oldValue);
-						}
-						_watch(target, prop, path);
+				}
+			} else if (typeof object == "object") {
+				for (var prop in object) {
+					if (object.hasOwnProperty(prop)) {
+						_watch(object, prop, root, oldObject);
 					}
-				})
+				}
 			}
-			return target;
+			return object;
 		};
-		var _watch = function (target, prop, path) {
-			var value = target[prop];
-			Object.defineProperty(target, prop, {
+		function _watch(object, prop, root, oldObject) {
+			var value = object[prop];
+			var oldValue = oldObject ? oldObject[prop] : undefined;
+			if (value == oldValue) {
+				if (value && Object.getOwnPropertyDescriptor(object, prop).set) {
+					return;
+				}
+			}
+			var path = root ? root + "." + prop : prop;
+			if (!(value instanceof view) && typeof value == "object") {
+				_observe(value, path, oldValue);
+			}
+			_define(object, prop, path, oldValue);
+		}
+		function _array(object, root) {
+			if (!object.watch)
+				Object.defineProperty(object, "watch", {
+					value: function (name, params) {
+						params.forEach(function (prop) {
+							callSet.call(this, root + "." + prop);
+						}, this);
+						eval("target" + root.replace(/(\w+)\.?/g, "['$1']") + "=this");
+					}
+				});
+		}
+		var _define = function (object, prop, path, oldValue) {
+			var value = object[prop];
+			Object.defineProperty(object, prop, {
 				get() {
-					callGet.call(this, prop, path);
+					callGet.call(this, path);
 					return value;
 				},
 				set(val) {
-					if (typeof value == "object") {
-						var oldValue = value;
-						_observe(value = val, callSet, callGet, path, oldValue);
-						callSet.call(value, prop, path);
-					} else if (value !== val) {
-						callSet.call(value = val, prop, path);
-					}
+					var oldValue = value;
+					_observe(value = val, path, oldValue);
+					callSet.call(value, path, value, oldValue);
 				}
 			});
-			callSet.call(target, prop, path);
+			callSet.call(object, path, value, oldValue);
 		};
-		return new _observe(obj, callSet, callGet);
+		_observe(target);
 	};
 	window.observe = observe;
 	window.query = query;
