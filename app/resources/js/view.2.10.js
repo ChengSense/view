@@ -931,7 +931,6 @@
 					var watch = this.watch;
 					if (watch) watch.open = true;
 					var data = method.apply(this, arguments);
-					var watch = this.watch;
 					if (watch)
 						this.watch = [0];
 					return data;
@@ -952,7 +951,6 @@
 					var watch = this.watch;
 					if (watch) watch.open = true;
 					var data = method.apply(this, arguments);
-					var watch = this.watch;
 					if (watch) {
 						var params = [], m = new Number(i) + new Number(l);
 						while (i < m) params.push(i++);
@@ -966,7 +964,6 @@
 					var watch = this.watch;
 					if (watch) watch.open = true;
 					var data = method.apply(this, arguments);
-					var watch = this.watch;
 					if (watch)
 						this.watch = [];
 					return data;
