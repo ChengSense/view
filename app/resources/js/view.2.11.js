@@ -66,7 +66,7 @@
 					compiler(doc, scope, nodes, { childNodes: node.childNodes, childNode: node.childNode });
 					setComCache(comment, scope, node);
 					comment.after(doc);
-					//console.log(cache);
+					console.log(cache);
 				} catch (e) {
 					console.log(e);
 				}
@@ -84,7 +84,7 @@
 					var doc = views.view;
 					setComCache(comment, scope, node);
 					comment.after(doc);
-					//console.log(cache);
+					console.log(cache);
 				} catch (e) {
 					console.log(e);
 				}
@@ -105,7 +105,7 @@
 					var doc = document.createDocumentFragment();
 					compiler(doc, scope, [node], { childNodes: [], childNode: [] });
 					insert.parentNode.replaceChild(doc, insert);
-					//console.log(cache);
+					console.log(cache);
 				} catch (e) {
 					console.log(e);
 				}
@@ -120,7 +120,7 @@
 					var children = cache["@" + node.path];
 					var nodes = children.get(node.clas);
 					node.content.childNodes.remove(node).push(nodes.last());
-					//console.log(cache);
+					console.log(cache);
 				} catch (e) {
 					console.log(e);
 				}
@@ -562,7 +562,7 @@
 			while (queue.list.length) {
 				var path = queue.list.shift();
 				var node = cache["@" + path];
-				caches[path] = node;
+				if (node) caches[path] = node;
 			}
 			each(caches, function (map, key) {
 				if (map) map.forEach(function (childNodes) {
@@ -570,29 +570,29 @@
 					if (node && node.resolver.match(/(each|html|view)/))
 						return merge(node.childNodes);
 					slice(childNodes).forEach(function (node) {
-						merge(node.childNodes);
+						if (node.childNodes)
+							merge(node.childNodes);
 					});
 				});
 			});
 			function merge(nodes) {
-				if (nodes)
-					nodes.forEach(function (node) {
-						if (node.path) {
-							var children = caches[node.path];
-							if (children) {
-								var childNodes = children.get(node.clas);
-								if (childNodes) {
-									children.delete(node.clas);
-									if (children.size == 0) {
-										delete caches[node.path];
-										delete cache["@" + node.path];
-									}
+				nodes.forEach(function (node) {
+					if (node.path) {
+						var children = caches[node.path];
+						if (children) {
+							var childNodes = children.get(node.clas);
+							if (childNodes) {
+								children.delete(node.clas);
+								if (children.size == 0) {
+									delete caches[node.path];
+									delete cache["@" + node.path];
 								}
 							}
 						}
-						if (node.childNodes)
-							merge(node.childNodes);
-					});
+					}
+					if (node.childNodes)
+						merge(node.childNodes);
+				});
 			}
 			return caches;
 		}
@@ -600,12 +600,8 @@
 			var nodes = cache["@" + path] || [];
 			slice(nodes).forEach(function (childNodes, clas) {
 				var node = childNodes[0];
-				if (node && node.resolver == "each")
+				if (node && node.resolver.match(/(each|html|view)/))
 					return resolver[node.resolver](node, node.scope, childNodes, path);
-				if (node && node.resolver == "html")
-					return resolver[node.resolver](node, node.scope);
-				if (node && node.resolver == "view")
-					return resolver[node.resolver](node, node.scope);
 				slice(childNodes).forEach(function (node) {
 					resolver[node.resolver](node, node.scope, childNodes, path);
 				});
@@ -969,82 +965,140 @@
 				break;
 		}
 	});
-	var observe = function (target, callSet, callGet, caches, queue) {
-		function _observe(object, root, oldObject) {
+
+	function observe(target, callSet, callGet, caches, queue) {
+
+		function watcher(object, root, oldObject) {
+
 			if (Array.isArray(object)) {
-				_array(object, root);
+
+				array(object, root);
+
 				for (var prop = 0; prop < object.length; prop++) {
+
 					if (object.hasOwnProperty(prop)) {
-						_watch(object, prop, root, oldObject);
+
+						walk(object, prop, root, oldObject);
+
 					}
+
 				}
+
 			} else if (typeof object == "object") {
+
 				for (var prop in object) {
+
 					if (object.hasOwnProperty(prop)) {
-						_watch(object, prop, root, oldObject);
+
+						walk(object, prop, root, oldObject);
+
 					}
+
 				}
+
 			}
-			return object;
-		};
-		function _watch(object, prop, root, oldObject) {
-			var value = object[prop];
-			var oldValue = oldObject ? oldObject[prop] : undefined;
-			if (value == oldValue) {
-				if (value && Object.getOwnPropertyDescriptor(object, prop).set) {
-					return;
-				}
-			}
-			var path = root ? root + "." + prop : prop;
-			if (value instanceof view) {
-				_define(object, prop, path, oldValue);
-			} else if (typeof value == "object") {
-				_observe(value, path, oldValue);
-			}
-			_define(object, prop, path, oldValue);
+
 		}
-		function _array(object, root) {
+
+		function array(object, root) {
+
 			if (!object.watch)
+
 				Object.defineProperty(object, "watch", {
-					set(parm) {
-						eval("target" + root.replace(/(\w+)\.?/g, "['$1']") + "=this");
-						parm.forEach(function (prop) {
-							queue.list.push(root + "." + prop);
-						});
-						queue.list.push(root);
-						queue.open = false;
-						each(caches(), function (item, path) {
-							callSet(path);
-						});
-					},
+
 					get() {
+
 						return queue;
-					}
-				});
-		}
-		function _define(object, prop, path, oldValue) {
-			var value = object[prop];
-			Object.defineProperty(object, prop, {
-				set(val) {
-					queue.list = [];
-					var oldValue = value;
-					_observe(value = val, path, oldValue);
-					if (!queue.open) {
-						queue.list.push(path);
-						each(caches(), function (item, path) {
-							callSet(path);
+
+					},
+					set(parm) {
+
+						parm.forEach(function (prop) {
+
+							queue.list.push(root + "." + prop);
+
 						});
+
+						queue.list.push(root), queue.open = false;
+
+						each(caches(), function (item, path) {
+
+							callSet(path);
+
+						});
+
 					}
-				},
+
+				});
+
+		}
+
+		function walk(object, prop, root, oldObject) {
+
+			var value = object[prop], oldValue = (oldObject || {})[prop];
+
+			var path = root ? root + "." + prop : prop;
+
+			if (typeof value != "view" && typeof value == "object") {
+
+				watcher(value, path, oldValue);
+
+			}
+
+			if (value == oldValue && Object.getOwnPropertyDescriptor(object, prop).set) return;
+
+			define(object, prop, path, oldValue);
+
+		}
+
+		function define(object, prop, path, oldValue) {
+
+			var value = object[prop];
+
+			Object.defineProperty(object, prop, {
+
 				get() {
+
 					callGet(path);
+
 					return value;
+
+				},
+
+				set(val) {
+
+					queue.list = [];
+
+					var oldValue = value;
+
+					watcher(val, path, oldValue);
+
+					value = val;
+
+					if (!queue.open) {
+
+						queue.list.push(path);
+
+						each(caches(), function (item, path) {
+
+							callSet(path);
+
+						});
+
+					}
+
 				}
+
 			});
+
 			queue.list.push(path);
-		};
-		_observe(target);
-	};
+
+		}
+
+		watcher(target);
+
+	}
+
 	window.observe = observe;
 	window.query = query;
 	window.each = each;
