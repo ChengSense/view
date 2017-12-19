@@ -632,6 +632,7 @@
 			$path = path;
 		}, caches, queue);
 		resolver[app.view ? "init" : "@view"](app.view, app.model);
+<<<<<<< HEAD
 		proto(this, app);
 		return this;
 	}
@@ -641,6 +642,18 @@
 		return object;
 	}
 	
+=======
+		extend(this, app);
+		return this;
+	}
+	function extend(object, parent) {
+		object.__proto__ = parent;
+		return object;
+	}
+	window.view = view;
+})(window);
+(function () {
+>>>>>>> origin/master
 	function query(express) {
 		try {
 			var doc = document.querySelectorAll(express);
@@ -1169,8 +1182,11 @@
 					},
 					set(parm) {
 
+<<<<<<< HEAD
 						setValue(object, root);
 
+=======
+>>>>>>> origin/master
 						parm.forEach(function (prop) {
 
 							queue.list.push(root + "." + prop);
@@ -1179,6 +1195,10 @@
 
 						queue.list.push(root);
 
+<<<<<<< HEAD
+=======
+						setValue(object, root);
+>>>>>>> origin/master
 
 						each(caches(), function (item, path) {
 
@@ -1306,7 +1326,14 @@
 
 	}
 
+<<<<<<< HEAD
 	window.query = query;
 	window.view = view;
 
+=======
+	window.observe = observe;
+	window.query = query;
+	window.each = each;
+	window.slice = slice;
+>>>>>>> origin/master
 })(window);
