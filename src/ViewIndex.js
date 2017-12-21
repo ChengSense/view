@@ -3,7 +3,9 @@ import { query } from "./ViewElmemt";
 import { observe } from "./ViewObserve";
 import { each, extend, slice, proto } from "./ViewLang";
 import { init, initCompiler, blankOut } from "./ViewInit";
-import { $express, $express1, $express2, $html, $view, $each, $else, $when, $chen,  $break, $word, $word1 } from "./ViewExpress";
+import { classNode, setVariable, binding} from "./ViewHelper";
+import { codex, Code, codes } from "./ViewScopePath";
+import { $express, $express1, $express2, $html, $view, $each, $else, $when, $chen, $break, $word } from "./ViewExpress";
 
 function view(app) {
 	var cache = {}, queue = { open: false, list: [] }, $path;
@@ -209,29 +211,6 @@ function view(app) {
 			return undefined;
 		}
 	}
-	function codex(_express, _scope) {
-		try {
-			_express = "'" + _express.replace($express, "'+($1)+'") + "'";
-			return Code(_express)(_scope);
-		} catch (e) {
-			return undefined;
-		}
-	}
-	function Code(_express) {
-		return new Function('_scope',
-			`with (_scope) {
-				return `+ _express + `;
-			 }`
-		);
-	}
-	function codes(_express, _scope) {
-		try {
-			return _scope["@" + _express] = _scope["@" + _express] || new Map();
-		} catch (e) {
-			return undefined;
-		}
-	}
-
 	function setCache(node, scope, clas, content, inode) {
 		if (!clas.clas) return;
 		switch (clas.clas.nodeType) {
@@ -349,7 +328,6 @@ function view(app) {
 				break;
 		}
 	}
-
 	function commom(node, scope, clas) {
 		each(node.attributes, function (child) {
 			if ($express1.test(child.name)) {
@@ -374,33 +352,6 @@ function view(app) {
 		} else if ($view.test(node.nodeValue)) {
 			resolver.view(clas, scope);
 		}
-	}
-	function classNode(newNode, child) {
-		return {
-			node: newNode,
-			clas: child.clas,
-			children: child.children,
-			scope: child.scope,
-			childNodes: []
-		};
-	}
-	function setVariable(scope, variable, path) {
-		Object.defineProperty(scope, variable, {
-			get() {
-				var value = scope;
-				path.replace($word1, function (express) {
-					value = value[express];
-				});
-				return value;
-			},
-			set(val) {
-				var paths = path.split("."), prop = paths.pop(), value = scope;
-				paths.forEach(function (express) {
-					value = value[express];
-				});
-				value[prop] = val;
-			}
-		});
 	}
 	function compiler(node, iscope, childNodes, content) {
 		each(childNodes, function (child, index, childNodes) {
@@ -523,17 +474,6 @@ function view(app) {
 					break;
 			}
 			childNodes.shift();
-		});
-	}
-	function binding(node, scope) {
-		var owner = node.ownerElement;
-		owner._express = node.nodeValue.replace($express, "$1");
-		owner.on("change", function handle() {
-			new Function('scope',
-				`with (scope) {
-					`+ owner._express + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
-				 }`
-			)(scope);
 		});
 	}
 	function caches() {
