@@ -1,4 +1,5 @@
 import { each } from "./ViewLang";
+import { Path } from "./ViewScopePath";
 
 export function observe(target, callSet, callGet, caches, queue) {
 
@@ -76,15 +77,12 @@ export function observe(target, callSet, callGet, caches, queue) {
 
 		queue.open = false;
 
-		var path = path.split("."), prop = path.pop(), value = target;
+		new Function('scope', 'val',
+			`
+			scope`+ Path(path) + `=val;
 
-		path.forEach(function (express) {
-
-			value = value[express];
-
-		});
-
-		value[prop] = object;
+			`
+		)(target, object);
 
 	}
 
@@ -297,20 +295,20 @@ class Mes extends Map {
 
 		function get(path) {
 
-			var path = path.split("."), object = target;
+			try {
 
-			while (path.length) {
+				return new Function('scope',
+					`
+					return scope`+ Path(path) + `;
+					`
+				)(target);
 
-				var prop = path.shift();
+			} catch (e) {
 
-				object = object[prop];
-
-				if (object == undefined) return;
+				return undefined;
 
 			}
-
-			return object;
-
+			
 		}
 
 	}
