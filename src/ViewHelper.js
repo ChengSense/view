@@ -1,4 +1,5 @@
 import { $word1, $express } from "./ViewExpress";
+import { Path } from "./ViewScopePath";
 
 export function classNode(newNode, child) {
 
@@ -19,34 +20,27 @@ export function classNode(newNode, child) {
 }
 
 export function setVariable(scope, variable, path) {
-
 	Object.defineProperty(scope, variable, {
 
 		get() {
 
-			var value = scope;
-
-			path.replace($word1, function (express) {
-
-				value = value[express];
-
-			});
-
-			return value;
+			return new Function('scope',
+				`
+				return scope`+ Path(path) + `;
+		
+				`
+			)(scope);
 
 		},
 
 		set(val) {
 
-			var paths = path.split("."), prop = paths.pop(), value = scope;
+			new Function('scope', 'val',
+				`
+				scope`+ Path(path) + `=val;
 
-			paths.forEach(function (express) {
-
-				value = value[express];
-
-			});
-
-			value[prop] = val;
+				`
+			)(scope, val);
 
 		}
 
@@ -63,13 +57,10 @@ export function binding(node, scope) {
 	owner.on("change", function handle() {
 
 		new Function('scope',
+			`
+			scope`+ Path(owner._express) + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
 
-			`with (scope) {
-
-				`+ owner._express + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
-
-			 }`
-
+			`
 		)(scope);
 
 	});

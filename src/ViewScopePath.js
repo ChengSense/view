@@ -40,5 +40,19 @@ export function codes(_express, _scope) {
 		return undefined;
 
 	}
-	
+
+}
+
+export function Path(path) {
+
+	try {
+
+		return path.replace(/(\w+)\.?/g, "['$1']");
+
+	} catch (e) {
+
+		return undefined;
+
+	}
+
 }
