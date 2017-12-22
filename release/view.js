@@ -416,77 +416,6 @@ extend(NodeList, {
 	}
 });
 
-var $express = /\{\s*\{>?@?([^\{\}]*)\}\s*\}/g;
-var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
-var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
-var $html = /\{\s*\{\s*>([^\{\}]*)\}\s*\}/;
-var $view = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
-var $each = /(@each)\s*\((.*)\s*,\s*\{/;
-var $when = /(@when)\s*\((.*)\s*,\s*\{/;
-var $else = /(@else)/;
-var $chen = /(@each|@when)\s*\((.*)\s*,\s*\{/;
-var $lang = /((@each|@when)\s*\((.*)\s*,\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*\)|@else)/g;
-var $close = /\}\s*\)\s*/;
-var $break = /\}\s*\)|(@else)/;
-var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
-
-function codex(_express, _scope) {
-
-	try {
-		_express = "'" + _express.replace($express, "'+($1)+'") + "'";
-
-		return Code(_express)(_scope);
-
-	} catch (e) {
-
-		return undefined;
-
-	}
-
-}
-
-function Code(_express) {
-
-	return new Function('_scope',
-
-		`with (_scope) {
-
-			return `+ _express + `;
-
-		 }`
-
-	);
-
-}
-
-function codes(_express, _scope) {
-
-	try {
-
-		return _scope["@" + _express] = _scope["@" + _express] || new Map();
-
-	} catch (e) {
-
-		return undefined;
-
-	}
-
-}
-
-function Path(path) {
-
-	try {
-
-		return path.replace(/(\w+)\.?/g, "['$1']");
-
-	} catch (e) {
-
-		return undefined;
-
-	}
-
-}
-
 function observe(target, callSet, callGet, caches, queue) {
 
 	function watcher(object, root, oldObject) {
@@ -563,12 +492,15 @@ function observe(target, callSet, callGet, caches, queue) {
 
 		queue.open = false;
 
-		new Function('scope', 'val',
-			`
-			scope`+ Path(path) + `=val;
+		var path = path.split("."), prop = path.pop(), value = target;
 
-			`
-		)(target, object);
+		path.forEach(function (express) {
+
+			value = value[express];
+
+		});
+
+		value[prop] = object;
 
 	}
 
@@ -781,20 +713,20 @@ class Mes extends Map {
 
 		function get(path) {
 
-			try {
+			var path = path.split("."), object = target;
 
-				return new Function('scope',
-					`
-					return scope`+ Path(path) + `;
-					`
-				)(target);
+			while (path.length) {
 
-			} catch (e) {
+				var prop = path.shift();
 
-				return undefined;
+				object = object[prop];
+
+				if (object == undefined) return;
 
 			}
-			
+
+			return object;
+
 		}
 
 	}
@@ -899,6 +831,21 @@ var mq = new Mes();
 
 });
 
+var $express = /\{\s*\{>?@?([^\{\}]*)\}\s*\}/g;
+var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
+var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
+var $html = /\{\s*\{\s*>([^\{\}]*)\}\s*\}/;
+var $view = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
+var $each = /(@each)\s*\((.*)\s*,\s*\{/;
+var $when = /(@when)\s*\((.*)\s*,\s*\{/;
+var $else = /(@else)/;
+var $chen = /(@each|@when)\s*\((.*)\s*,\s*\{/;
+var $lang = /((@each|@when)\s*\((.*)\s*,\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*\)|@else)/g;
+var $close = /\}\s*\)\s*/;
+var $break = /\}\s*\)|(@else)/;
+var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
+var $word1 = /\w+/g;
+
 function init(dom) {
 
 	each(dom, function (node) {
@@ -1002,27 +949,34 @@ function classNode(newNode, child) {
 }
 
 function setVariable(scope, variable, path) {
+
 	Object.defineProperty(scope, variable, {
 
 		get() {
 
-			return new Function('scope',
-				`
-				return scope`+ Path(path) + `;
-		
-				`
-			)(scope);
+			var value = scope;
+
+			path.replace($word1, function (express) {
+
+				value = value[express];
+
+			});
+
+			return value;
 
 		},
 
 		set(val) {
 
-			new Function('scope', 'val',
-				`
-				scope`+ Path(path) + `=val;
+			var paths = path.split("."), prop = paths.pop(), value = scope;
 
-				`
-			)(scope, val);
+			paths.forEach(function (express) {
+
+				value = value[express];
+
+			});
+
+			value[prop] = val;
 
 		}
 
@@ -1039,14 +993,60 @@ function binding(node, scope) {
 	owner.on("change", function handle() {
 
 		new Function('scope',
-			`
-			scope`+ Path(owner._express) + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
 
-			`
+			`with (scope) {
+
+				`+ owner._express + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
+
+			 }`
+
 		)(scope);
 
 	});
 
+}
+
+function codex(_express, _scope) {
+
+	try {
+		_express = "'" + _express.replace($express, "'+($1)+'") + "'";
+
+		return Code(_express)(_scope);
+
+	} catch (e) {
+
+		return undefined;
+
+	}
+
+}
+
+function Code(_express) {
+
+	return new Function('_scope',
+
+		`with (_scope) {
+
+			return `+ _express + `;
+
+		 }`
+
+	);
+
+}
+
+function codes(_express, _scope) {
+
+	try {
+
+		return _scope["@" + _express] = _scope["@" + _express] || new Map();
+
+	} catch (e) {
+
+		return undefined;
+
+	}
+	
 }
 
 function view(app) {
@@ -1085,34 +1085,6 @@ function view(app) {
 				var childNodes = children.get(node.clas);
 				childNodes.clear();
 				setComCache(newNode, scope, node.clas);
-			} catch (e) {
-				console.log(e);
-			}
-		},
-		each: function (node, scope, childNodes, path) {
-			try {
-				var insert = insertion([node]);
-				childNodes.remove(node);
-				clearEachNode([node], node, insert);
-				var doc = document.createDocumentFragment();
-				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
-				insert.parentNode.replaceChild(doc, insert);
-				console.log(cache);
-			} catch (e) {
-				console.log(e);
-			}
-		},
-		when: function (node, scope, childNodes, path) {
-			try {
-				var insert = insertion([node]);
-				clearWhenNode([node], node, insert);
-				var doc = document.createDocumentFragment();
-				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
-				insert.parentNode.replaceChild(doc, insert);
-				var children = cache["@" + node.path];
-				var nodes = children.get(node.clas);
-				node.content.childNodes.remove(node).push(nodes.last());
-				console.log(cache);
 			} catch (e) {
 				console.log(e);
 			}
@@ -1156,6 +1128,34 @@ function view(app) {
 		"@view": function (node, scope) {
 			try {
 				app.view = resolver.init;
+				console.log(cache);
+			} catch (e) {
+				console.log(e);
+			}
+		},
+		each: function (node, scope, childNodes, path) {
+			try {
+				var insert = insertion([node]);
+				childNodes.remove(node);
+				clearEachNode([node], node, insert);
+				var doc = document.createDocumentFragment();
+				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
+				insert.parentNode.replaceChild(doc, insert);
+				console.log(cache);
+			} catch (e) {
+				console.log(e);
+			}
+		},
+		when: function (node, scope, childNodes, path) {
+			try {
+				var insert = insertion([node]);
+				clearWhenNode([node], node, insert);
+				var doc = document.createDocumentFragment();
+				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
+				insert.parentNode.replaceChild(doc, insert);
+				var children = cache["@" + node.path];
+				var nodes = children.get(node.clas);
+				node.content.childNodes.remove(node).push(nodes.last());
 				console.log(cache);
 			} catch (e) {
 				console.log(e);

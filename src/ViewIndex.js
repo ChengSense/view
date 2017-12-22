@@ -3,7 +3,7 @@ import { query } from "./ViewElmemt";
 import { observe } from "./ViewObserve";
 import { each, extend, slice, proto } from "./ViewLang";
 import { init, initCompiler, blankOut } from "./ViewInit";
-import { classNode, setVariable, binding } from "./ViewHelper";
+import { classNode, setVariable, binding} from "./ViewHelper";
 import { codex, Code, codes } from "./ViewScopePath";
 import { $express, $express1, $express2, $html, $view, $each, $else, $when, $chen, $break, $word } from "./ViewExpress";
 
@@ -47,34 +47,6 @@ function view(app) {
 				console.log(e);
 			}
 		},
-		each: function (node, scope, childNodes, path) {
-			try {
-				var insert = insertion([node]);
-				childNodes.remove(node);
-				clearEachNode([node], node, insert);
-				var doc = document.createDocumentFragment();
-				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
-				insert.parentNode.replaceChild(doc, insert);
-				console.log(cache);
-			} catch (e) {
-				console.log(e);
-			}
-		},
-		when: function (node, scope, childNodes, path) {
-			try {
-				var insert = insertion([node]);
-				clearWhenNode([node], node, insert);
-				var doc = document.createDocumentFragment();
-				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
-				insert.parentNode.replaceChild(doc, insert);
-				var children = cache["@" + node.path];
-				var nodes = children.get(node.clas);
-				node.content.childNodes.remove(node).push(nodes.last());
-				console.log(cache);
-			} catch (e) {
-				console.log(e);
-			}
-		},
 		html: function (node, scope) {
 			try {
 				var insert = insertion([node]);
@@ -114,6 +86,34 @@ function view(app) {
 		"@view": function (node, scope) {
 			try {
 				app.view = resolver.init;
+				console.log(cache);
+			} catch (e) {
+				console.log(e);
+			}
+		},
+		each: function (node, scope, childNodes, path) {
+			try {
+				var insert = insertion([node]);
+				childNodes.remove(node);
+				clearEachNode([node], node, insert);
+				var doc = document.createDocumentFragment();
+				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
+				insert.parentNode.replaceChild(doc, insert);
+				console.log(cache);
+			} catch (e) {
+				console.log(e);
+			}
+		},
+		when: function (node, scope, childNodes, path) {
+			try {
+				var insert = insertion([node]);
+				clearWhenNode([node], node, insert);
+				var doc = document.createDocumentFragment();
+				compiler(doc, scope, [node], { childNodes: [], childNode: [] });
+				insert.parentNode.replaceChild(doc, insert);
+				var children = cache["@" + node.path];
+				var nodes = children.get(node.clas);
+				node.content.childNodes.remove(node).push(nodes.last());
 				console.log(cache);
 			} catch (e) {
 				console.log(e);
