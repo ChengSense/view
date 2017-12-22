@@ -37,45 +37,105 @@ export function observe(target, callSet, callGet, caches, queue) {
 
 	function array(object, root) {
 
-		if (!object.watch)
+		var prototype = Array.prototype;
 
-			Object.defineProperty(object, "watch", {
+		["shift", "push", "pop", "splice", "unshift", "reverse"].forEach(function (name) {
 
-				get() {
+			var method = prototype[name];
 
-					return queue;
+			switch (name) {
 
-				},
-				set(parm) {
+				case "shift":
 
-					setValue(object, root);
+					object[name] = function () {
 
-					parm.forEach(function (prop) {
+						queue.open = true;
 
-						queue.list.push(root + "." + prop);
+						var data = method.apply(this, arguments);
 
-					});
+						notify([0]);
 
-					queue.list.push(root);
+						return data;
 
+					};
 
-					each(caches(), function (item, path) {
+					break;
 
-						set(path);
+				case "pop":
 
-					});
+					object[name] = function () {
 
-					mq.gc(target);
+						queue.open = true;
 
-				}
+						var data = method.apply(this, arguments);
+
+						notify([this.length]);
+
+						return data;
+
+					};
+
+					break;
+
+				case "splice":
+
+					object[name] = function (i, l) {
+
+						queue.open = true;
+
+						var data = method.apply(this, arguments);
+
+						var params = [], m = new Number(i) + new Number(l);
+
+						while (i < m) params.push(i++);
+
+						notify(params);
+
+						return data;
+
+					};
+
+					break;
+
+				default:
+
+					object[name] = function () {
+
+						queue.open = true;
+
+						var data = method.apply(this, arguments);
+
+						notify([]);
+
+						return data;
+
+					};
+
+					break;
+
+			}
+
+		});
+
+		function notify(parm) {
+
+			queue.open = false;
+
+			setValue(object, root);
+
+			parm.forEach(function (prop) {
+
+				queue.list.push(root + "." + prop);
 
 			});
+
+			publish(root);
+
+		}
 
 	}
 
 	function setValue(object, path) {
-
-		queue.open = false;
 
 		new Function('scope', 'val',
 			`
@@ -126,19 +186,7 @@ export function observe(target, callSet, callGet, caches, queue) {
 
 				watcher(value = val, path, oldValue);
 
-				if (!queue.open) {
-
-					queue.list.push(path);
-
-					each(caches(), function (item, path) {
-
-						set(path);
-
-					});
-
-					mq.gc(target);
-
-				}
+				if (!queue.open) publish(path);
 
 			}
 
@@ -166,11 +214,19 @@ export function observe(target, callSet, callGet, caches, queue) {
 
 	}
 
-	function set(path) {
+	function publish(path) {
 
 		try {
 
-			mq.publish("set." + path, [path]);
+			queue.list.push(path);
+
+			each(caches(), function (item, path) {
+
+				mq.publish("set." + path, [path]);
+
+			});
+
+			mq.gc(target);
 
 		} finally {
 
@@ -308,7 +364,7 @@ class Mes extends Map {
 				return undefined;
 
 			}
-			
+
 		}
 
 	}
@@ -317,98 +373,3 @@ class Mes extends Map {
 
 var mq = new Mes();
 
-["shift", "push", "pop", "splice", "unshift", "reverse"].forEach(function (name) {
-
-	var method = Array.prototype[name];
-
-	switch (name) {
-
-		case "shift":
-
-			Array.prototype[name] = function () {
-
-				var watch = this.watch;
-
-				if (watch) watch.open = true;
-
-				var data = method.apply(this, arguments);
-
-				if (watch)
-
-					this.watch = [0];
-
-				return data;
-
-			};
-
-			break;
-
-		case "pop":
-
-			Array.prototype[name] = function () {
-
-				var watch = this.watch;
-
-				if (watch) watch.open = true;
-
-				var data = method.apply(this, arguments);
-
-				if (watch)
-
-					this.watch = [this.length];
-
-				return data;
-
-			};
-
-			break;
-
-		case "splice":
-
-			Array.prototype[name] = function (i, l) {
-
-				var watch = this.watch;
-
-				if (watch) watch.open = true;
-
-				var data = method.apply(this, arguments);
-
-				if (watch) {
-
-					var params = [], m = new Number(i) + new Number(l);
-
-					while (i < m) params.push(i++);
-
-					this.watch = params;
-
-				}
-
-				return data;
-
-			};
-
-			break;
-
-		default:
-
-			Array.prototype[name] = function () {
-
-				var watch = this.watch;
-
-				if (watch) watch.open = true;
-
-				var data = method.apply(this, arguments);
-
-				if (watch)
-
-					this.watch = [];
-
-				return data;
-
-			};
-
-			break;
-
-	}
-
-});
