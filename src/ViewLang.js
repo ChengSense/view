@@ -50,16 +50,16 @@ export function blank(str) {
 
 export function clone(value) {
   if (Array.isArray(value)) {
-    return value.map(clone)
-  } else if (value && typeof value === 'object') {
-    const res = {}
-    for (const key in value) {
-      res[key] = clone(value[key])
-    }
-    return res
-  } else {
-    return value
+    return value.map(clone);
   }
+  if (value && typeof value === 'object') {
+    const obj = {};
+    for (const key in value) {
+      obj[key] = clone(value[key]);
+    }
+    return obj;
+  }
+  return value;
 }
 
 extend(Array, {
