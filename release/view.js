@@ -576,12 +576,13 @@ var view = (function (exports) {
       }
     } catch (error) {
     }
-    function dep(key, scope, clas) {
-      key.replace($word, function (key) {
-        if (code(key, scope) == undefined || global.$path == undefined) return;
-        clas.path.push(global.$path);
-      });
-    }
+  }
+
+  function dep(key, scope, clas) {
+    key.replace($word, function (key) {
+      if (code(key, scope) == undefined || global.$path == undefined) return;
+      clas.path.push(global.$path);
+    });
   }
 
   function bind(node, scope) {
