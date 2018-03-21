@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+
+
+
+<html>
+
+<head>
+  <title>main.html</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript" src="./view.6.js"></script>
+
+  <style>
+    header>nav {
+      box-shadow: 0 1px 2px hsla(0, 0%, 60%, .05);
+      border-bottom: 1px solid #ebebeb;
+      background: #fff;
+    }
+
+    main {
+      margin-top: 57px;
+    }
+
+    .flex-column {
+      box-shadow: 0 1px 2px hsla(0, 0%, 60%, .05);
+      border-right: 1px solid #ebebeb;
+    }
+
+    .fixed-left {
+      position: fixed;
+      height: calc(100vh);
+      width: 8%;
+      display: block;
+    }
+
+    .fixed-left a {
+      height: 60px;
+    }
+
+    table.api-detail>tbody>tr> :first-child {
+      text-align: right;
+      width: 12%;
+    }
+
+    table.api-detail>tbody>tr :last-child {
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <!-- <a class="navbar-brand" href="#">APIVIEW</a> -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor02" aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarColor02">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">首页</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">分组</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">接口</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">设置</a>
+            </li>
+          </ul>
+          <form class="form-inline">
+            <input class="form-control mr-sm-2" type="search" placeholder="搜索" aria-label="Search">
+          </form>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main class="container">
+    <div class="row">
+      <div class="col-2 text-center">
+        <div class="nav flex-column pt-5 fixed-left" role="tablist" aria-orientation="vertical">
+          <a class="nav-link nav-link-h" href="#iface" role="tab">主页</a>
+          <a class="nav-link nav-link-h" href="#group" role="tab">分组</a>
+          <a class="nav-link nav-link-h" href="#iface" role="tab">接口</a>
+          <a class="nav-link nav-link-h" href="#setting" role="tab">设置</a>
+          <a class="nav-link nav-link-h" href="#iface" role="tab">成员</a>
+        </div>
+      </div>
+      <div class="col-10">
+        <div class="tab-content pt-5">
+          <!-- 
+            路由视图
+          -->
+          {{@router}}
+          <!--  
+            接口列表模块
+          -->
+          <div id="iface" class="tab-pane fade show active" role="tabpanel">
+            <div>
+              <h6 scope="col" class="pl-2" style="font-weight: bold">接口列表</h6>
+              <hr>
+            </div>
+            @each(item:index:ifaces){
+            <h5 class="mb-0">
+              <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne{{index}}" aria-expanded="true">
+                {{item.group_name}}({{item.list.length}})
+              </button>
+            </h5>
+            <div id="collapseOne{{index}}" class="collapse show">
+              <table class="table">
+                <tbody>
+                  <tr each="iface:item.list">
+                    <th scope="row">{{iface.method}}</th>
+                    <td>{{iface.name}}</td>
+                    <td>{{iface.comment}}</td>
+                    <td>
+                      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                        <div class="btn-group mr-2" role="group" aria-label="First group">
+                          <button type="button" class="btn btn-outline-primary btn-sm">
+                            <a href="#iface/detail/{{iface.id}}">详情</a>
+                          </button>
+                          <button type="button" class="btn btn-outline-primary btn-sm">
+                            <a href="#iface/ae/add/{{iface.id}}">添加</a>
+                          </button>
+                          <button type="button" class="btn btn-outline-secondary btn-sm">
+                            <a href="#iface/ae/copy/{{iface.id}}">复制</a>
+                          </button>
+                          <button type="button" class="btn btn-outline-success btn-sm">
+                            <a href="#iface/ae/edit/{{iface.id}}">修改</a>
+                          </button>
+                          <button type="button" class="btn btn btn-outline-danger btn-sm" onclick="ifaceDle(`{{iface.id}}`)">删除</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+          <!--  
+            接口编辑模块
+          -->
+          <div id="iface-save" class="tab-pane fade show active" role="tabpanel">
+            <div class="text-left">
+              <h6 class="pl-5" scope="col" style="font-weight: bold">
+                @when(add=="add"){ 新增接口 }.when{ 修改接口 }
+              </h6>
+              <hr>
+            </div>
+            <form class="text-right">
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">接口名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="接口名称" value="{{iface.name}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">接口用途：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="接口用途" value="{{iface.comment}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">选择分组：</label>
+                <div class="col-sm-4">
+                  <select class="form-control" value="{{iface.gid}}">
+                    <option>选择分组</option>
+                    <option each="item:ifaces" value="{{item.id}}">{{item.group_name}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">method：</label>
+                <div class="col-sm-4">
+                  <select class="form-control" value="{{iface.method}}">
+                    <option value="GET">GET</option>
+                    <option value="POST" selected>POST</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">调用地址：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="调用地址" value="{{iface.url}}">
+                </div>
+              </div>
+              <fieldset class="form-group">
+                <div class="row">
+                  <legend class="col-form-label col-sm-2 pt-0">请求参数：</legend>
+                  <div class="col-sm-8  text-left">
+                    <button type="button" class="btn btn-sm btn-success" onclick="paramAdd()"> + </button>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset class="form-group" each="item:i:iface.params">
+                <div class="row">
+                  <legend class="col-form-label col-sm-2 pt-0"></legend>
+                  <div class="col-sm-8">
+                    <div class="btn-toolbar">
+                      <div class="btn-group">
+                        <input type="text" class="form-control mr-1" placeholder="参数名" value="{{item.name}}">
+                        <select name="para_type" class="form-control  mr-1" value="{{item.type}}">
+                          <option value="int">int</option>
+                          <option value="long">long</option>
+                          <option value="float">float</option>
+                          <option value="string" selected>string</option>
+                          <option value="boolen">boolen</option>
+                          <option value="file">file</option>
+                          <option value="array">array</option>
+                          <option value="json">json</option>
+                          <option value="xml">xml</option>
+                        </select>
+                        <select class="form-control  mr-1" value="{{item.required}}">
+                          <option value="1">必须传入</option>
+                          <option value="0" selected>可选传入</option>
+                        </select>
+                        <input type="text" class="form-control mr-1" placeholder="参数备注" value="{{item.comment}}">
+                        <button type="button" class="btn btn-danger mr-1" onclick="paramDel({{i}})">删除</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset class="form-group">
+                <div class="row">
+                  <legend class="col-form-label col-sm-2 pt-0">返回参数：</legend>
+                  <div class="col-sm-8">
+                    <textarea class="form-control" rows="8" value="{{iface.response}}">{{iface.response}}</textarea>
+                  </div>
+                </div>
+              </fieldset>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">备注信息：</label>
+                <div class="col-sm-8">
+                  <textarea class="form-control" rows="5" value="{{iface.comment}}">{{iface.comment}}</textarea>
+                  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10  text-left">
+                  <button type="button" class="btn btn-primary" onclick="ifaceSave()">确定</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <!--  
+              接口详情模块
+            -->
+          <div id="iface-detail" class="tab-pane fade show active" role="tabpanel" aria-labelledby="v-pills-group-tab">
+            <div class="text-left pl-3">
+              <h6 style="font-weight: bold">接口详情</h6>
+            </div>
+            <table class="table api-detail">
+              <tbody>
+                <tr>
+                  <td scope="row">接口名称：</td>
+                  <td>{{iface.name}}</td>
+                </tr>
+                <tr>
+                  <td scope="row">接口用途：</td>
+                  <td>{{iface.comment}}</td>
+                </tr>
+                <tr>
+                  <td scope="row">method：</td>
+                  <td>
+                    <select class="form-control form-control-sm col-sm-3" value="{{iface.method}}">
+                      <option value="GET">GET</option>
+                      <option value="POST" selected>POST</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td scope="row">主机地址：</td>
+                  <td>
+                    <select class="form-control form-control-sm col-sm-3 mr-1" value="{{host}}">
+                      <option value="{{host.host}}" each="host:hosts">{{host.userName}}</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td scope="row">接口地址：</td>
+                  <td>{{iface.url}}</td>
+                </tr>
+                <tr>
+                  <td scope="row">输入参数：</td>
+                  <td>
+                    <table class="table table-striped table-sm" style="width: 100%;text-align: left;">
+                      <thead>
+                        <tr>
+                          <th scope="col">参数名</th>
+                          <th scope="col">参数值</th>
+                          <th scope="col">参数类型</th>
+                          <th scope="col">可选传入</th>
+                          <th scope="col">参数备注</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr each="item:iface.params">
+                          <td>{{item.name}}</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" value="{{item.value}}">
+                          </td>
+                          <td>{{item.type}}</td>
+                          <td>{{item.required}}</td>
+                          <td>{{item.comment}}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td scope="row">返回数据：</td>
+                  <td>
+                    <div class="row">
+                      <div class="col-sm-7">
+                        {{iface.response}}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td scope="row">返备注：</td>
+                  <td>{{iface.comment}}</td>
+                </tr>
+                <tr>
+                  <td scope="row"></td>
+                  <td>
+                    <button type="button" class="btn btn-primary" onclick="">发送请求</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 
+            分组列表模块
+          -->
+          <div id="group" class="tab-pane fade show active" role="tabpanel" aria-labelledby="v-pills-group-tab">
+            <div class="text-left">
+              <h6 scope="col" style="font-weight: bold">分组列表</h6>
+              <hr>
+            </div>
+            <ul class="list-group mb-3" each="group:list">
+              <li class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  {{group.group_name}} - {{group.code}}
+                  <small>
+                    <a class="badge badge-primary" href="#group/add/{{group.id}}">添加</a>
+                    <a class="badge badge-primary ml-2" href="#group/edit/{{group.id}}">修改</a>
+                    <a class="badge badge-primary ml-2" href="#" onclick="groupDel(`{{group.id}}`)">删除</a>
+                  </small>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <!-- 
+            分组添加 &修改模块
+          -->
+          <div id="group-save" class="tab-pane fade show active" role="tabpanel" aria-labelledby="v-pills-group-tab">
+            <div class="text-left pl-5">
+              <h6 scope="col" style="font-weight: bold">
+                @when(add=="add"){ 添加分组 }.when{ 修改分组 }
+              </h6>
+              <hr>
+            </div>
+            <form class="text-right">
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">显示名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="显示名称" value="{{group_name}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">分组标识：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="分组标识" value="{{code}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10  text-left">
+                  <button type="button" class="btn btn-primary" onclick="groupSave()">确定</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <!-- 
+            设置列表模块
+          -->
+          <div id="setting" class="tab-pane fade show active" role="tabpanel" aria-labelledby="v-pills-group-tab">
+            <div class="text-left">
+              <h6 scope="col" style="font-weight: bold">设置主机列表</h6>
+              <hr>
+            </div>
+            <ul class="list-group mb-3" each="set:list">
+              <li class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  {{set.userName}} - {{set.host}}
+                  <small>
+                    <a class="badge badge-primary pointer" href="#setting/add/{{set.id}}">
+                      <i class="btn btn-sm glyphicon glyphicon-pencil" style="display: inline;">添加</i>
+                    </a>
+                    <a class="badge badge-success pointer ml-2" href="#setting/edit/{{set.id}}">
+                      <i class="btn btn-sm glyphicon glyphicon-pencil" style="display: inline;">修改</i>
+                    </a>
+                    <span class="badge badge-danger pointer ml-2">
+                      <i class="btn btn-sm glyphicon glyphicon-remove" style="display: inline;" onclick="setDel(`{{set.id}}`)">删除</i>
+                    </span>
+                  </small>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <!-- 
+            分组添加 &修改模块
+          -->
+          <div id="setting-save" class="tab-pane fade show active " role="tabpanel" aria-labelledby="v-pills-group-tab">
+            <form class="text-right setting-save">
+              <div class="text-left pl-5">
+                <h6 scope="col" style="font-weight: bold">
+                  @when(add=="add"){ 添加主机 }.when{ 修改主机 }
+                </h6>
+                <hr>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">用户名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="用户名称" value="{{userName}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">主机名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="主机名称" value="{{host}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10  text-left">
+                  <button type="button" class="btn btn-primary" onclick="setSave()">确定</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <!-- 
+          模块结束          
+          -->
+        </div>
+      </div>
+    </div>
+    </div>
+  </main>
+</body>
+<script>
+  (function () {
+
+    function getId() {
+      return (((1 + Math.random()) * 0x10000000) | 0).toString(16).substring(1);;
+    }
+
+    let group = [{
+      id: getId(),
+      group_name: "产品",
+      code: "product"
+    }, {
+      id: getId(),
+      group_name: "订单",
+      code: "order"
+    }, {
+      id: getId(),
+      group_name: "支付",
+      code: "pay"
+    }];
+
+    let api = {
+
+      getId: getId,
+
+      api: {
+        list: (function () {
+          let list = [];
+          group.forEach(g => {
+            for (let index = 0; index < 4; index++) {
+              list.push({
+                id: getId(),
+                method: "POST",
+                name: "api/user/list",
+                url: "api/user/list",
+                gid: g.id,
+                group_name: g.group_name,
+                params: [{
+                  name: "username",
+                  type: "int",
+                  required: "1",
+                  comment: "用户名",
+                  value: ""
+                }, {
+                  name: "username",
+                  type: "int",
+                  required: "1",
+                  comment: "用户名",
+                  value: ""
+                }, {
+                  name: "username",
+                  type: "int",
+                  required: "1",
+                  comment: "用户名",
+                  value: ""
+                }, {
+                  name: "username",
+                  type: "int",
+                  required: "1",
+                  comment: "用户名",
+                  value: ""
+                }],
+                response: "无",
+                comment: "获取用户信息"
+              })
+            }
+          });
+          return list;
+        })(),
+        getList() {
+          let list = new Map();
+          let apis = [];
+          this.list.forEach(item => {
+            let api = list.get(item.gid);
+            if (api) {
+              api.list.push(item);
+            } else {
+              let a = {
+                id: item.gid,
+                group_name: item.group_name,
+                list: [item]
+              };
+              apis.push(a);
+              list.set(item.gid, a);
+            }
+          });
+          return apis;
+        },
+        getApi(id) {
+          for (const i in this.list) {
+            let api = this.list[i];
+            if (id == api.id) {
+              return api;
+            }
+          }
+        },
+        add(api) {
+          this.list.push(api);
+        },
+        save(api) {
+          this.list.forEach((item, i) => {
+            if (item.id == api.id) {
+              this.list.splice(i, 1, api);
+            }
+          });
+        },
+        delete(id) {
+          this.list.forEach((api, i) => {
+            if (api.id == id) {
+              this.list.splice(i, 1)
+            }
+          });
+        }
+      },
+
+
+
+      group: {
+        list: group,
+        getList() {
+          return this.list;
+        },
+        getGroup(id) {
+          for (const i in this.list) {
+            let group = this.list[i];
+            if (id == group.id) {
+              return group;
+            }
+          }
+        },
+        add(group) {
+          this.list.push(group);
+        },
+        save(group) {
+          this.list.forEach((item, i) => {
+            if (item.id == group.id) {
+              this.list.splice(i, 1, group)
+            }
+          });
+        },
+        delete(id) {
+          this.list.forEach((group, i) => {
+            if (group.id == id) {
+              this.list.splice(i, 1)
+            }
+          });
+        }
+      },
+
+
+      setting: {
+        list: [{
+          id: 1,
+          userName: "localhost",
+          host: "127.0.0.1"
+        }],
+        getList() {
+          return this.list;
+        },
+        getHost(id) {
+          for (const i in this.list) {
+            let host = this.list[i];
+            if (id == host.id) {
+              return host;
+            }
+          }
+        },
+        add(host) {
+          this.list.push(host);
+        },
+        save(host) {
+          this.list.forEach((item, i) => {
+            if (item.id == host.id) {
+              this.list.splice(i, 1, host)
+            }
+          });
+        },
+        delete(id) {
+          this.list.forEach((host, i) => {
+            if (host.id == id) {
+              this.list.splice(i, 1)
+            }
+          });
+        }
+      }
+    };
+    window.api = api;
+  })()
+
+  var iface = new View({
+    component: "#iface",
+    model: {
+
+    }
+  });
+
+  var iface_save = new View({
+    component: "#iface-save",
+    model: {
+
+    }
+  });
+
+  var iface_detail = new View({
+    component: "#iface-detail",
+    model: {
+      hosts: api.setting.getList()
+    }
+  });
+
+  var group = new View({
+    component: "#group",
+    model: {
+      list: api.group.getList()
+    }
+  });
+
+  var group_save = new View({
+    component: "#group-save",
+    model: {
+      add: "add",
+      group_name: "",
+      code: ""
+    }
+  });
+
+  var setting = new View({
+    component: "#setting",
+    model: {
+      list: api.setting.getList()
+    }
+  });
+
+  var setting_save = new View({
+    component: "#setting-save",
+    model: {
+      add: "add",
+      id: "",
+      userName: "",
+      host: ""
+    }
+  });
+
+  var app = new View({
+    view: "body",
+    model: {
+      add: "add",
+      router: iface,
+      iface: {
+        name: "",
+        group_name: "",
+        method: "GET",
+        url: "",
+        params: [{
+          name: "",
+          type: "",
+          required: "",
+          comment: "",
+          value: ""
+        }],
+        response: "",
+        comment: ""
+      },
+      ifaces: api.api.getList()
+    }
+  });
+
+  let router = new Router(app, {
+    "iface": {
+      component: iface,
+      action(param) {
+
+      }
+    },
+    "iface/ae/:add/:id": {
+      component: iface_save,
+      action(param) {
+        apps.add = param.add;
+        let iface = api.api.getApi(param.id);
+        switch (param.add) {
+          case "add":
+            app.model.iface = {
+              id: "",
+              name: "",
+              gid: "",
+              group_name: "",
+              method: "GET",
+              url: "",
+              params: [{
+                name: "",
+                type: "",
+                required: "",
+                comment: "",
+                value: ""
+              }],
+              response: "",
+              comment: ""
+            };
+            break;
+          case "edit":
+            app.model.iface = clone(iface);
+            break;
+          case "copy":
+            app.model.iface = clone(iface);
+            app.model.iface.id = "";
+            apps.add = "add";
+            break;
+        }
+      }
+    },
+    "iface/detail/:id": {
+      component: iface_detail,
+      action(param) {
+        let iface = api.api.getApi(param.id);
+        app.model.iface = clone(iface);
+      }
+    },
+    "group": {
+      component: group,
+      action(param) {
+
+      }
+    },
+    "group/:add/:id": {
+      component: group_save,
+      action(param) {
+        grou.add = param.add;
+        if (param.add == "add") {
+          grou.id = "";
+          grou.code = "";
+          grou.group_name = "";
+        } else {
+          let group = api.group.getGroup(param.id);
+          grou.id = group.id;
+          grou.code = group.code;
+          grou.group_name = group.group_name;
+        }
+      }
+    },
+    "setting": {
+      component: setting,
+      action(param) {
+
+      }
+    },
+    "setting/:add/:id": {
+      component: setting_save,
+      action(param) {
+        sets.add = param.add;
+        if (param.add == "add") {
+          sets.id = "";
+          sets.userName = "";
+          sets.host = "";
+        } else {
+          let host = api.setting.getHost(param.id);
+          sets.id = host.id;
+          sets.userName = host.userName;
+          sets.host = host.host;
+        }
+      }
+    }
+  });
+
+  let apps = app.model;
+
+  function ifaceSave() {
+    if (apps.add == "add") {
+      let a = clone(apps.iface);
+      a.id = api.getId();
+      api.api.add(a);
+    } else {
+      let a = clone(apps.iface);
+      api.api.save(a);
+    }
+    app.model.ifaces = api.api.getList();
+    router.redreact("iface");
+  }
+
+  function ifaceDle(id) {
+    api.api.delete(id);
+    app.model.ifaces = api.api.getList();
+  }
+
+  function paramAdd() {
+    apps.iface.params.push({
+      name: "",
+      type: "string",
+      required: "1",
+      comment: "",
+      value: ""
+    });
+  }
+
+  function paramDel(id) {
+    if (1 < apps.iface.params.length) {
+      apps.iface.params.splice(id, 1);
+    }
+  }
+
+  var sets = setting_save.model;
+  function setSave() {
+    if (sets.add == "add") {
+      api.setting.add({
+        id: api.getId(),
+        userName: sets.userName,
+        host: sets.host
+      });
+    } else {
+      api.setting.save({
+        id: sets.id,
+        userName: sets.userName,
+        host: sets.host
+      });
+    }
+    router.redreact("setting");
+  }
+  function setDel(id) {
+    api.setting.delete(id);
+  }
+
+  var grou = group_save.model;
+  function groupSave() {
+    if (grou.add == "add") {
+      api.group.add({
+        id: api.getId(),
+        group_name: grou.group_name,
+        code: grou.code
+      });
+    } else {
+      api.group.save({
+        id: grou.id,
+        group_name: grou.group_name,
+        code: grou.code
+      });
+    }
+    router.redreact("group");
+  }
+  function groupDel(id) {
+    api.group.delete(id);
+  }
+</script>
+
+</html>

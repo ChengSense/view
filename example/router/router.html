@@ -19,22 +19,40 @@
     </li>
     <li>
       <a href="#edit/qwe/qwe">edit !</a>
-      <input value="{{text}}" />
+    </li>
+    <li>
+      <input value="{{param1}}" /> + <input value="{{param2}}" />
+    </li>
+    <li>
+      {{@router}}
     </li>
   </ul>
-  {{@router}}
+  <home>
+    {{name}} => {{param1+param2}}
+    <br>
+    <input value="{{name}}" />
+  </home>
   <detail>
-    {{name}} => {{text}}
+    {{name}} => {{param1+param2}}
+    <br>
     <input value="{{name}}" />
   </detail>
   <edit>
-    {{name}} => {{text}}
+    {{name}} => {{param1+param2}}
+    <br>
     <input value="{{name}}" />
   </edit>
 </body>
 
 </html>
 <script type="text/javascript">
+  var home = new View({
+    component: "home",
+    model: {
+      name: "home"
+    }
+  });
+
   var detail = new View({
     component: "detail",
     model: {
@@ -53,24 +71,28 @@
     view: "body",
     model: {
       router: detail,
-      text: "asdasdasdasdas"
+      param1: "",
+      param2: ""
     }
   });
 
   new Router(app, {
-    "detail/:name/:id": {
+    "home": {
+      component: home,
       action(params) {
-        app.model.router = detail;
+
+      }
+    },
+    "detail/:name/:id": {
+      component: detail,
+      action(params) {
+
       }
     },
     "edit/:name/:id": {
+      component: edit,
       action(params) {
-        app.model.router = edit;
-      }
-    },
-    "home": {
-      action(params) {
-        console.log(params);
+
       }
     }
   });
