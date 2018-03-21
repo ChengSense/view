@@ -866,7 +866,6 @@ var view = (function (exports) {
     window.addEventListener("onpopstate" in window ? "popstate" : "hashchange", action, false);
 
   }
-  window.Router = Router;
 
   let global = { $path: undefined };
 

@@ -52,4 +52,3 @@ export function Router(app, params) {
   window.addEventListener("onpopstate" in window ? "popstate" : "hashchange", action, false);
 
 }
-window.Router = Router;
