@@ -2,6 +2,7 @@ export default {
     input: 'src/ViewIndex.js',
     output: {
         file: 'release/view.js',
-        format: 'cjs'
-    }
+        format: 'iife'
+    },
+    name:"view"
 };
