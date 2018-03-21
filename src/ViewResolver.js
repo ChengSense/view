@@ -2,6 +2,7 @@ import { View, global } from "./ViewIndex";
 import { each, slice, extention } from "./ViewLang";
 import { compiler, compoNode } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
+
 export var resolver = {
   view: function (view, node, scope, content, attributes) {
     try {
