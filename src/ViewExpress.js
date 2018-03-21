@@ -1,17 +1,11 @@
-
-export var $express = /\{\s*\{>?@?([^\{\}]*)\}\s*\}/g;
-export var $express1 = /\{\s*\{([^\{\}]*)\}\s*\}/;
-export var $express2 = /\{\s*\{([^>@\{\}]*)\}\s*\}/g;
-export var $html = /\{\s*\{\s*>([^\{\}]*)\}\s*\}/;
-export var $view = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
-export var $each = /(@each)\s*\((.*)\s*,\s*\{/;
-export var $when = /(@when)\s*\((.*)\s*,\s*\{/;
-export var $else = /(@else)/;
-export var $chen = /(@each|@when)\s*\((.*)\s*,\s*\{/;
-export var $lang = /((@each|@when)\s*\((.*)\s*,\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*\)|@else)/g;
-export var $close = /\}\s*\)\s*/;
-export var $break = /\}\s*\)|(@else)/;
+export var $lang = /((@each|@when|\.when)\s*\((.*)\)\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*|\.when\s*\{)/g;
+export var $chen = /(@each|@when|\.when)\s*\((.*)\)\{|\.when\s*\{/;
+export var $each = /(@each)\s*\((.*)\)\{/g;
+export var $when = /(@when|\.when)\s*\((.*)\)\{|\.when\s*\{/g;
+export var $whec = /\.when\s*\((.*)\)\{|\.when\s*\{/g;
+export var $whea = /@when/g;
+export var $express = /\{\s*\{@?([^\{\}]*)\}\s*\}/;
+export var $expres = /\{\s*\{([^\{\}]*)\}\s*\}/g;
+export var $component = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
+export var $close = /(^\s*\}\s*$)/;
 export var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
-export var $word1 = /\w+/g;
-
-

@@ -1,276 +1,315 @@
+import { each, slice, blank, extention } from "./ViewLang";
+import { code, codex, Path, setVariable } from "./ViewScope";
+import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word } from "./ViewExpress";
+import { global } from "./ViewIndex";
+import { resolver } from "./ViewResolver";
 
-
-function code(_express, _scope) {
-	try {
-		$path = undefined;
-		_express = _express.replace($express, "$1");
-		return Code(_express)(_scope);
-	} catch (e) {
-		return undefined;
-	}
+export function compiler(node, scopes, childNodes, content, attributes) {
+  each(childNodes, function (child, index, childNodes) {
+    switch (child.clas.nodeType) {
+      case 1:
+        if (child.clas.hasAttribute("each")) {
+          var expreses = child.clas.getAttribute("each").split(":");
+          var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
+          var dataSource = code(source, scopes);
+          var clas = eachNode(null, node, child);
+          content.childNodes.push(clas);
+          binding(null, scopes, clas, content, attributes);
+          each(dataSource, function (item, index) {
+            var scope = Object.create(scopes || {});
+            setVariable(scope, variable, global.$path);
+            if (id) scope[id.trim()] = index.toString();
+            var newNode = child.clas.cloneNode();
+            newNode.removeAttribute("each");
+            node.appendChild(newNode);
+            var clasNodes = classNode(newNode, child);
+            clas.childNodes.push(clasNodes);
+            compiler(newNode, scope, slice(child.children), clasNodes, attributes);
+            commom(newNode, scope, clasNodes, content, attributes);
+          });
+        } else {
+          switch ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
+            case true:
+              var newNode = child.clas.cloneNode(true);
+              node.appendChild(newNode);
+              var clasNodes = classNode(newNode, child);
+              content.childNodes.push(clasNodes);
+              break;
+            default:
+              var newNode = child.clas.cloneNode();
+              node.appendChild(newNode);
+              var clasNodes = classNode(newNode, child);
+              content.childNodes.push(clasNodes);
+              compiler(newNode, scopes, slice(child.children), clasNodes, attributes);
+              commom(newNode, scopes, clasNodes, content, attributes);
+              break;
+          }
+        }
+        break;
+      default:
+        if ($each.test(child.clas.nodeValue)) {
+          var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
+          var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
+          var dataSource = code(source, scopes);
+          var clas = eachNode(null, node, child);
+          content.childNodes.push(clas);
+          binding(null, scopes, clas, content, attributes);
+          each(dataSource, slice(child.children), function (item, index, children) {
+            var scope = Object.create(scopes || {});
+            setVariable(scope, variable, global.$path);
+            if (id) scope[id.trim()] = index.toString();
+            var clasNodes = classNode(null, child);
+            clas.childNodes.push(clasNodes);
+            compiler(node, scope, slice(children), clasNodes, attributes);
+          });
+        } else if ($when.test(child.clas.nodeValue)) {
+          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+          var clas = whenNode(null, node, child, content, scopes, attributes);
+          clas.children.push(childNodes.shift());
+          if (when) {
+            binding(null, scopes, clas, content, attributes);
+            each(childNodes, function (child, index, childNodes) {
+              if (!whem(child)) return true;
+              clas.children.push(childNodes.shift());
+            });
+            each(slice(child.children), function (child, index, childNodes) {
+              switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
+                case true:
+                  compiler(node, scopes, childNodes, clas, attributes);
+                  break;
+                default:
+                  var newNode = child.clas.cloneNode();
+                  node.appendChild(newNode);
+                  var clasNodes = classNode(newNode, child);
+                  clas.childNodes.push(clasNodes);
+                  commom(newNode, scopes, clasNodes, clas, attributes);
+                  break;
+              }
+              childNodes.shift();
+            });
+          } else if (when == undefined) {
+            binding(null, scopes, clas, content, attributes);
+            each(slice(child.children), function (child, index, childNodes) {
+              switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
+                case true:
+                  compiler(node, scopes, childNodes, clas, attributes);
+                  break;
+                default:
+                  var newNode = child.clas.cloneNode();
+                  node.appendChild(newNode);
+                  var clasNodes = classNode(newNode, child);
+                  clas.childNodes.push(clasNodes);
+                  commom(newNode, scopes, clasNodes, clas, attributes);
+                  break;
+              }
+              childNodes.shift();
+            });
+          } else if (whem(childNodes[0])) {
+            compiler(node, scopes, childNodes, clas, attributes);
+          }
+          return whem(child);
+        } else {
+          var newNode = child.clas.cloneNode();
+          node.appendChild(newNode);
+          var clasNodes = classNode(newNode, child);
+          content.childNodes.push(clasNodes);
+          commom(newNode, scopes, clasNodes, content, attributes);
+        }
+        break;
+    }
+    childNodes.shift();
+  });
 }
-function setCache(node, scope, clas, content, inode) {
-	if (!clas.clas) return;
-	switch (clas.clas.nodeType) {
-		case 1:
-			var key = clas.clas.getAttribute("each").split(":").pop();
-			if (code(key, scope) == undefined || $path == undefined) return;
-			var caches = codes($path, cache);
-			clas.resolver = "each";
-			clas.content = content;
-			clas.scope = scope;
-			clas.path = $path;
-			clas.node = node;
-			caches.setting(clas, inode);
-			return;
-		default:
-			if (clas.clas.nodeValue)
-				clas.clas.nodeValue.replace($each, function (key) {
-					key = key.replace($each, "$2").split(":").pop();
-					if (code(key, scope) == undefined || $path == undefined) return;
-					var caches = codes($path, cache);
-					clas.resolver = "each";
-					clas.content = content;
-					clas.scope = scope;
-					clas.path = $path;
-					clas.node = node;
-					caches.setting(clas, inode);
-				});
-			if (clas.clas.nodeValue)
-				clas.clas.nodeValue.replace($when, function (key) {
-					key = key.replace($when, "$2");
-					key.replace($word, function (key) {
-						if (code(key, scope) == undefined || $path == undefined) return;
-						var caches = codes($path, cache);
-						clas.resolver = "when";
-						clas.content = content;
-						clas.scope = scope;
-						clas.path = $path;
-						clas.node = node;
-						caches.setting(clas, inode);
-					});
-				});
-			break;
-	}
+
+function whem(child) {
+  if (child) return new RegExp($whec).test(child.clas.nodeValue);
 }
-function setComCache(node, scope, clas) {
-	if (node.name == "value")
-		binding(node, scope);
-	switch (clas.clas != undefined) {
-		case true:
-			if (clas.clas.nodeValue) {
-				clas.clas.nodeValue.replace($express2, function (key) {
-					key.replace($word, function (key) {
-						if (code(key, scope) == undefined || $path == undefined) return;
-						var caches = codes($path, cache);
-						clas.resolver = "express";
-						clas.scope = scope;
-						clas.path = $path;
-						clas.node = node;
-						caches.setting(clas);
-					});
-				});
-				clas.clas.nodeValue.replace($html, function (key) {
-					key.replace($word, function (key) {
-						if (code(key, scope) == undefined || $path == undefined) return;
-						var caches = codes($path, cache);
-						clas.resolver = "html";
-						clas.scope = scope;
-						clas.path = $path;
-						clas.node = node;
-						caches.setting(clas);
-					});
-				});
-				clas.clas.nodeValue.replace($view, function (key) {
-					key.replace($word, function (key) {
-						if (code(key, scope) == undefined || $path == undefined) return;
-						var caches = codes($path, cache);
-						clas.resolver = "view";
-						clas.scope = scope;
-						clas.path = $path;
-						clas.node = node;
-						caches.setting(clas);
-					});
-				});
-			}
-			break;
-		default:
-			if (clas.name)
-				clas.name.replace($express, function (key) {
-					if (code(key, scope) == undefined || $path == undefined) return;
-					var caches = codes($path, cache);
-					caches.setting({
-						resolver: "attribute",
-						scope: scope,
-						clas: clas,
-						path: $path,
-						node: node
-					});
-				});
-			if (node.nodeValue)
-				node.nodeValue.replace($express, function (key) {
-					key.replace($word, function (key) {
-						if (code(key, scope) == undefined || $path == undefined) return;
-						var caches = codes($path, cache);
-						if (node.nodeType == 2)
-							(node.ownerElement["@attr"] = node.ownerElement["@attr"] || []).push($path);
-						caches.setting({
-							resolver: "express",
-							scope: scope,
-							clas: clas,
-							path: $path,
-							node: node
-						});
-					});
-				});
-			break;
-	}
+
+function binding(node, scope, clas, content, attributes) {
+  try {
+    var nodeValue = clas.clas.nodeValue;
+    switch (clas.clas.nodeType) {
+      case 1:
+        var key = clas.clas.getAttribute("each").split(":").pop();
+        if (code(key, scope) == undefined || global.$path == undefined) return;
+        clas.resolver = "each";
+        clas.content = content;
+        clas.scope = scope;
+        clas.path = [global.$path];
+        clas.node = node;
+        break;
+      case 2:
+        nodeValue.replace($expres, function (key) {
+          clas.resolver = "express";
+          clas.scope = scope;
+          clas.path = [];
+          clas.node = node;
+          dep(key, scope, clas);
+          if (clas.clas.name == "value") bind(node, scope);
+          attributes.push(clas);
+        });
+        break;
+      default:
+        nodeValue.replace($each, function (key) {
+          key = key.replace($each, "$2").split(":").pop();
+          if (code(key, scope) == undefined || global.$path == undefined) return;
+          clas.resolver = "each";
+          clas.content = content;
+          clas.scope = scope;
+          clas.path = [global.$path];
+          clas.node = node;
+          throw null;
+        });
+        nodeValue.replace($when, function (key) {
+          key = key.replace($when, "$2");
+          clas.resolver = "when";
+          clas.scope = scope;
+          clas.path = [];
+          clas.node = node;
+          dep(key, scope, clas);
+          throw null;
+        });
+        nodeValue.replace($express, function (key) {
+          clas.resolver = "express";
+          clas.scope = scope;
+          clas.path = [];
+          clas.node = node;
+          dep(key, scope, clas);
+        });
+        break;
+    }
+  } catch (error) {
+  }
+  function dep(key, scope, clas) {
+    key.replace($word, function (key) {
+      if (code(key, scope) == undefined || global.$path == undefined) return;
+      clas.path.push(global.$path);
+    });
+  }
 }
-function commom(node, scope, clas) {
-	each(node.attributes, function (child) {
-		if ($express1.test(child.name)) {
-			try {
-				var node = document.createAttribute(codex(child.name, scope));
-				node.nodeValue = child.nodeValue;
-				child.ownerElement.setAttributeNode(node);
-				child.ownerElement.removeAttributeNode(child);
-				setComCache(node, scope, (clas.clas || clas).getAttributeNode(child.name));
-				commom(node, scope, (clas.clas || clas).getAttributeNode(child.name));
-			} catch (e) {
-				console.log(child.name + "属性节点不允许为null或者''， " + child.name + "=" + child.nodeValue + "属性节点创建失败");
-			}
-		}
-		commom(child, scope, (clas.clas || clas).getAttributeNode(child.name));
-	});
-	if (new RegExp($express2).test(node.nodeValue)) {
-		setComCache(node, scope, clas);
-		node.nodeValue = codex(node.nodeValue, scope);
-	} else if ($html.test(node.nodeValue)) {
-		resolver.html(clas, scope);
-	} else if ($view.test(node.nodeValue)) {
-		resolver.view(clas, scope);
-	}
+
+function bind(node, scope) {
+  var owner = node.ownerElement, handle;
+  owner._express = node.nodeValue.replace($express, "$1");
+  owner.on("change", handle = function () {
+    new Function('scope',
+      `
+      scope`+ Path(owner._express) + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
+      `
+    )(scope);
+  });
+  if (owner.nodeName == "SELECT") {
+    let value = code(owner._express, scope);
+    blank(value) ? handle() : owner.value = value;
+  }
 }
-function compiler(node, iscope, childNodes, content) {
-	each(childNodes, function (child, index, childNodes) {
-		if ($break.test(child.clas.nodeValue))
-			return childNodes.clear();
-		switch (child.clas.nodeType) {
-			case 1:
-				if (child.clas.hasAttribute("each")) {
-					var expreses = child.clas.getAttribute("each").split(":");
-					var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
-					var dataSource = code(source, iscope);
 
-					node.appendChild(document.createComment($path));
-					var clas = classNode(null, child);
-					content.childNodes.push(clas);
-					setCache(null, iscope, clas, content, node);
+function classNode(newNode, child) {
+  return {
+    node: newNode,
+    clas: child.clas,
+    children: child.children,
+    scope: child.scope,
+    childNodes: []
+  };
+}
 
-					each(dataSource, function (item, index) {
-						var scope = Object.create(iscope || {});
-						setVariable(scope, variable, $path);
-						if (id) scope[id.trim()] = index.toString();
-						var newNode = child.clas.cloneNode();
-						newNode.removeAttribute("each");
-						node.appendChild(newNode);
-						var clasNodes = classNode(newNode, child);
-						clas.childNodes.push(clasNodes);
-						compiler(newNode, scope, slice(child.children), clasNodes);
-						commom(newNode, scope, child.clas);
-					});
-				} else {
-					switch ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
-						case true:
-							var newNode = child.clas.cloneNode(true);
-							node.appendChild(newNode);
-							var clasNodes = classNode(newNode, child);
-							content.childNodes.push(clasNodes);
-							break;
-						default:
-							var newNode = child.clas.cloneNode();
-							node.appendChild(newNode);
-							var clasNodes = classNode(newNode, child);
-							content.childNodes.push(clasNodes);
-							compiler(newNode, iscope, slice(child.children), clasNodes);
-							commom(newNode, iscope, clasNodes);
-							break;
-					}
-				}
-				break;
-			default:
-				if ($each.test(child.clas.nodeValue)) {
-					var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-					var variable = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
-					var dataSource = code(source, iscope);
+function eachNode(newNode, node, child) {
+  var comment = document.createComment("each:" + global.$path);
+  node.appendChild(comment);
+  return {
+    node: newNode,
+    clas: child.clas,
+    children: child.children,
+    scope: child.scope,
+    childNodes: [{
+      node: comment,
+      clas: child.clas,
+      children: [],
+      scope: child.scope,
+      childNodes: []
+    }]
+  };
+}
 
-					node.appendChild(document.createComment($path));
-					var clas = classNode(null, child);
-					content.childNodes.push(clas);
-					setCache(null, iscope, clas, content, node);
+function whenNode(newNode, node, child, content, scopes, attributes) {
+  if (new RegExp($whea).test(child.clas.nodeValue)) {
+    var comment = document.createComment("when:" + global.$path);
+    node.appendChild(comment);
+    content.childNodes.push(content = {
+      node: newNode,
+      clas: child.clas,
+      children: [],
+      scope: child.scope,
+      content: content,
+      childNodes: [{
+        node: comment,
+        clas: child.clas,
+        children: [],
+        scope: child.scope,
+        childNodes: []
+      }]
+    });
+    binding(null, scopes, content, attributes);
+  }
+  return content;
+}
 
-					each(dataSource, slice(child.children), function (item, index, children) {
-						var scope = Object.create(iscope || {});
-						setVariable(scope, variable, $path);
-						if (id) scope[id.trim()] = index.toString();
-						var clasNodes = classNode(null, child);
-						clas.childNodes.push(clasNodes);
-						compiler(node, scope, slice(children), clasNodes);
-					});
-				} else if ($when.test(child.clas.nodeValue)) {
-					var clas = classNode(null, child);
-					content.childNodes.push(clas);
-					setCache(null, iscope, clas, content, node);
-					var when = code(child.clas.nodeValue.replace($when, "$2"), iscope);
-					if (when) {
-						each(slice(child.children), function (child, index, childNodes) {
-							if ($break.test(child.clas.nodeValue))
-								return true;
-							switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
-								case true:
-									compiler(node, iscope, childNodes, clas);
-									break;
-								default:
-									var newNode = child.clas.cloneNode();
-									node.appendChild(newNode);
-									var clasNodes = classNode(newNode, child);
-									clas.childNodes.push(clasNodes);
-									commom(newNode, iscope, clasNodes);
-									break;
-							}
-							childNodes.shift();
-						});
-					} else {
-						each(slice(child.children), function (child, index, childNodes) {
-							childNodes.shift();
-							if ($else.test(child.clas.nodeValue)) {
-								each(childNodes, function (child, index, childNodes) {
-									switch ($chen.test(child.clas.nodeValue) || child.clas.nodeType == 1) {
-										case true:
-											compiler(node, iscope, childNodes, clas);
-											break;
-										default:
-											var newNode = child.clas.cloneNode();
-											node.appendChild(newNode);
-											var clasNodes = classNode(newNode, child);
-											clas.childNodes.push(clasNodes);
-											commom(newNode, iscope, clasNodes);
-											break;
-									}
-									childNodes.shift();
-								});
-							}
-						});
-					}
-				} else {
-					var newNode = child.clas.cloneNode();
-					node.appendChild(newNode);
-					var clasNodes = classNode(newNode, child);
-					content.childNodes.push(clasNodes);
-					commom(newNode, iscope, clasNodes);
-				}
-				break;
-		}
-		childNodes.shift();
-	});
+function comNode(node, scope, clas, content) {
+  var comment = document.createComment("component");
+  node.parentNode.replaceChild(comment, node);
+  clas.scope = scope;
+  clas.resolver = "component";
+  clas.content = content;
+  clas.childNodes.push({
+    node: comment,
+    children: [],
+    content: clas,
+    childNodes: []
+  });
+}
+
+export function compoNode(node, child, component) {
+  var comment = document.createComment("component:" + child.path);
+  node.before(comment);
+  component.content.node = component.view;
+  return {
+    node: child.node,
+    clas: child.clas,
+    children: [component.node],
+    scope: child.scope,
+    resolver: child.resolver,
+    content: child.content,
+    path: child.path,
+    childNodes: [{
+      node: comment,
+      children: [],
+      scope: child.scope,
+      childNodes: []
+    }, component.content]
+  };
+}
+
+function attrNode(newNode, scope, clas) {
+  return {
+    node: newNode,
+    clas: clas,
+    children: [],
+    scope: scope,
+    childNodes: []
+  };
+}
+
+function commom(node, scope, clas, content, attributes) {
+  each(node.attributes, function (child) {
+    let clasNodes = attrNode(child, scope, child.cloneNode());
+    commom(child, scope, clasNodes, null, attributes);
+  });
+  if (new RegExp($component).test(node.nodeValue)) {
+    comNode(node, scope, clas, content);
+    resolver["component"](clas);
+  } else if (new RegExp($express).test(node.nodeValue)) {
+    binding(node, scope, clas, content, attributes);
+    node.nodeValue = codex(node.nodeValue, scope);
+  }
 }
