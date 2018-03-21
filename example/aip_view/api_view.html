@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+
+<html>
+
+<head>
+  <title>main.html</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script type="text/javascript" src="../../release/view.js"></script>
+
+  <style>
+    table.api-detail>tbody>tr> :first-child {
+      text-align: right;
+      width: 105px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card text-center" style="height: calc(100vh);">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs">
+        <li class="nav-item ml-5">
+          <a class="nav-link active" href="#home">
+            <svg width="24" height="24" viewBox="0 0 8 8" class="d-inline-block align-top">
+              <path d="M4 0l-4 3h1v4h2v-2h2v2h2v-4.03l1 .03-4-3z" />
+            </svg>
+            首页
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#iface">接口</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#group">分组</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#setting">设置</a>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body" style="overflow: auto;">
+      <main class=" container">
+        {{@router}}
+
+        <div id="home">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  项目统计
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <td sc>分组数量</td>
+                    <td>
+                      <span class="badge badge-pill badge-primary">{{ifaces.length}}</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>接口数量</td>
+                    <td>
+                      <span class="badge badge-pill badge-primary">{{ifaces.length}}</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>主机数量</td>
+                    <td>
+                      <span class="badge badge-pill badge-primary">{{sets.length}}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="iface">
+          <div class="card text-left" each="item:i:ifaces">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{{i}}" aria-expanded="true">
+                  {{item.group_name}}
+                  <span class="badge badge-pill badge-primary ml-2">{{item.list.length}}</span>
+                </button>
+              </h5>
+            </div>
+            <div id="collapse{{i}}" class="collapse show">
+              <div class="card-body">
+                <table class="table">
+                  <tbody>
+                    <tr each="iface:item.list">
+                      <th scope="row">
+                        <span class="badge badge-success">{{iface.method}}</span>
+                      </th>
+                      <td>{{iface.name}}</td>
+                      <td>{{iface.comment}}</td>
+                      <td>
+                        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                          <div class="btn-group mr-2" role="group" aria-label="First group">
+                            <a class="btn btn-outline-primary btn-sm" href="#iface/detail/{{iface.id}}">详情</a>
+                            <a class="btn btn-outline-success btn-sm" href="#iface/save/add/{{iface.id}}">添加</a>
+                            <a class="btn btn-outline-secondary btn-sm" href="#iface/save/copy/{{iface.id}}">复制</a>
+                            <a class="btn btn-outline-success btn-sm" href="#iface/save/edit/{{iface.id}}">修改</a>
+                            <button type="button" class="btn btn btn-outline-danger btn-sm" onclick="ifaceDle(`{{iface.id}}`)">删除</button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="iface-detail">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  接口详情 > {{iface.comment}}
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <table class="table api-detail">
+                <tbody>
+                  <tr>
+                    <th scope="row" class="text-right">请求方式：</th>
+                    <td>
+                      <select class="form-control form-control-sm col-sm-2" value="{{iface.method}}">
+                        <option value="GET">GET</option>
+                        <option value="POST" selected>POST</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-right">主机列表：</th>
+                    <td>
+                      <select class="form-control form-control-sm col-sm-2" value="{{iface.host}}">
+                        <option value="{{host.host}}" each="host:hosts">{{host.userName}}</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-right">接口地址：</th>
+                    <td>{{iface.url}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-right">输入参数：</th>
+                    <td class="pr-0">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th scope="col">参数名</th>
+                            <th scope="col">参数值</th>
+                            <th scope="col">参数类型</th>
+                            <th scope="col">可选传入</th>
+                            <th scope="col">参数备注</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr each="item:iface.params">
+                            <td>{{item.name}}</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" value="{{item.value}}">
+                            </td>
+                            <td>{{item.type}}</td>
+                            <td>{{item.required}}</td>
+                            <td>{{item.comment}}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-right">返回数据：</th>
+                    <td>
+                      <textarea class="form-control col-sm-8" rows="8" value="{{iface.response}}">{{iface.response}}</textarea>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-right">返备注：</th>
+                    <td>{{iface.comment}}</td>
+                  </tr>
+                  <tr>
+                    <td scope="row"></td>
+                    <td>
+                      <button type="button" class="btn btn-primary" onclick="ifaceSave()">发送请求</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="iface-save">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  @when(add=="add"){ 新增接口 }.when{ 修改接口 }
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <form class="text-right">
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">接口名称：</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" placeholder="接口名称" value="{{iface.name}}">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">接口用途：</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" placeholder="接口用途" value="{{iface.comment}}">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">选择分组：</label>
+                  <div class="col-sm-4">
+                    <select class="form-control" value="{{iface.gid}}">
+                      <option>选择分组</option>
+                      <option each="item:groups" value="{{item.id}}">{{item.group_name}}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">请求方式：</label>
+                  <div class="col-sm-4">
+                    <select class="form-control" value="{{iface.method}}">
+                      <option value="GET">GET</option>
+                      <option value="POST" selected>POST</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">调用地址：</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" placeholder="调用地址" value="{{iface.url}}">
+                  </div>
+                </div>
+                <fieldset class="form-group">
+                  <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">请求参数：</legend>
+                    <div class="col-sm-8  text-left">
+                      <button type="button" class="btn btn-sm btn-success" onclick="paramAdd()"> + </button>
+                    </div>
+                  </div>
+                </fieldset>
+                <fieldset class="form-group" each="item:i:iface.params">
+                  <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0"></legend>
+                    <div class="col-sm-8">
+                      <div class="btn-toolbar">
+                        <div class="btn-group">
+                          <input type="text" class="form-control mr-1" placeholder="参数名" value="{{item.name}}">
+                          <select name="para_type" class="form-control  mr-1" value="{{item.type}}">
+                            <option value="int">int</option>
+                            <option value="long">long</option>
+                            <option value="float">float</option>
+                            <option value="string" selected>string</option>
+                            <option value="boolen">boolen</option>
+                            <option value="file">file</option>
+                            <option value="array">array</option>
+                            <option value="json">json</option>
+                            <option value="xml">xml</option>
+                          </select>
+                          <select class="form-control  mr-1" value="{{item.required}}">
+                            <option value="1">必须传入</option>
+                            <option value="0" selected>可选传入</option>
+                          </select>
+                          <input type="text" class="form-control mr-1" placeholder="参数备注" value="{{item.comment}}">
+                          <button type="button" class="btn btn-danger mr-1" onclick="paramDel({{i}})">删除</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+                <fieldset class="form-group">
+                  <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">返回参数：</legend>
+                    <div class="col-sm-8">
+                      <textarea class="form-control" rows="8" value="{{iface.response}}">{{iface.response}}</textarea>
+                    </div>
+                  </div>
+                </fieldset>
+                <div class="form-group row">
+                  <label for="inputText3" class="col-sm-2 col-form-label">备注信息：</label>
+                  <div class="col-sm-8">
+                    <textarea class="form-control" rows="5" value="{{iface.comment}}">{{iface.comment}}</textarea>
+                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-2"></div>
+                  <div class="col-sm-10  text-left">
+                    <button type="button" class="btn btn-primary" onclick="ifaceSave()">确定</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="group">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  分组列表
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>分组名称</th>
+                    <th>分组编码</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr each="group:list">
+                    <td>{{group.group_name}}</td>
+                    <td>{{group.code}}</td>
+                    <td>
+                      <a class="badge badge-primary pointer" href="#group/add/{{group.id}}"> 添加</a>
+                      <a class="badge badge-success pointer ml-2" href="#group/edit/{{group.id}}">修改</a>
+                      <span class="badge badge-danger pointer ml-2" style="cursor:pointer" onclick="groupDel(`{{group.id}}`)">删除</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="group-save">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  @when(add=="add"){ 添加分组 }.when{ 修改分组 }
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">显示名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="显示名称" value="{{group_name}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label">分组标识：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="分组标识" value="{{code}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10  text-left">
+                  <button type="button" class="btn btn-primary" onclick="groupSave()">确定</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div id="setting">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  设置主机列表
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>用户名称</th>
+                    <th>用户主机</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr each="set:list">
+                    <td>{{set.userName}}</td>
+                    <td>{{set.host}}</td>
+                    <td>
+                      <a class="badge badge-primary" href="#setting/add/{{set.id}}"> 添加</a>
+                      <a class="badge badge-success ml-2" href="#setting/edit/{{set.id}}">修改</a>
+                      <span class="badge badge-danger ml-2" style="cursor:pointer" onclick="setDel(`{{set.id}}`)">删除</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div id="setting-save">
+          <div class="card text-left">
+            <div class="card-header py-0">
+              <h5 class="mb-0">
+                <button class="btn btn-link">
+                  @when(add=="add"){ 添加主机 }.when{ 修改主机 }
+                </button>
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label pl-4">用户名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="用户名称" value="{{userName}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputText3" class="col-sm-2 col-form-label pl-4">主机名称：</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" placeholder="主机名称" value="{{host}}">
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-10  text-left">
+                  <button type="button" class="btn btn-primary" onclick="setSave()">确定</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </main>
+    </div>
+  </div>
+</body>
+<script type="text/javascript" src="./api_view.js"></script>
+<script type="text/javascript">
+  $('.nav-item a').click(function (e) {
+    $(this).tab('show')
+  })
+</script>
+
+</html>
