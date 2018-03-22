@@ -7,11 +7,10 @@
 ######     3.循环嵌套  
 ######     4.逻辑判断  
 ######     5.数据双向绑定
+
 ## 示例
-
 ```html
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html>
     
     <head>
@@ -25,8 +24,12 @@
         <div @click="alert(`{{param1}}`)">
           @when(i==1){
             {{param1}}
-          }.when{
+          }
+          .when(i==2){
             {{item}}
+          }
+          .when{
+            {{i}}
           }
         </div>
       </div>
@@ -50,5 +53,4 @@
         }
       });
     </script>
-
-     
+```
