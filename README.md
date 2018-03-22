@@ -4,11 +4,14 @@
 ## 功能  
 ######     1.支持小粒度的表达式控制  
 ######     2.基于浏览器解析（非字符串拼接）的模板引擎  
-######     3.循环嵌套  
-######     4.逻辑判断  
-######     5.数据双向绑定
-
+######     3.循环 
+######     4.逻辑 
+######     5.双向绑定
+######     6.组件
+######     7.路由
 ## 示例
+
+    
 ```html
 <!DOCTYPE html>
     <html>
@@ -20,18 +23,19 @@
     </head>
     
     <body>
+    
       <div each="item:i:list">
-        <div @click="alert(`{{param1}}`)">
-          @when(i==1){
-            {{param1}}
-          }
-          .when(i==2){
-            {{item}}
-          }
-          .when{
-            {{i}}
-          }
-        </div>
+        @each(l:item){
+          <div @click="alert(`{{param1}}`)">
+            @when(i==1){
+              <div>{{param1}}</div>
+            }.when(i==2){
+              <div>{{param2}}</div>
+            }.when{
+              <div>{{l}}</div>
+            }
+          </div>
+        }
       </div>
     
     </body>
@@ -42,7 +46,7 @@
         view: "body",
         model: {
           router: "",
-          list: [1, 2, 3],
+          list: [[1, 2],[3,4], [5,6]],
           param1: "param1",
           param2: "param2"
         },
@@ -54,3 +58,5 @@
       });
     </script>
 ```
+
+     
