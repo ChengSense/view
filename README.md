@@ -68,8 +68,6 @@
 <head>
   <title>main.html</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link href="https://kendo.cdn.telerik.com/2017.3.1018/styles/kendo.common.min.css" rel="stylesheet" />
-  <link href="https://kendo.cdn.telerik.com/2017.3.1018/styles/kendo.silver.min.css" rel="stylesheet" />
   <script type="text/javascript" src="../../release/view.js"></script>
 </head>
 
