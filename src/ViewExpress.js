@@ -9,3 +9,4 @@ export var $expres = /\{\s*\{([^\{\}]*)\}\s*\}/g;
 export var $component = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
 export var $close = /(^\s*\}\s*$)/;
 export var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
+export var $evevt = /^@(.*)/;

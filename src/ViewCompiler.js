@@ -1,6 +1,6 @@
 import { each, slice, blank, extention } from "./ViewLang";
-import { code, codex, Path, setVariable } from "./ViewScope";
-import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word } from "./ViewExpress";
+import { code, Code, codex, Path, setVariable } from "./ViewScope";
+import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $evevt } from "./ViewExpress";
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
 
@@ -121,6 +121,33 @@ export function compiler(node, scopes, childNodes, content, attributes) {
   });
 }
 
+function commom(node, scope, clas, content, attributes) {
+  each(node.attributes, function (child) {
+    let clasNodes = attrNode(child, scope, child.cloneNode());
+    commom(child, scope, clasNodes, null, attributes);
+  });
+  if (new RegExp($component).test(node.nodeValue)) {
+    comNode(node, scope, clas, content);
+    resolver["component"](clas);
+  } else if (new RegExp($express).test(node.nodeValue)) {
+    binding(node, scope, clas, content, attributes);
+    node.nodeValue = codex(node.nodeValue, scope);
+  }
+  if (new RegExp($evevt).test(node.name)) {
+    bind(node, scope);
+  }
+}
+
+function bind(node, scope) {
+  node.name.replace($evevt, function (key) {
+    key = key.replace($evevt, "$1");
+    let owner = node.ownerElement;
+    owner.on(key, function () {
+      Code(node.nodeValue).call(owner, scope.$action);
+    })
+  });
+}
+
 function whem(child) {
   if (child) return new RegExp($whec).test(child.clas.nodeValue);
 }
@@ -145,7 +172,7 @@ function binding(node, scope, clas, content, attributes) {
           clas.path = [];
           clas.node = node;
           dep(key, scope, clas);
-          if (clas.clas.name == "value") bind(node, scope);
+          if (clas.clas.name == "value") module(node, scope);
           attributes.push(clas);
         });
         break;
@@ -189,7 +216,7 @@ function dep(key, scope, clas) {
   });
 }
 
-function bind(node, scope) {
+function module(node, scope) {
   var owner = node.ownerElement, handle;
   owner._express = node.nodeValue.replace($express, "$1");
   owner.on("change", handle = function () {
@@ -299,18 +326,4 @@ function attrNode(newNode, scope, clas) {
     scope: scope,
     childNodes: []
   };
-}
-
-function commom(node, scope, clas, content, attributes) {
-  each(node.attributes, function (child) {
-    let clasNodes = attrNode(child, scope, child.cloneNode());
-    commom(child, scope, clasNodes, null, attributes);
-  });
-  if (new RegExp($component).test(node.nodeValue)) {
-    comNode(node, scope, clas, content);
-    resolver["component"](clas);
-  } else if (new RegExp($express).test(node.nodeValue)) {
-    binding(node, scope, clas, content, attributes);
-    node.nodeValue = codex(node.nodeValue, scope);
-  }
 }

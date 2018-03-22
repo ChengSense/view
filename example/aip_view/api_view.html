@@ -111,7 +111,7 @@
                             <a class="btn btn-outline-success btn-sm" href="#iface/save/add/{{iface.id}}">添加</a>
                             <a class="btn btn-outline-secondary btn-sm" href="#iface/save/copy/{{iface.id}}">复制</a>
                             <a class="btn btn-outline-success btn-sm" href="#iface/save/edit/{{iface.id}}">修改</a>
-                            <button type="button" class="btn btn btn-outline-danger btn-sm" onclick="ifaceDle(`{{iface.id}}`)">删除</button>
+                            <button type="button" class="btn btn btn-outline-danger btn-sm" @click="ifaceDle(`{{iface.id}}`)">删除</button>
                           </div>
                         </div>
                       </td>
@@ -196,7 +196,7 @@
                   <tr>
                     <td scope="row"></td>
                     <td>
-                      <button type="button" class="btn btn-primary" onclick="ifaceSave()">发送请求</button>
+                      <button type="button" class="btn btn-primary" @click="ifaceSave()">发送请求</button>
                     </td>
                   </tr>
                 </tbody>
@@ -257,7 +257,7 @@
                   <div class="row">
                     <legend class="col-form-label col-sm-2 pt-0">请求参数：</legend>
                     <div class="col-sm-8  text-left">
-                      <button type="button" class="btn btn-sm btn-success" onclick="paramAdd()"> + </button>
+                      <button type="button" class="btn btn-sm btn-success" @click="paramAdd()"> + </button>
                     </div>
                   </div>
                 </fieldset>
@@ -284,7 +284,7 @@
                             <option value="0" selected>可选传入</option>
                           </select>
                           <input type="text" class="form-control mr-1" placeholder="参数备注" value="{{item.comment}}">
-                          <button type="button" class="btn btn-danger mr-1" onclick="paramDel({{i}})">删除</button>
+                          <button type="button" class="btn btn-danger mr-1" @click="paramDel({{i}})">删除</button>
                         </div>
                       </div>
                     </div>
@@ -308,7 +308,7 @@
                 <div class="form-group row">
                   <div class="col-sm-2"></div>
                   <div class="col-sm-10  text-left">
-                    <button type="button" class="btn btn-primary" onclick="ifaceSave()">确定</button>
+                    <button type="button" class="btn btn-primary" @click="ifaceSave()">确定</button>
                   </div>
                 </div>
               </form>
@@ -342,7 +342,7 @@
                     <td>
                       <a class="badge badge-primary pointer" href="#group/add/{{group.id}}"> 添加</a>
                       <a class="badge badge-success pointer ml-2" href="#group/edit/{{group.id}}">修改</a>
-                      <span class="badge badge-danger pointer ml-2" style="cursor:pointer" onclick="groupDel(`{{group.id}}`)">删除</span>
+                      <span class="badge badge-danger pointer ml-2" style="cursor:pointer" @click="groupDel(`{{group.id}}`)">删除</span>
                     </td>
                   </tr>
                 </tbody>
@@ -376,7 +376,7 @@
               <div class="form-group row">
                 <div class="col-sm-2"></div>
                 <div class="col-sm-10  text-left">
-                  <button type="button" class="btn btn-primary" onclick="groupSave()">确定</button>
+                  <button type="button" class="btn btn-primary" @click="groupSave()">确定</button>
                 </div>
               </div>
             </div>
@@ -411,7 +411,7 @@
                     <td>
                       <a class="badge badge-primary" href="#setting/add/{{set.id}}"> 添加</a>
                       <a class="badge badge-success ml-2" href="#setting/edit/{{set.id}}">修改</a>
-                      <span class="badge badge-danger ml-2" style="cursor:pointer" onclick="setDel(`{{set.id}}`)">删除</span>
+                      <span class="badge badge-danger ml-2" style="cursor:pointer" @click="setDel(`{{set.id}}`)">删除</span>
                     </td>
                   </tr>
                 </tbody>
@@ -447,7 +447,7 @@
               <div class="form-group row">
                 <div class="col-sm-2"></div>
                 <div class="col-sm-10  text-left">
-                  <button type="button" class="btn btn-primary" onclick="setSave()">确定</button>
+                  <button type="button" class="btn btn-primary" @click="setSave()">确定</button>
                 </div>
               </div>
             </div>

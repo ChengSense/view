@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>main.html</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" src="../../release/view.js"></script>
+</head>
+
+<body>
+
+  <div @click="alert(`{{param1}}`)">
+    {{param1}}
+  </div>
+
+</body>
+
+</html>
+<script type="text/javascript">
+  var app = new View({
+    view: "body",
+    model: {
+      router: "",
+      param1: "asdasdasd",
+      param2: "3333"
+    },
+    action: {
+      alert(el) {
+        app.model.param1 = "this.model";
+      }
+    }
+  });
+
+</script>

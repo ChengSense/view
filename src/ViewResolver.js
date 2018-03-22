@@ -23,7 +23,7 @@ export var resolver = {
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model });
+      let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)

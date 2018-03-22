@@ -205,6 +205,12 @@ var iface = new View({
   component: "#iface",
   model: {
     ifaces: api.api.getList()
+  },
+  action: {
+    ifaceDle(id) {
+      api.api.delete(id);
+      iface.model.ifaces = api.api.getList();
+    }
   }
 });
 
@@ -219,6 +225,33 @@ var iface_save = new View({
   component: "#iface-save",
   model: {
     groups: api.group.getList()
+  },
+  action: {
+    ifaceSave() {
+      if (app.model.add == "add") {
+        let a = clone(app.model.iface);
+        a.id = api.getId();
+        api.api.add(a);
+      } else {
+        let a = clone(app.model.iface);
+        api.api.save(a);
+      }
+      iface.model.ifaces = api.api.getList();
+      router.redreact("iface");
+    },
+    paramAdd() {
+      app.model.iface.params.push({
+        name: "",
+        type: "string",
+        required: "1",
+        comment: ""
+      });
+    },
+    paramDel(id) {
+      if (1 < app.model.iface.params.length) {
+        app.model.iface.params.splice(id, 1);
+      }
+    }
   }
 });
 
@@ -226,6 +259,11 @@ var group = new View({
   component: "#group",
   model: {
     list: api.group.getList()
+  },
+  action: {
+    groupDel(id) {
+      api.group.delete(id);
+    }
   }
 });
 
@@ -235,6 +273,25 @@ var group_save = new View({
     add: "add",
     group_name: "",
     code: ""
+  },
+  action: {
+    groupSave() {
+      var group = group_save.model;
+      if (group.add == "add") {
+        api.group.add({
+          id: api.getId(),
+          group_name: group.group_name,
+          code: group.code
+        });
+      } else {
+        api.group.save({
+          id: group.id,
+          group_name: group.group_name,
+          code: group.code
+        });
+      }
+      router.redreact("group");
+    }
   }
 });
 
@@ -242,6 +299,11 @@ var setting = new View({
   component: "#setting",
   model: {
     list: api.setting.getList()
+  },
+  action: {
+    setDel(id) {
+      api.setting.delete(id);
+    }
   }
 });
 
@@ -252,6 +314,25 @@ var setting_save = new View({
     id: "",
     userName: "",
     host: ""
+  },
+  action: {
+    setSave() {
+      var sets = setting_save.model;
+      if (sets.add == "add") {
+        api.setting.add({
+          id: api.getId(),
+          userName: sets.userName,
+          host: sets.host
+        });
+      } else {
+        api.setting.save({
+          id: sets.id,
+          userName: sets.userName,
+          host: sets.host
+        });
+      }
+      router.redreact("setting");
+    }
   }
 });
 
@@ -352,74 +433,3 @@ let router = new Router(app, {
     }
   }
 });
-
-
-function ifaceSave() {
-  if (app.model.add == "add") {
-    let a = clone(app.model.iface);
-    a.id = api.getId();
-    api.api.add(a);
-  } else {
-    let a = clone(app.model.iface);
-    api.api.save(a);
-  }
-  iface.model.ifaces = api.api.getList();
-  router.redreact("iface");
-}
-function ifaceDle(id) {
-  api.api.delete(id);
-  iface.model.ifaces = api.api.getList();
-}
-function paramAdd() {
-  app.model.iface.params.push({
-    name: "",
-    type: "string",
-    required: "1",
-    comment: ""
-  });
-}
-function paramDel(id) {
-  if (1 < app.model.iface.params.length) {
-    app.model.iface.params.splice(id, 1);
-  }
-}
-function groupSave() {
-  var group = group_save.model;
-  if (group.add == "add") {
-    api.group.add({
-      id: api.getId(),
-      group_name: group.group_name,
-      code: group.code
-    });
-  } else {
-    api.group.save({
-      id: group.id,
-      group_name: group.group_name,
-      code: group.code
-    });
-  }
-  router.redreact("group");
-}
-function groupDel(id) {
-  api.group.delete(id);
-}
-function setSave() {
-  var sets = setting_save.model;
-  if (sets.add == "add") {
-    api.setting.add({
-      id: api.getId(),
-      userName: sets.userName,
-      host: sets.host
-    });
-  } else {
-    api.setting.save({
-      id: sets.id,
-      userName: sets.userName,
-      host: sets.host
-    });
-  }
-  router.redreact("setting");
-}
-function setDel(id) {
-  api.setting.delete(id);
-}

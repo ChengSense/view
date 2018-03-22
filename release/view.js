@@ -12,6 +12,7 @@ var view = (function (exports) {
   var $component = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
   var $close = /(^\s*\}\s*$)/;
   var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
+  var $evevt = /^@(.*)/;
 
   function code(_express, _scope) {
     try {
@@ -517,6 +518,33 @@ var view = (function (exports) {
     });
   }
 
+  function commom(node, scope, clas, content, attributes) {
+    each(node.attributes, function (child) {
+      let clasNodes = attrNode(child, scope, child.cloneNode());
+      commom(child, scope, clasNodes, null, attributes);
+    });
+    if (new RegExp($component).test(node.nodeValue)) {
+      comNode(node, scope, clas, content);
+      resolver["component"](clas);
+    } else if (new RegExp($express).test(node.nodeValue)) {
+      binding(node, scope, clas, content, attributes);
+      node.nodeValue = codex(node.nodeValue, scope);
+    }
+    if (new RegExp($evevt).test(node.name)) {
+      bind(node, scope);
+    }
+  }
+
+  function bind(node, scope) {
+    node.name.replace($evevt, function (key) {
+      key = key.replace($evevt, "$1");
+      let owner = node.ownerElement;
+      owner.on(key, function () {
+        Code(node.nodeValue).call(owner, scope.$action);
+      });
+    });
+  }
+
   function whem(child) {
     if (child) return new RegExp($whec).test(child.clas.nodeValue);
   }
@@ -541,7 +569,7 @@ var view = (function (exports) {
             clas.path = [];
             clas.node = node;
             dep(key, scope, clas);
-            if (clas.clas.name == "value") bind(node, scope);
+            if (clas.clas.name == "value") module$1(node, scope);
             attributes.push(clas);
           });
           break;
@@ -585,7 +613,7 @@ var view = (function (exports) {
     });
   }
 
-  function bind(node, scope) {
+  function module$1(node, scope) {
     var owner = node.ownerElement, handle;
     owner._express = node.nodeValue.replace($express, "$1");
     owner.on("change", handle = function () {
@@ -697,20 +725,6 @@ var view = (function (exports) {
     };
   }
 
-  function commom(node, scope, clas, content, attributes) {
-    each(node.attributes, function (child) {
-      let clasNodes = attrNode(child, scope, child.cloneNode());
-      commom(child, scope, clasNodes, null, attributes);
-    });
-    if (new RegExp($component).test(node.nodeValue)) {
-      comNode(node, scope, clas, content);
-      resolver["component"](clas);
-    } else if (new RegExp($express).test(node.nodeValue)) {
-      binding(node, scope, clas, content, attributes);
-      node.nodeValue = codex(node.nodeValue, scope);
-    }
-  }
-
   var resolver = {
     view: function (view, node, scope, content, attributes) {
       try {
@@ -731,7 +745,7 @@ var view = (function (exports) {
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        let component = new View({ view: app.component, model: app.model });
+        let component = new View({ view: app.component, model: app.model, action: app.action });
         let clasNodes = compoNode(insert, node, component);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode)
@@ -886,8 +900,10 @@ var view = (function (exports) {
         var node = initCompiler(init(slice(view)))[0];
         this.content = content;
         this.model = app.model;
+        this.action = app.action;
         this.node = node;
         this.view = view[0];
+        app.model.$action = app.action;
         resolver["view"](this.view, node, app.model, content, attributes);
         break;
       case "component":
@@ -896,6 +912,7 @@ var view = (function (exports) {
         this.view.parentNode.removeChild(this.view);
         this.content = content;
         this.model = app.model;
+        this.action = app.action;
         this.component = this.view.outerHTML;
         break;
     }

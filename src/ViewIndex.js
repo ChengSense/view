@@ -24,8 +24,10 @@ export function View(app) {
       var node = initCompiler(init(slice(view)))[0];
       this.content = content;
       this.model = app.model;
+      this.action = app.action;
       this.node = node;
       this.view = view[0];
+      app.model.$action = app.action;
       resolver["view"](this.view, node, app.model, content, attributes);
       break;
     case "component":
@@ -34,6 +36,7 @@ export function View(app) {
       this.view.parentNode.removeChild(this.view);
       this.content = content;
       this.model = app.model;
+      this.action = app.action;
       this.component = this.view.outerHTML;
       break;
   }
