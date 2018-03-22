@@ -21,11 +21,8 @@
     </head>
     
     <body>
-      循环
       <div each="item:i:list">
-        事件
         <div @click="alert(`{{param1}}`)">
-          条件
           @when(i==1){
             {{param1}}
           }.when{
