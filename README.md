@@ -7,3 +7,47 @@
 ######     3.循环嵌套  
 ######     4.逻辑判断  
 ######     5.数据双向绑定
+## 示例
+
+    <!DOCTYPE html>
+    <html>
+    
+    <head>
+      <title>main.html</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <script type="text/javascript" src="../../release/view.js"></script>
+    </head>
+    
+    <body>
+    
+      <div each="item:i:list">
+        <div @click="alert(`{{param1}}`)">
+          @when(i==1){
+            {{param1}}
+          }.when{
+            {{item}}
+          }
+        </div>
+      </div>
+    
+    </body>
+    
+    </html>
+    <script type="text/javascript">
+      var app = new View({
+        view: "body",
+        model: {
+          router: "",
+          list: [1, 2, 3],
+          param1: "param1",
+          param2: "param2"
+        },
+        action: {
+          alert(el) {
+            app.model.param1 = "this.model";
+          }
+        }
+      });
+    </script>
+
+     
