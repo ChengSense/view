@@ -4,7 +4,7 @@ import { $chen, $lang, $close } from "./ViewExpress";
 
 export function init(dom) {
   each(dom, function (node) {
-    if (node.childNodes[0] && node.nodeName != "SCRIPT")
+    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
       init(slice(node.childNodes));
     if (node.nodeType == 3)
       node.nodeValue.replace($lang, function (tag) {

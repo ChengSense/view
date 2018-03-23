@@ -369,7 +369,7 @@ var view = (function (exports) {
 
   function init(dom) {
     each(dom, function (node) {
-      if (node.childNodes[0] && node.nodeName != "SCRIPT")
+      if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
         init(slice(node.childNodes));
       if (node.nodeType == 3)
         node.nodeValue.replace($lang, function (tag) {
@@ -842,6 +842,7 @@ var view = (function (exports) {
         if (match(path, hath)) return {
           component: params[rout].component,
           action: params[rout].action,
+          after: params[rout].after,
           params: para,
           router: rout
         }
@@ -874,6 +875,9 @@ var view = (function (exports) {
       if (router) {
         router.action(router.params);
         app.model.router = router.component;
+        if (router.after){
+          router.after();
+        }
       }
     }
 

@@ -13,6 +13,7 @@ export function Router(app, params) {
       if (match(path, hath)) return {
         component: params[rout].component,
         action: params[rout].action,
+        after: params[rout].after,
         params: para,
         router: rout
       }
@@ -45,6 +46,9 @@ export function Router(app, params) {
     if (router) {
       router.action(router.params);
       app.model.router = router.component;
+      if (router.after){
+        router.after();
+      }
     }
   }
 
