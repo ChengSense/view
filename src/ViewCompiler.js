@@ -172,7 +172,7 @@ function binding(node, scope, clas, content, attributes) {
           clas.path = [];
           clas.node = node;
           dep(key, scope, clas);
-          if (clas.clas.name == "value") module(node, scope);
+          if (clas.clas.name == "value") model(node, scope);
           attributes.push(clas);
         });
         break;
@@ -216,7 +216,7 @@ function dep(key, scope, clas) {
   });
 }
 
-function module(node, scope) {
+function model(node, scope) {
   var owner = node.ownerElement, handle;
   owner._express = node.nodeValue.replace($express, "$1");
   owner.on("change", handle = function () {

@@ -1,5 +1,5 @@
 import { View, global } from "./ViewIndex";
-import { each, slice, extention } from "./ViewLang";
+import { each, slice, extention, blank } from "./ViewLang";
 import { compiler, compoNode } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
 
@@ -19,6 +19,7 @@ export var resolver = {
     try {
       let app = code(node.clas.nodeValue, node.scope);
       node.path = [global.$path];
+      if(blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
