@@ -348,18 +348,21 @@ var app = new View({
 let router = new Router(app, {
   "home": {
     component: home,
+    router:"router",
     action(param) {
 
     }
   },
   "iface": {
     component: iface,
+    router:"router",
     action(param) {
 
     }
   },
   "iface/save/:add/:id": {
     component: iface_save,
+    router:"router",
     action(param) {
       app.model.iface = api.iface();
       app.model.add = param.add;
@@ -381,6 +384,7 @@ let router = new Router(app, {
   },
   "iface/detail/:id": {
     component: iface_detail,
+    router:"router",
     action(param) {
       let iface = api.api.getApi(param.id);
       app.model.iface = clone(iface);
@@ -388,12 +392,14 @@ let router = new Router(app, {
   },
   "group": {
     component: group,
+    router:"router",
     action(param) {
 
     }
   },
   "group/:add/:id": {
     component: group_save,
+    router:"router",
     action(param) {
       var grou = group_save.model;
       grou.add = param.add;
@@ -411,12 +417,14 @@ let router = new Router(app, {
   },
   "setting": {
     component: setting,
+    router:"router",
     action(param) {
 
     }
   },
   "setting/:add/:id": {
     component: setting_save,
+    router:"router",
     action(param) {
       var sets = setting_save.model;
       sets.add = param.add;
