@@ -1,29 +1,30 @@
 export function Router(app, params) {
   var $param = /^:/;
-  let rout, para, router;
+  let router, para, routes;
   this.redreact = redreact;
 
   function resolver(hash) {
-    router = Object.keys(params);
-    while (router.length) {
-      rout = router.shift(), para = {};
-      let path = rout.split("/");
-      let hath = hash.split("/");
+    routes = Object.keys(params);
+    while (routes.length) {
+      router = routes.shift(), para = {};
+      let routs = router.split("/");
+      let haths = hash.split("/");
 
-      if (match(path, hath)) return {
-        component: params[rout].component,
-        action: params[rout].action,
-        after: params[rout].after,
+      if (match(routs, haths)) return {
+        component: params[router].component,
+        router: params[router].router,
+        action: params[router].action,
+        after: params[router].after,
         params: para,
-        router: rout
+        path: hash
       }
     }
   }
 
-  function match(path, hash) {
-    while (hash.length) {
-      let name = path.shift();
-      let param = hash.shift();
+  function match(routs, hashs) {
+    while (hashs.length) {
+      let name = routs.shift();
+      let param = hashs.shift();
       if (param != name) {
         if (!$param.test(name)) {
           return false;
@@ -45,8 +46,8 @@ export function Router(app, params) {
     let router = resolver(hash);
     if (router) {
       router.action(router.params);
-      app.model.router = router.component;
-      if (router.after){
+      app.model[router.router] = router.component;
+      if (router.after) {
         router.after();
       }
     }
