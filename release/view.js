@@ -829,7 +829,7 @@ var view = (function (exports) {
   }
 
   function Router(app, params) {
-    var $param = /^:/;
+    var $param = /^:/, $root = /^\/(.+)/;
     let router, para, routes;
     this.redreact = redreact;
 
@@ -837,7 +837,8 @@ var view = (function (exports) {
       routes = Object.keys(params);
       while (routes.length) {
         router = routes.shift(), para = {};
-        let routs = router.split("/");
+        let routs = router.replace($root, "$1");
+        routs = routs.split("/");
         let haths = hash.split("/");
 
         if (match(routs, haths)) return {
@@ -872,7 +873,7 @@ var view = (function (exports) {
     }
 
     function action(event) {
-      var hash = window.location.hash.replace("#", "");
+      var hash = window.location.hash.replace(/^#\/?/, "");
       let router = resolver(hash);
       if (router) {
         router.action(router.params);
