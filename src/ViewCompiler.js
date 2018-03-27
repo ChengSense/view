@@ -222,7 +222,7 @@ function model(node, scope) {
   owner.on("change", handle = function () {
     new Function('scope',
       `
-      scope`+ Path(owner._express) + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
+      scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
       `
     )(scope);
   });

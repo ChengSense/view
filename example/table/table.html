@@ -38,15 +38,15 @@
               }
             </td>
             <td>
-              <span class="k-button k-button-icontext k-grid-add">添加</span>
-              <span class="k-button k-button-icontext k-grid-edit" id="{{id}}">
+              <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
+              <span class="k-button k-button-icontext k-grid-edit" id="{{id}}" @click="edit(this.id)">
                 @when(edit===id){ 
                   保存 
                 }.when{ 
                   编辑 
                 }
               </span>
-              <span class="k-button k-button-icontext k-grid-delete" id="{{id}}" onclick="del(this.id)">删除</span>
+              <span class="k-button k-button-icontext k-grid-delete" id="{{id}}" @click="del(this.id)">删除</span>
             </td>
           </tr>
         </tbody>
@@ -58,7 +58,7 @@
   var grid = new View({
     view: ".k-grid",
     model: {
-      edit: false,
+      edit: "edit",
       columns: {
         "id": "档案编号",
         "age": "门店名称",
@@ -71,23 +71,28 @@
         "username": "小小的-0",
         "address": "未知"
       }]
+    },
+    action: {
+      add() {
+        var data = [];
+        for (var i = 0; i < 100; i++) {
+          data.push({
+            "id": 10000 + data.length,
+            "age": "宁波店" + data.length,
+            "username": "小小的-" + data.length,
+            "address": "西湖区-" + data.length
+          })
+        }
+        grid.model.list = data;
+      },
+      edit(id) {
+        grid.model.edit = grid.model.edit == id ? "edit" : id;
+      },
+      del(id) {
+        grid.model.list.shift(id, 1);
+      }
     }
   });
-
-  var data = [];
-  for (var i = 0; i < 10000; i++) {
-    data.push({
-      "id": 10000 + data.length,
-      "age": "宁波店" + data.length,
-      "username": "小小的-" + data.length,
-      "address": "西湖区-" + data.length
-    })
-  }
-  grid.model.list = data;
-
-  function del(id) {
-    grid.model.list.shift();
-  }
 </script>
 
 </html>

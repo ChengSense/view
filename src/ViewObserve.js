@@ -104,7 +104,7 @@ export function observe(target, callSet, callGet) {
     function notify(parm) {
       new Function('scope', 'val',
         `
-        scope`+ Path(root) + `=val;
+        scope${Path(root)}=val;
         `
       )(target, object);
     }

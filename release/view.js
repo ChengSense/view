@@ -26,7 +26,7 @@ var view = (function (exports) {
 
   function codex(_express, _scope) {
     try {
-      _express = "'" + _express.replace($expres, "'+($1)+'") + "'";
+      _express = `'${_express.replace($expres, "'+($1)+'")}'`;
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
@@ -36,8 +36,8 @@ var view = (function (exports) {
   function Code(_express) {
     return new Function('_scope',
       `with (_scope) {
-		  return `+ _express + `;
-		}`
+       return ${_express};
+    }`
     );
   }
 
@@ -54,14 +54,14 @@ var view = (function (exports) {
       get() {
         return new Function('scope',
           `
-        return scope`+ Path(path) + `;
+        return scope${Path(path)};
         `
         )(scope);
       },
       set(val) {
         new Function('scope', 'val',
           `
-        scope`+ Path(path) + `=val;
+        scope${Path(path)}=val;
         `
         )(scope, val);
       }
@@ -171,7 +171,7 @@ var view = (function (exports) {
       function notify(parm) {
         new Function('scope', 'val',
           `
-        scope`+ Path(root) + `=val;
+        scope${Path(root)}=val;
         `
         )(target, object);
       }
@@ -619,7 +619,7 @@ var view = (function (exports) {
     owner.on("change", handle = function () {
       new Function('scope',
         `
-      scope`+ Path(owner._express) + `='` + owner.value.replace(/(\'|\")/g, "\\$1") + `';
+      scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
       `
       )(scope);
     });
