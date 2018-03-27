@@ -54,7 +54,7 @@ export function Router(app, params) {
     }
   }
 
-  window.addEventListener("load", action, false);
+  window.addEventListener("load", action, action());
   window.addEventListener("onpopstate" in window ? "popstate" : "hashchange", action, false);
 
 }
