@@ -4,7 +4,7 @@ import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
 
-export function compiler(node, scopes, childNodes, content, attributes) {
+export function compiler(node, scopes, childNodes, content, shcope) {
   each(childNodes, function (child, index, childNodes) {
     switch (child.clas.nodeType) {
       case 1:
@@ -14,7 +14,7 @@ export function compiler(node, scopes, childNodes, content, attributes) {
           var dataSource = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding(null, scopes, clas, content, attributes);
+          binding(null, scopes, clas, content, shcope);
           each(dataSource, function (item, index) {
             var scope = Object.create(scopes || {});
             setVariable(scope, variable, global.$path);
@@ -24,8 +24,8 @@ export function compiler(node, scopes, childNodes, content, attributes) {
             node.appendChild(newNode);
             var clasNodes = classNode(newNode, child);
             clas.childNodes.push(clasNodes);
-            compiler(newNode, scope, slice(child.children), clasNodes, attributes);
-            commom(newNode, scope, clasNodes, content, attributes);
+            compiler(newNode, scope, slice(child.children), clasNodes, shcope);
+            commom(newNode, scope, clasNodes, content, shcope);
           });
         } else {
           switch ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
@@ -40,8 +40,8 @@ export function compiler(node, scopes, childNodes, content, attributes) {
               node.appendChild(newNode);
               var clasNodes = classNode(newNode, child);
               content.childNodes.push(clasNodes);
-              compiler(newNode, scopes, slice(child.children), clasNodes, attributes);
-              commom(newNode, scopes, clasNodes, content, attributes);
+              compiler(newNode, scopes, slice(child.children), clasNodes, shcope);
+              commom(newNode, scopes, clasNodes, content, shcope);
               break;
           }
         }
@@ -53,21 +53,21 @@ export function compiler(node, scopes, childNodes, content, attributes) {
           var dataSource = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding(null, scopes, clas, content, attributes);
+          binding(null, scopes, clas, content, shcope);
           each(dataSource, slice(child.children), function (item, index, children) {
             var scope = Object.create(scopes || {});
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
-            compiler(node, scope, slice(children), clasNodes, attributes);
+            compiler(node, scope, slice(children), clasNodes, shcope);
           });
         } else if ($when.test(child.clas.nodeValue)) {
           var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
-          var clas = whenNode(null, node, child, content, scopes, attributes);
+          var clas = whenNode(null, node, child, content, scopes, shcope);
           clas.children.push(childNodes.shift());
           if (when) {
-            binding(null, scopes, clas, content, attributes);
+            binding(null, scopes, clas, content, shcope);
             each(childNodes, function (child, index, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
@@ -75,37 +75,37 @@ export function compiler(node, scopes, childNodes, content, attributes) {
             each(slice(child.children), function (child, index, childNodes) {
               switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 case true:
-                  compiler(node, scopes, childNodes, clas, attributes);
+                  compiler(node, scopes, childNodes, clas, shcope);
                   break;
                 default:
                   var newNode = child.clas.cloneNode();
                   node.appendChild(newNode);
                   var clasNodes = classNode(newNode, child);
                   clas.childNodes.push(clasNodes);
-                  commom(newNode, scopes, clasNodes, clas, attributes);
+                  commom(newNode, scopes, clasNodes, clas, shcope);
                   break;
               }
               childNodes.shift();
             });
           } else if (when == undefined) {
-            binding(null, scopes, clas, content, attributes);
+            binding(null, scopes, clas, content, shcope);
             each(slice(child.children), function (child, index, childNodes) {
               switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 case true:
-                  compiler(node, scopes, childNodes, clas, attributes);
+                  compiler(node, scopes, childNodes, clas, shcope);
                   break;
                 default:
                   var newNode = child.clas.cloneNode();
                   node.appendChild(newNode);
                   var clasNodes = classNode(newNode, child);
                   clas.childNodes.push(clasNodes);
-                  commom(newNode, scopes, clasNodes, clas, attributes);
+                  commom(newNode, scopes, clasNodes, clas, shcope);
                   break;
               }
               childNodes.shift();
             });
           } else if (whem(childNodes[0])) {
-            compiler(node, scopes, childNodes, clas, attributes);
+            compiler(node, scopes, childNodes, clas, shcope);
           }
           return whem(child);
         } else {
@@ -113,7 +113,7 @@ export function compiler(node, scopes, childNodes, content, attributes) {
           node.appendChild(newNode);
           var clasNodes = classNode(newNode, child);
           content.childNodes.push(clasNodes);
-          commom(newNode, scopes, clasNodes, content, attributes);
+          commom(newNode, scopes, clasNodes, content, shcope);
         }
         break;
     }
@@ -121,16 +121,16 @@ export function compiler(node, scopes, childNodes, content, attributes) {
   });
 }
 
-function commom(node, scope, clas, content, attributes) {
+function commom(node, scope, clas, content, shcope) {
   each(node.attributes, function (child) {
     let clasNodes = attrNode(child, scope, child.cloneNode());
-    commom(child, scope, clasNodes, null, attributes);
+    commom(child, scope, clasNodes, null, shcope);
   });
   if (new RegExp($component).test(node.nodeValue)) {
     comNode(node, scope, clas, content);
     resolver["component"](clas);
   } else if (new RegExp($express).test(node.nodeValue)) {
-    binding(node, scope, clas, content, attributes);
+    binding(node, scope, clas, content, shcope);
     node.nodeValue = codex(node.nodeValue, scope);
   }
   if (new RegExp($evevt).test(node.name)) {
@@ -152,7 +152,7 @@ function whem(child) {
   if (child) return new RegExp($whec).test(child.clas.nodeValue);
 }
 
-function binding(node, scope, clas, content, attributes) {
+function binding(node, scope, clas, content, shcope) {
   try {
     var nodeValue = clas.clas.nodeValue;
     switch (clas.clas.nodeType) {
@@ -171,9 +171,8 @@ function binding(node, scope, clas, content, attributes) {
           clas.scope = scope;
           clas.path = [];
           clas.node = node;
-          dep(key, scope, clas);
+          dep(key, scope, clas, shcope);
           if (clas.clas.name == "value") model(node, scope);
-          attributes.push(clas);
         });
         break;
       default:
@@ -209,9 +208,17 @@ function binding(node, scope, clas, content, attributes) {
   }
 }
 
-function dep(key, scope, clas) {
+function dep(key, scope, clas, shcope) {
   key.replace($word, function (key) {
     if (code(key, scope) == undefined || global.$path == undefined) return;
+    if (clas.clas.nodeType == 2) {
+      let attres = global.$attres.get(shcope);
+      if(attres){
+        attres.push(clas) 
+      }else{
+        global.$attres.set(shcope, [clas]);
+      }
+    }
     clas.path.push(global.$path);
   });
 }
@@ -260,7 +267,7 @@ function eachNode(newNode, node, child) {
   };
 }
 
-function whenNode(newNode, node, child, content, scopes, attributes) {
+function whenNode(newNode, node, child, content, scopes, shcope) {
   if (new RegExp($whea).test(child.clas.nodeValue)) {
     var comment = document.createComment("when:" + global.$path);
     node.appendChild(comment);
@@ -278,7 +285,7 @@ function whenNode(newNode, node, child, content, scopes, attributes) {
         childNodes: []
       }]
     });
-    binding(null, scopes, content, attributes);
+    binding(null, scopes, content, shcope);
   }
   return content;
 }

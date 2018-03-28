@@ -10,10 +10,11 @@ export let global = { $path: undefined };
 
 export function View(app) {
   var content = { childNodes: [], children: [] };
-  var attributes = [];
+  var shcope = this;
 
   observe(app.model, function set(path) {
-    deepen(content, path, attributes);
+    deepen(content, path, shcope);
+    attrDeepen(global.$attres.get(this));
   }, function get(path) {
     global.$path = path;
   });
@@ -28,7 +29,7 @@ export function View(app) {
       this.node = node;
       this.view = view[0];
       app.model.$action = app.action;
-      resolver["view"](this.view, node, app.model, content, attributes);
+      resolver["view"](this.view, node, app.model, content, shcope);
       break;
     case "component":
       var view = query(app.component);
@@ -42,22 +43,20 @@ export function View(app) {
   }
 }
 
-function deepen(content, path, attributes) {
-  each(slice(content.childNodes), function (node) {
+function deepen(content, path, shcope) {
+  each(content.childNodes, function (node) {
     if (node.path && node.path.has(path)) {
-      resolver[node.resolver](node, attributes);
+      resolver[node.resolver](node, shcope);
       return true;
     }
     if (node.childNodes[0])
-      deepen(node, path, attributes);
+      deepen(node, path, shcope);
   });
-  each(attributes, function (node) {
-    if (!node.node.ownerElement.parentNode) {
-      attributes.remove(node);
-      return;
-    }
-    if (node.path && node.path.has(path))
-      resolver[node.resolver](node, attributes);
+}
+
+function attrDeepen(attres) {
+  each(attres, function (node) {
+    resolver[node.resolver](node);
   });
 }
 

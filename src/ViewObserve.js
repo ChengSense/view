@@ -1,5 +1,5 @@
 import { Path } from "./ViewScope";
-import { View } from "./ViewIndex";
+import { View, global } from "./ViewIndex";
 
 export function observe(target, callSet, callGet) {
   var setable = true;
@@ -30,15 +30,17 @@ export function observe(target, callSet, callGet) {
   }
 
   function define(object, prop, path, oldValue) {
-    var value = object[prop];
+    var value = object[prop], attres = new Map();
     Object.defineProperty(object, prop, {
       get() {
         mq.publish(target, "get", [path]);
+        global.$attres = attres;
         return value;
       },
       set(val) {
         var oldValue = value;
         watcher(value = val, path, oldValue);
+        global.$attres = attres;
         if (setable) mq.publish(target, "set", [path]);
       }
     });

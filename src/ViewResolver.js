@@ -4,10 +4,10 @@ import { compiler, compoNode } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
 
 export var resolver = {
-  view: function (view, node, scope, content, attributes) {
+  view: function (view, node, scope, content, shcope) {
     try {
       var doc = document.createDocumentFragment();
-      compiler(doc, scope, slice(node.children), content, attributes);
+      compiler(doc, scope, slice(node.children), content, shcope);
       content.children = node.children;
       content.clas = node.clas;
       view.reappend(doc);
@@ -33,13 +33,13 @@ export var resolver = {
       console.log(e);
     }
   },
-  when: function (node, attributes) {
+  when: function (node, shcope) {
     try {
       var insert = insertion(node.childNodes);
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      compiler(doc, node.scope, slice(node.children), node.content, attributes);
+      compiler(doc, node.scope, slice(node.children), node.content, shcope);
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
@@ -47,13 +47,13 @@ export var resolver = {
       console.log(e);
     }
   },
-  each: function (node, attributes) {
+  each: function (node, shcope) {
     try {
       var insert = insertion(node.childNodes);
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      compiler(doc, node.scope, [node], node.content, attributes);
+      compiler(doc, node.scope, [node], node.content, shcope);
       childNodes.replace(node, childNodes.pop())
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
