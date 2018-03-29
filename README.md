@@ -7,7 +7,7 @@
 ## 文档  
 #####    文档地址请访问 [viewjs.org](https://vewjs.github.io/viewjs.org/)
 
-## 基础示例
+## 示例
     
 ```html
 <!DOCTYPE html>
@@ -56,7 +56,7 @@
 </script>
 ```
 
-## 路由示例
+## 示例
 
 ```html
 <!DOCTYPE html>
