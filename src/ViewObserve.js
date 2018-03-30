@@ -118,9 +118,12 @@ export function observe(target, callSet, callGet) {
   watcher(target);
 }
 
-class Mess extends Map {
+class Mess {
+  constructor() {
+    this.map = new Map();
+  }
   publish(scope, event, data) {
-    const cache = this.get(scope);
+    const cache = this.map.get(scope);
     if (cache) {
       let action = cache.get(event);
       if (action) {
@@ -131,7 +134,7 @@ class Mess extends Map {
     } else {
       let data = new Map();
       data.set(event, { data: [data], queue: [] });
-      this.set(scope, data);
+      this.map.set(scope, data);
     }
     this.notify(cache.get(event));
   }
@@ -145,7 +148,7 @@ class Mess extends Map {
         });
       }
     } else {
-      this.forEach(function (cache) {
+      this.map.forEach(function (cache) {
         cache.forEach(function (action) {
           while (action.data.length) {
             const data = action.data.shift();
@@ -159,7 +162,7 @@ class Mess extends Map {
   }
 
   subscribe(scope, event, call) {
-    const cache = this.get(scope);
+    const cache = this.map.get(scope);
     if (cache) {
       const action = cache.get(event);
       if (action) {
@@ -170,7 +173,7 @@ class Mess extends Map {
     } else {
       let data = new Map();
       data.set(event, { data: [], queue: [call] });
-      this.set(scope, data);
+      this.map.set(scope, data);
     }
   }
 }
