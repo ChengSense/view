@@ -870,6 +870,14 @@ var view = (function (exports) {
         routes = void 0;
     this.redreact = redreact;
 
+    var supportsPushState = function () {
+      var userAgent = window.navigator.userAgent;
+      if (userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1 || userAgent.indexOf("Trident") > -1 || userAgent.indexOf("Edge") > -1) {
+        return false;
+      }
+      return window.history && 'pushState' in window.history;
+    }();
+
     function resolver(hash) {
       routes = Object.keys(params);
       while (routes.length) {
@@ -922,7 +930,7 @@ var view = (function (exports) {
     }
 
     window.addEventListener("load", action, action());
-    window.addEventListener("onpopstate" in window ? "popstate" : "hashchange", action, false);
+    window.addEventListener(supportsPushState ? "popstate" : "hashchange", action, false);
   }
 
   var global$1 = { $path: undefined };
