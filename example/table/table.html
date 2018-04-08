@@ -89,7 +89,7 @@
         grid.model.edit = grid.model.edit == id ? "edit" : id;
       },
       del: function (id) {
-        grid.model.list.shift(id, 1);
+        grid.model.list.splice(id, 1);
       }
     }
   });
