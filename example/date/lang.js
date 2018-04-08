@@ -78,10 +78,20 @@ extend(Date, {
     array[begin].date == 1 ? (begin = begin - 7) : begin;
     array = array.slice(begin, begin + 42);
     var arr = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       var items = []; arr.push(items);
-      for (let l = 0; l < 6; l++) {
+      for (let l = 0; l < 7; l++) {
         items.push(array[i * 7 + l])
+      }
+    }
+    return arr;
+  },
+  getYear: function (year, y) {
+    var arr = [];
+    for (let i = 0; i < 3; i++) {
+      var items = []; arr.push(items);
+      for (let l = 0; l < 5; l++) {
+        items.push((year || new Date().getFullYear()) + i * 4 + l + (y || 0));
       }
     }
     return arr;

@@ -4,15 +4,26 @@
 <head>
   <title>main.html</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link href="https://kendo.cdn.telerik.com/2018.1.221/styles/kendo.common.min.css" rel="stylesheet" />
-  <link href="https://kendo.cdn.telerik.com/2018.1.221/styles/kendo.silver.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdn.bootcss.com/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
   <script type="text/javascript" src="../../release/view.js"></script>
   <script type="text/javascript" src="lang.js"></script>
   <style>
-  /* .x-calendar{
-    width: 100px;
-    height: 150px;
-  } */
+  .x-calendar{
+    width: 360px;
+    height: 420px;
+    transition: padding ease-in .4s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    top: calc(50vh - 210px);
+    left: calc(50vw - 180px);
+    position: relative;
+  } 
+  table{
+    width: 100%;
+    height: 100%;
+  }
   </style>
 
 </head>
@@ -20,39 +31,39 @@
 <body>
   <view>
     <div class='x-calendar'>
-      <div class='x-calendar-header'>
+      <div class='x-calendar-header text-center'>
         <span class='x-icon x-arrowhead-w' @click="ml()"><</span>
         <span class='x-calendar-option' style='width: {{width}}px;'>
-          <span class='x-calendar-title' @click="go()">{{datei}}</span>
+          <span class='x-calendar-title' @click="go()">{{title}}</span>
         </span>
         <span class='x-icon x-arrowhead-e' @click="mr()">></span>
       </div>
       <div class='x-calendar-body'>
         @when(change){
-        <table>
+        <table class="table">
           <thead class='x-calendar-week-body'>
             <tr>
               <td each='i:week'>{{i}}</td>
             </tr>
           </thead>
           <tbody class='x-calendar-date-body'>
-            <tr each='cels:dates'>
-              <td role='handle' each='cel:cels' data-year='{{cel.year}}' data-month='{{cel.month}}' data-date='{{cel.date}}'>
+            <tr each='cels:datePicker'>
+              <td class="text-center" role='handle' each='cel:cels' data-year='{{cel.year}}' data-month='{{cel.month}}' data-date='{{cel.date}}'>
                 <span>{{cel.date}}</span>
               </td>
             </tr>
           </tbody>
         </table>
         }.when{
-        <table class='x-calendar-month-body'>
+        <table class='x-calendar-month-body table'>
           <tr each='cels:month'>
             <td role='mhandle' each='cel:cels' data-month='cel'>
               <span>{{cel}}</span>
             </td>
           </tr>
         </table>
-        <table class='x-calendar-year-body'>
-          <tr each='cels:years'>
+        <table class='x-calendar-year-body table'>
+          <tr each='cels:yearPicker'>
             <td role='yhandle' each='cel:cels' data-year='{{cel}}'>
               <span>{{cel}}</span>
             </td>
@@ -60,55 +71,45 @@
         </table>
         }
       </div>
-      <div class='x-calendar-footer'>
+      <div class='x-calendar-footer   text-center'>
         <span>{{now}}</span>
       </div>
     </div>
   </view>
 </body>
 <script type="text/javascript">
-  function getYear(year, y) {
-    var arr = [];
-    for (let i = 0; i < 2; i++) {
-      var items = []; arr.push(items);
-      for (let l = 0; l < 4; l++) {
-        items.push((year || new Date().getFullYear()) + i * 4 + l + (y || 0));
-      }
-    }
-    return arr;
-  }
   var calendar = new View({
     view: "view",
     model: {
       change: true,
       date: new Date(),
-      datei: new Date().format("yyyy年MM月"),
+      title: new Date().format("yyyy年MM月"),
       week: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
       month: [[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]],
-      dates: new Date().getCalendar(),
-      years: getYear(),
-      year: new Date().year,
+      datePicker: new Date().getCalendar(),
+      yearPicker: new Date().getYear(),
+      year: new Date().getFullYear(),
       now: new Date().format("yyyy年M月d")
     },
     action: {
       ml: function () {
         var model = calendar.model;
-        if(model.change){
+        if (model.change) {
           model.date.setMonth(model.date.getMonth() - 1);
-          model.datei = model.date.format("yyyy年MM月");
-          model.dates = model.date.getCalendar();
-        }else{
-
+          model.title = model.date.format("yyyy年MM月");
+          model.datePicker = model.date.getCalendar();
+        } else {
+          model.yearPicker = model.date.getYear(model.year, -5);
         }
       },
       mr: function () {
-        if(model.change){
-          var model = calendar.model;
+        var model = calendar.model;
+        if (model.change) {
           model.date.setMonth(model.date.getMonth() + 1);
-          model.datei = model.date.format("yyyy年MM月");
-          model.dates = model.date.getCalendar();
-        }else{
-
+          model.title = model.date.format("yyyy年MM月");
+          model.datePicker = model.date.getCalendar();
+        } else {
+          model.yearPicker = model.date.getYear(model.year, 5);
         }
       },
       go: function () {
