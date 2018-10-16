@@ -14,7 +14,7 @@ export function View(app) {
 
   observe(app.model, function set(path) {
     deepen(content, path, shcope);
-    attrDeepen(global.$attres.get(this));
+    attrDeepen(global.$attres.get(shcope));
   }, function get(path) {
     global.$path = path;
   });

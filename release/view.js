@@ -926,6 +926,9 @@ var view = (function (exports) {
         if (router.after) {
           router.after();
         }
+        if (event == undefined || event.type == "load") {
+          redreact("");
+        }
       }
     }
 
@@ -941,7 +944,7 @@ var view = (function (exports) {
 
     observe(app.model, function set(path) {
       deepen(content, path, shcope);
-      attrDeepen(global$1.$attres.get(this));
+      attrDeepen(global$1.$attres.get(shcope));
     }, function get(path) {
       global$1.$path = path;
     });

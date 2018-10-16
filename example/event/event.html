@@ -11,6 +11,7 @@
 
   <div @click="alert(`{{param1}}`)">
     {{param1}}
+    <input value="{{param1}}"/>
   </div>
 
 </body>
@@ -21,12 +22,12 @@
     view: "body",
     model: {
       router: "",
-      param1: "asdasdasd",
+      param1: "点我！",
       param2: "3333"
     },
     action: {
       alert(el) {
-        app.model.param1 = "this.model";
+        app.model.param1 = "我变成了你！";
       }
     }
   });
