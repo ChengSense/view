@@ -1,2 +1,10 @@
 /node_modules
 package-lock.json
+example/grid/Graph.json
+example/grid/grid.1.html
+example/grid/grid.3.html
+example/grid/grid.4.html
+example/grid/grid.5.html
+example/grid/grid.6.html
+example/grid/grid.html
+example/grid/grid.js

@@ -31,20 +31,25 @@
         <tbody class="k-tbody-edit">
           <tr each="item:id:list" class="{{id%2?'k-alt':''}}">
             <td each="col:item">
-              @when(edit===id){
-                <input id="{{id}}" value="{{col}}" style="border-width: 0px;background-color: rgba(255, 255, 255, 0);width:100%;height:20px">
-              }.when{
-                {{col}}
-              }
+            @when(edit===id)
+            {
+              <input id="{{id}}" value="{{col}}" style="border-width: 0px;background-color: rgba(255, 255, 255, 0);width:100%;height:20px">
+            }
+            .when
+            {
+              {{col}}
+            }
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
               <span class="k-button k-button-icontext k-grid-edit" id="{{id}}" @click="edit(this.id)">
-                @when(edit===id){ 
-                  保存 
-                }.when{ 
-                  编辑 
-                }
+              @when(edit===id)
+              { 
+                保存 
+              }
+              .when{ 
+                编辑 
+              }
               </span>
               <span class="k-button k-button-icontext k-grid-delete" id="{{id}}" @click="del(this.id)">删除</span>
             </td>

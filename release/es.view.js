@@ -1,15 +1,15 @@
-var $lang = /((@each|@when|\.when)\s*\((.*)\)\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*|\.when\s*\{)/g;
-var $chen = /(@each|@when|\.when)\s*\((.*)\)\{|\.when\s*\{/;
-var $each = /(@each)\s*\((.*)\)\{/g;
-var $when = /(@when|\.when)\s*\((.*)\)\{|\.when\s*\{/g;
-var $whec = /\.when\s*\((.*)\)\{|\.when\s*\{/g;
+var $lang = /((@each|@when|\.when)\s*\((.*)\)\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*|\.when\s*\{)/g;
+var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+var $each = /(@each)\s*\((.*)\)\s*\{/g;
+var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
+var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
 var $express = /\{\s*\{@?([^\{\}]*)\}\s*\}/;
 var $expres = /\{\s*\{([^\{\}]*)\}\s*\}/g;
 var $component = /\{\s*\{\s*@([^\{\}]*)\}\s*\}/;
 var $close = /(^\s*\}\s*$)/;
 var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
-var $evevt = /^@(.*)/;
+var $event = /^@(.*)/;
 
 function code(_express, _scope) {
   try {
@@ -532,14 +532,14 @@ function commom(node, scope, clas, content, shcope) {
     binding(node, scope, clas, content, shcope);
     node.nodeValue = codex(node.nodeValue, scope);
   }
-  if (new RegExp($evevt).test(node.name)) {
+  if (new RegExp($event).test(node.name)) {
     bind(node, scope);
   }
 }
 
 function bind(node, scope) {
-  node.name.replace($evevt, function (key) {
-    key = key.replace($evevt, "$1");
+  node.name.replace($event, function (key) {
+    key = key.replace($event, "$1");
     let owner = node.ownerElement;
     owner.on(key, function () {
       Code(node.nodeValue).call(owner, scope.$action);

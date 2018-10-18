@@ -1,6 +1,6 @@
 import { each, slice, blank, extention } from "./ViewLang";
 import { code, Code, codex, Path, setVariable } from "./ViewScope";
-import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $evevt } from "./ViewExpress";
+import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
 
@@ -133,14 +133,14 @@ function commom(node, scope, clas, content, shcope) {
     binding(node, scope, clas, content, shcope);
     node.nodeValue = codex(node.nodeValue, scope);
   }
-  if (new RegExp($evevt).test(node.name)) {
+  if (new RegExp($event).test(node.name)) {
     bind(node, scope);
   }
 }
 
 function bind(node, scope) {
-  node.name.replace($evevt, function (key) {
-    key = key.replace($evevt, "$1");
+  node.name.replace($event, function (key) {
+    key = key.replace($event, "$1");
     let owner = node.ownerElement;
     owner.on(key, function () {
       Code(node.nodeValue).call(owner, scope.$action);
