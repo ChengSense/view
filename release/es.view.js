@@ -38,6 +38,14 @@ function Code(_express) {
   );
 }
 
+function codev(_express, _scope, _event) {
+  var array = _express.toString().match(/\(([^)]*)\)/);
+  var name = _express.toString().replace(array[0], "");
+  var args = code(`[${array[1]}]`, _scope);
+  args.push(_event);
+  code(name, _scope.$action).apply(_scope, args);
+}
+
 function Path(path) {
   try {
     return path.replace(/(\w+)\.?/g, "['$1']");
@@ -541,8 +549,8 @@ function bind(node, scope) {
   node.name.replace($event, function (key) {
     key = key.replace($event, "$1");
     let owner = node.ownerElement;
-    owner.on(key, function () {
-      Code(node.nodeValue).call(owner, scope.$action);
+    owner.on(key, function (event) {
+      codev(node.nodeValue, scope, event);
     });
   });
 }

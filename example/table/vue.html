@@ -39,8 +39,8 @@
               </div>
             </td>
             <td>
-              <span class="k-button k-button-icontext k-grid-add">添加</span>
-              <span class="k-button k-button-icontext k-grid-edit" v-bind:id="id">
+              <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
+              <span class="k-button k-button-icontext k-grid-edit" v-bind:id="id" @click="edit1()">
                 <div v-if="edit===id">
                   保存
                 </div>
@@ -73,23 +73,30 @@
         "username": "小小的-0",
         "address": "未知"
       }]
+    },
+    methods: {
+      add: function () {
+        var data = [];
+        for (var i = 0; i < 1000; i++) {
+          data.push({
+            "id": 10000 + data.length,
+            "age": "宁波店" + data.length,
+            "username": "小小的-" + data.length,
+            "address": "西湖区-" + data.length
+          })
+        }
+        this.list = data;
+      },
+      edit1: function (id) {
+        this.edit = this.edit == id ? "edit" : id;
+      },
+      del: function (id) {
+        this.list.splice(id, 1);
+      }
     }
   });
 
-  var data = [];
-  for (var i = 0; i < 10000; i++) {
-    data.push({
-      "id": 10000 + data.length,
-      "age": "宁波店" + data.length,
-      "username": "小小的-" + data.length,
-      "address": "西湖区-" + data.length
-    })
-  }
-  grid.list = data;
 
-  function del(id) {
-    grid.list.shift();
-  }
 </script>
 
 </html>

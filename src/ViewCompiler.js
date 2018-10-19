@@ -1,5 +1,5 @@
 import { each, slice, blank, extention } from "./ViewLang";
-import { code, Code, codex, Path, setVariable } from "./ViewScope";
+import { code, Code,codev, codex, Path, setVariable } from "./ViewScope";
 import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
@@ -142,8 +142,8 @@ function bind(node, scope) {
   node.name.replace($event, function (key) {
     key = key.replace($event, "$1");
     let owner = node.ownerElement;
-    owner.on(key, function () {
-      Code(node.nodeValue).call(owner, scope.$action);
+    owner.on(key, function (event) {
+      codev(node.nodeValue, scope, event);
     })
   });
 }
