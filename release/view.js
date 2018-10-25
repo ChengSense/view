@@ -290,36 +290,58 @@ var view = (function (exports) {
 
   var mq = new Mess();
 
-  function each(obj, arg, callback) {
+  function whiles(obj, methd) {
+    while (obj.length) {
+      var data = obj[0];
+      if (methd.call(data, data, obj)) break;
+    }
+  }
+
+  function each(obj, methd, arg) {
     if (!obj) return;
-    var methd = arguments[2] || arguments[1];
-    var args = arguments[2] ? arg : obj;
+    arg = arg || obj;
     if (Array.isArray(obj)) {
       var length = obj.length;
       for (var i = 0; i < length; i++) {
-        if (obj.length != length) {
-          i = i - length + obj.length;length = obj.length;
-        }
         if (obj.hasOwnProperty(i)) {
           var data = obj[i];
-          if (methd.call(data, data, i, args)) break;
+          if (methd.call(data, data, i, arg)) break;
         }
       }
     } else {
       for (var i in obj) {
         if (obj.hasOwnProperty(i)) {
           var data = obj[i];
-          if (methd.call(data, data, i, args)) break;
+          if (methd.call(data, data, i, arg)) break;
         }
       }
     }
-    return args;
+    return arg;
+  }
+
+  function forEach(obj, methd) {
+    if (Array.isArray(obj)) {
+      var length = obj.length;
+      for (var i = 0; i < length; i++) {
+        if (obj.hasOwnProperty(i)) {
+          methd(obj[i], i);
+        }
+      }
+    } else {
+      for (var i in obj) {
+        if (obj.hasOwnProperty(i)) {
+          methd(obj[i], i);
+        }
+      }
+    }
   }
 
   function slice(obj) {
-    return each(obj, [], function (node, i, list) {
-      list.push(this);
+    var list = [];
+    forEach(obj, function (node) {
+      list.push(node);
     });
+    return list;
   }
 
   function extention(object, parent) {
@@ -425,7 +447,8 @@ var view = (function (exports) {
   }
 
   function initCompiler(node, children) {
-    return each(node, children || [], function (child, i, list) {
+    var list = children || [];
+    whiles(node, function (child) {
       node.shift();
       if (new RegExp($close).test(child.nodeValue)) return true;
       var item = { clas: child.cloneNode(true), children: [] };
@@ -440,10 +463,11 @@ var view = (function (exports) {
           });
           break;
       }  });
+    return list;
   }
 
   function compiler(node, scopes, childNodes, content, shcope) {
-    each(childNodes, function (child, index, childNodes) {
+    whiles(childNodes, function (child, childNodes) {
       switch (child.clas.nodeType) {
         case 1:
           if (child.clas.hasAttribute("each")) {
@@ -455,7 +479,7 @@ var view = (function (exports) {
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
             binding(null, scopes, clas, content, shcope);
-            each(dataSource, function (item, index) {
+            forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
               setVariable(scope, variable, global$1.$path);
               if (id) scope[id.trim()] = index.toString();
@@ -496,7 +520,8 @@ var view = (function (exports) {
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
             binding(null, scopes, clas, content, shcope);
-            each(dataSource, slice(child.children), function (item, index, children) {
+            var children = slice(child.children);
+            forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
               setVariable(scope, variable, global$1.$path);
               if (id) scope[id.trim()] = index.toString();
@@ -510,11 +535,11 @@ var view = (function (exports) {
             clas.children.push(childNodes.shift());
             if (when) {
               binding(null, scopes, clas, content, shcope);
-              each(childNodes, function (child, index, childNodes) {
+              whiles(childNodes, function (child, childNodes) {
                 if (!whem(child)) return true;
                 clas.children.push(childNodes.shift());
               });
-              each(slice(child.children), function (child, index, childNodes) {
+              whiles(slice(child.children), function (child, childNodes) {
                 switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                   case true:
                     compiler(node, scopes, childNodes, clas, shcope);
@@ -531,7 +556,7 @@ var view = (function (exports) {
               });
             } else if (when == undefined) {
               binding(null, scopes, clas, content, shcope);
-              each(slice(child.children), function (child, index, childNodes) {
+              whiles(slice(child.children), function (child, childNodes) {
                 switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                   case true:
                     compiler(node, scopes, childNodes, clas, shcope);
@@ -564,7 +589,7 @@ var view = (function (exports) {
   }
 
   function commom(node, scope, clas, content, shcope) {
-    each(node.attributes, function (child) {
+    forEach(node.attributes, function (child) {
       var clasNodes = attrNode(child, scope, child.cloneNode());
       commom(child, scope, clasNodes, null, shcope);
     });

@@ -1,11 +1,11 @@
-import { each, slice, blank, extention } from "./ViewLang";
-import { code, Code,codev, codex, Path, setVariable } from "./ViewScope";
+import { forEach, whiles, slice, blank, extention } from "./ViewLang";
+import { code, Code, codev, codex, Path, setVariable } from "./ViewScope";
 import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
 
 export function compiler(node, scopes, childNodes, content, shcope) {
-  each(childNodes, function (child, index, childNodes) {
+  whiles(childNodes, function (child, childNodes) {
     switch (child.clas.nodeType) {
       case 1:
         if (child.clas.hasAttribute("each")) {
@@ -15,7 +15,7 @@ export function compiler(node, scopes, childNodes, content, shcope) {
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding(null, scopes, clas, content, shcope);
-          each(dataSource, function (item, index) {
+          forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes || {});
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
@@ -54,7 +54,8 @@ export function compiler(node, scopes, childNodes, content, shcope) {
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding(null, scopes, clas, content, shcope);
-          each(dataSource, slice(child.children), function (item, index, children) {
+          let children = slice(child.children);
+          forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes || {});
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
@@ -68,11 +69,11 @@ export function compiler(node, scopes, childNodes, content, shcope) {
           clas.children.push(childNodes.shift());
           if (when) {
             binding(null, scopes, clas, content, shcope);
-            each(childNodes, function (child, index, childNodes) {
+            whiles(childNodes, function (child, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
             });
-            each(slice(child.children), function (child, index, childNodes) {
+            whiles(slice(child.children), function (child, childNodes) {
               switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 case true:
                   compiler(node, scopes, childNodes, clas, shcope);
@@ -89,7 +90,7 @@ export function compiler(node, scopes, childNodes, content, shcope) {
             });
           } else if (when == undefined) {
             binding(null, scopes, clas, content, shcope);
-            each(slice(child.children), function (child, index, childNodes) {
+            whiles(slice(child.children), function (child, childNodes) {
               switch (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 case true:
                   compiler(node, scopes, childNodes, clas, shcope);
@@ -122,7 +123,7 @@ export function compiler(node, scopes, childNodes, content, shcope) {
 }
 
 function commom(node, scope, clas, content, shcope) {
-  each(node.attributes, function (child) {
+  forEach(node.attributes, function (child) {
     let clasNodes = attrNode(child, scope, child.cloneNode());
     commom(child, scope, clasNodes, null, shcope);
   });

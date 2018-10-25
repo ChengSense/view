@@ -9,7 +9,7 @@
 
 <body>
 
-  <div @click="alert(`{{param1}}`)">
+  <div @click="alert(param1)">
     {{param1}}
   </div>
   <input value="{{param1}}"/>
@@ -27,7 +27,7 @@
     },
     action: {
       alert(el) {
-        app.model.param1 = "我变成了你！";
+        this.param1 = "我变成了你！";
       }
     }
   });

@@ -1,5 +1,5 @@
 
-import { each, slice } from "./ViewLang";
+import { each, whiles, slice } from "./ViewLang";
 import { $chen, $lang, $close } from "./ViewExpress";
 
 export function init(dom) {
@@ -18,7 +18,8 @@ export function init(dom) {
 }
 
 export function initCompiler(node, children) {
-  return each(node, children || [], function (child, i, list) {
+  let list = children || [];
+  whiles(node, function (child) {
     node.shift();
     if (new RegExp($close).test(child.nodeValue)) return true;
     var item = { clas: child.cloneNode(true), children: [] };
@@ -34,5 +35,6 @@ export function initCompiler(node, children) {
         });
         break;
     };
-  });
+  })
+  return list;
 }

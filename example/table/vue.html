@@ -32,23 +32,23 @@
           <tr v-for="(item,id) in list" v-bind:class="[id%2?'k-alt':'']">
             <td v-for="col in item">
               <div v-if="edit===id">
-                <input v-bind:id="id" v-model="col" style="border-width: 0px;background-color: rgba(255, 255, 255, 0);width:100%;height:20px">
+                <input v-model="col" style="border-width: 0px;background-color: rgba(255, 255, 255, 0);width:100%;height:20px">
               </div>
-              <div v-sle>
+              <div v-else>
                 {{col}}
               </div>
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
-              <span class="k-button k-button-icontext k-grid-edit" v-bind:id="id" @click="edit1()">
+              <span class="k-button k-button-icontext k-grid-edit" @click="edi(id)">
                 <div v-if="edit===id">
                   保存
                 </div>
-                <div v-sle>
+                <div v-else>
                   编辑
                 </div>
               </span>
-              <span class="k-button k-button-icontext k-grid-delete" v-bind:id="id" @click="del(this.id)">删除</span>
+              <span class="k-button k-button-icontext k-grid-delete" @click="del(id)">删除</span>
             </td>
           </tr>
         </tbody>
@@ -87,7 +87,7 @@
         }
         this.list = data;
       },
-      edit1: function (id) {
+      edi: function (id) {
         this.edit = this.edit == id ? "edit" : id;
       },
       del: function (id) {
@@ -95,7 +95,16 @@
       }
     }
   });
-
+  var data = [];
+  for (var i = 0; i < 1000; i++) {
+    data.push({
+      "id": 10000 + data.length,
+      "age": "宁波店" + data.length,
+      "username": "小小的-" + data.length,
+      "address": "西湖区-" + data.length
+    })
+  }
+  grid.list = data;
 
 </script>
 
