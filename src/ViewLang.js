@@ -1,7 +1,7 @@
 export function whiles(obj, methd) {
   while (obj.length) {
     var data = obj[0];
-    if (methd.call(data, data, obj))
+    if (methd(data, obj))
       break;
   }
 }
@@ -9,48 +9,22 @@ export function whiles(obj, methd) {
 export function each(obj, methd, arg) {
   if (!obj) return;
   arg = arg || obj;
-  if (Array.isArray(obj)) {
-    var length = obj.length;
-    for (var i = 0; i < length; i++) {
-      if (obj.hasOwnProperty(i)) {
-        var data = obj[i];
-        if (methd.call(data, data, i, arg))
-          break;
-      }
-    }
-  } else {
-    for (var i in obj)
-      if (obj.hasOwnProperty(i)) {
-        var data = obj[i];
-        if (methd.call(data, data, i, arg))
-          break;
-      }
-  }
+  Object.keys(obj).every(i => {
+    var data = obj[i];
+    return !methd.call(data, data, i, arg);
+  })
   return arg;
 }
 
 export function forEach(obj, methd) {
-  if (Array.isArray(obj)) {
-    var length = obj.length;
-    for (var i = 0; i < length; i++) {
-      if (obj.hasOwnProperty(i)) {
-        methd(obj[i], i);
-      }
-    }
-  } else {
-    for (var i in obj)
-      if (obj.hasOwnProperty(i)) {
-        methd(obj[i], i);
-      }
-  }
+  if (!obj) return;
+  Object.keys(obj).forEach(i => {
+    methd(obj[i], i);
+  })
 }
 
 export function slice(obj) {
-  let list = [];
-  forEach(obj, function (node) {
-    list.push(node);
-  });
-  return list;
+  return [].slice.call(obj);
 }
 
 export function extention(object, parent) {

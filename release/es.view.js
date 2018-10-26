@@ -78,17 +78,13 @@ function observe(target, callSet, callGet) {
   function watcher(object, root, oldObject) {
     if (Array.isArray(object)) {
       array(object, root);
-      for (var prop = 0; prop < object.length; prop++) {
-        if (object.hasOwnProperty(prop)) {
-          walk(object, prop, root, oldObject);
-        }
-      }
+      object.forEach((a, prop) => {
+        walk(object, prop, root, oldObject);
+      });
     } else if (typeof object == "object") {
-      for (var prop in object) {
-        if (object.hasOwnProperty(prop)) {
-          walk(object, prop, root, oldObject);
-        }
-      }
+      Object.keys(object).forEach(prop => {
+        walk(object, prop, root, oldObject);
+      });
     }
   }
 
@@ -255,7 +251,7 @@ var mq = new Mess();
 function whiles(obj, methd) {
   while (obj.length) {
     var data = obj[0];
-    if (methd.call(data, data, obj))
+    if (methd(data, obj))
       break;
   }
 }
@@ -263,48 +259,22 @@ function whiles(obj, methd) {
 function each(obj, methd, arg) {
   if (!obj) return;
   arg = arg || obj;
-  if (Array.isArray(obj)) {
-    var length = obj.length;
-    for (var i = 0; i < length; i++) {
-      if (obj.hasOwnProperty(i)) {
-        var data = obj[i];
-        if (methd.call(data, data, i, arg))
-          break;
-      }
-    }
-  } else {
-    for (var i in obj)
-      if (obj.hasOwnProperty(i)) {
-        var data = obj[i];
-        if (methd.call(data, data, i, arg))
-          break;
-      }
-  }
+  Object.keys(obj).every(i => {
+    var data = obj[i];
+    return !methd.call(data, data, i, arg);
+  });
   return arg;
 }
 
 function forEach(obj, methd) {
-  if (Array.isArray(obj)) {
-    var length = obj.length;
-    for (var i = 0; i < length; i++) {
-      if (obj.hasOwnProperty(i)) {
-        methd(obj[i], i);
-      }
-    }
-  } else {
-    for (var i in obj)
-      if (obj.hasOwnProperty(i)) {
-        methd(obj[i], i);
-      }
-  }
+  if (!obj) return;
+  Object.keys(obj).forEach(i => {
+    methd(obj[i], i);
+  });
 }
 
 function slice(obj) {
-  let list = [];
-  forEach(obj, function (node) {
-    list.push(node);
-  });
-  return list;
+  return [].slice.call(obj);
 }
 
 function extention(object, parent) {

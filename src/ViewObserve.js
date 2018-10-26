@@ -6,17 +6,13 @@ export function observe(target, callSet, callGet) {
   function watcher(object, root, oldObject) {
     if (Array.isArray(object)) {
       array(object, root);
-      for (var prop = 0; prop < object.length; prop++) {
-        if (object.hasOwnProperty(prop)) {
-          walk(object, prop, root, oldObject);
-        }
-      }
+      object.forEach((a, prop) => {
+        walk(object, prop, root, oldObject);
+      })
     } else if (typeof object == "object") {
-      for (var prop in object) {
-        if (object.hasOwnProperty(prop)) {
-          walk(object, prop, root, oldObject);
-        }
-      }
+      Object.keys(object).forEach(prop => {
+        walk(object, prop, root, oldObject);
+      })
     }
   }
 
