@@ -47,7 +47,7 @@ function deepen(content, path, shcope) {
   each(content.childNodes, function (node) {
     if (node.path && node.path.has(path)) {
       resolver[node.resolver](node, shcope);
-      return true;
+      return false;
     }
     if (node.childNodes[0])
       deepen(node, path, shcope);
@@ -55,9 +55,12 @@ function deepen(content, path, shcope) {
 }
 
 function attrDeepen(attres) {
-  each(attres, function (node) {
+  each(slice(attres), function (node) {
+    if (node.node && !node.node.ownerElement.parentNode)
+      attres.remove(node);
     resolver[node.resolver](node);
   });
+  console.log();
 }
 
 window.View = View;
