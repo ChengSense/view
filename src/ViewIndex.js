@@ -5,7 +5,6 @@ import { each, slice, clone } from "./ViewLang";
 import { resolver } from "./ViewResolver";
 import { Router } from "./ViewRouter";
 
-
 export let global = { $path: undefined };
 
 export function View(app) {
@@ -55,12 +54,12 @@ function deepen(content, path, shcope) {
 }
 
 function attrDeepen(attres) {
+  if (!attres) return;
   each(slice(attres), function (node) {
     if (node.node && !node.node.ownerElement.parentNode)
       attres.remove(node);
     resolver[node.resolver](node);
   });
-  console.log();
 }
 
 window.View = View;
