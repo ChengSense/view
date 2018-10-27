@@ -9,11 +9,11 @@ export let global = { $path: undefined };
 
 export function View(app) {
   var content = { childNodes: [], children: [] };
-  var shcope = this;
+  var we = this;
 
   observe(app.model, function set(path) {
-    deepen(content, path, shcope);
-    attrDeepen(global.$attres.get(shcope));
+    deepen(content, path, we);
+    attrDeepen(global.$attres.get(we));
   }, function get(path) {
     global.$path = path;
   });
@@ -28,7 +28,7 @@ export function View(app) {
       this.node = node;
       this.view = view[0];
       app.model.$action = app.action;
-      resolver["view"](this.view, node, app.model, content, shcope);
+      resolver["view"](this.view, node, app.model, content, we);
       break;
     case "component":
       var view = query(app.component);
@@ -42,14 +42,14 @@ export function View(app) {
   }
 }
 
-function deepen(content, path, shcope) {
+function deepen(content, path, we) {
   each(content.childNodes, function (node) {
     if (node.path && node.path.has(path)) {
-      resolver[node.resolver](node, shcope);
+      resolver[node.resolver](node, we);
       return false;
     }
     if (node.childNodes[0])
-      deepen(node, path, shcope);
+      deepen(node, path, we);
   });
 }
 

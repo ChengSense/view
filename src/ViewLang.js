@@ -1,7 +1,7 @@
-export function whiles(obj, methd) {
+export function whiles(obj, methd, me) {
   while (obj.length) {
     var data = obj[0];
-    if (methd(data, obj))
+    if (methd.call(me, data, obj))
       break;
   }
 }
@@ -16,10 +16,10 @@ export function each(obj, methd, arg) {
   return arg;
 }
 
-export function forEach(obj, methd) {
+export function forEach(obj, methd, me) {
   if (!obj) return;
   Object.keys(obj).forEach(i => {
-    methd(obj[i], i);
+    methd.call(me, obj[i], i);
   })
 }
 

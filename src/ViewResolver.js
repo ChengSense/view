@@ -1,13 +1,13 @@
 import { View, global } from "./ViewIndex";
 import { each, slice, extention, blank } from "./ViewLang";
-import { compiler, compoNode } from "./ViewCompiler";
+import { Compiler, compoNode } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
 
 export var resolver = {
-  view: function (view, node, scope, content, shcope) {
+  view: function (view, node, scope, content, we) {
     try {
       var doc = document.createDocumentFragment();
-      compiler(doc, scope, slice(node.children), content, shcope);
+      new Compiler(doc, scope, slice(node.children), content, we);
       content.children = node.children;
       content.clas = node.clas;
       view.reappend(doc);
@@ -19,7 +19,7 @@ export var resolver = {
     try {
       let app = code(node.clas.nodeValue, node.scope);
       node.path = [global.$path];
-      if(blank(app)) return;
+      if (blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
@@ -33,13 +33,13 @@ export var resolver = {
       console.log(e);
     }
   },
-  when: function (node, shcope) {
+  when: function (node, we) {
     try {
       var insert = insertion(node.childNodes);
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      compiler(doc, node.scope, slice(node.children), node.content, shcope);
+      new Compiler(doc, node.scope, slice(node.children), node.content, we);
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
@@ -47,13 +47,13 @@ export var resolver = {
       console.log(e);
     }
   },
-  each: function (node, shcope) {
+  each: function (node, we) {
     try {
       var insert = insertion(node.childNodes);
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      compiler(doc, node.scope, [node], node.content, shcope);
+      new Compiler(doc, node.scope, [node], node.content, we);
       childNodes.replace(node, childNodes.pop())
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
