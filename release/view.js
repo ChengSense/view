@@ -700,7 +700,7 @@ var view = (function (exports) {
     };
   }
 
-  function whenNode(newNode, node, child, content, scopes, shcope) {
+  function whenNode(newNode, node, child, content, scopes) {
     if (new RegExp($whea).test(child.clas.nodeValue)) {
       var comment = document.createComment("when:" + global$1.$path);
       node.appendChild(comment);
@@ -718,7 +718,7 @@ var view = (function (exports) {
           childNodes: []
         }]
       });
-      binding(null, scopes, content, shcope);
+      binding(null, scopes, content);
     }
     return content;
   }
@@ -993,7 +993,6 @@ var view = (function (exports) {
       if (node.node && !node.node.ownerElement.parentNode) attres.remove(node);
       resolver[node.resolver](node);
     });
-    console.log();
   }
 
   window.View = View;

@@ -669,7 +669,7 @@ function eachNode(newNode, node, child) {
   };
 }
 
-function whenNode(newNode, node, child, content, scopes, shcope) {
+function whenNode(newNode, node, child, content, scopes) {
   if (new RegExp($whea).test(child.clas.nodeValue)) {
     var comment = document.createComment("when:" + global.$path);
     node.appendChild(comment);
@@ -687,7 +687,7 @@ function whenNode(newNode, node, child, content, scopes, shcope) {
         childNodes: []
       }]
     });
-    binding(null, scopes, content, shcope);
+    binding(null, scopes, content);
   }
   return content;
 }
@@ -972,7 +972,6 @@ function attrDeepen(attres) {
       attres.remove(node);
     resolver[node.resolver](node);
   });
-  console.log();
 }
 
 window.View = View;
