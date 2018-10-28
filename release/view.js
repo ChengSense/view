@@ -17,6 +17,7 @@ var view = (function (exports) {
   function code(_express, _scope) {
     try {
       global$1.$path = undefined;
+      _express = _express.replace($express, "$1");
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
