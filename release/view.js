@@ -632,11 +632,11 @@ var view = (function (exports) {
       key.replace($word, function (key) {
         if (code(key, scope) == undefined || global$1.$path == undefined) return;
         if (clas.clas.nodeType == 2) {
-          var attres = global$1.$attres.get(view);
+          var attres = global$1.$attres.get(we);
           if (attres) {
             attres.push(clas);
           } else {
-            global$1.$attres.set(view, [clas]);
+            global$1.$attres.set(we, [clas]);
           }
         }
         clas.path.push(global$1.$path);

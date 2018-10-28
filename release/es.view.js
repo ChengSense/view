@@ -612,11 +612,11 @@ function Compiler(node, scopes, childNodes, content, we) {
     key.replace($word, function (key) {
       if (code(key, scope) == undefined || global.$path == undefined) return;
       if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(view);
+        let attres = global.$attres.get(we);
         if (attres) {
           attres.push(clas);
         } else {
-          global.$attres.set(view, [clas]);
+          global.$attres.set(we, [clas]);
         }
       }
       clas.path.push(global.$path);
