@@ -1,5 +1,5 @@
-import { forEach, whiles, slice, blank, extention } from "./ViewLang";
-import { code, Code, codev, codex, Path, setVariable } from "./ViewScope";
+import { forEach, whiles, slice, blank } from "./ViewLang";
+import { code, codev, codex, Path, setVariable } from "./ViewScope";
 import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
 import { resolver } from "./ViewResolver";
