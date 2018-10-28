@@ -23,17 +23,12 @@ export function initCompiler(node, children) {
     node.shift();
     if (new RegExp($close).test(child.nodeValue)) return true;
     var item = { clas: child.cloneNode(true), children: [] };
-    if (!(child.nodeType == 3 && child.nodeValue.trim() == ""))
-      list.push(item);
-    switch (child.nodeType) {
-      case 1:
-        initCompiler(slice(child.childNodes), item.children);
-        break;
-      default:
-        child.nodeValue.replace($chen, function () {
-          initCompiler(node, item.children);
-        });
-        break;
+    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+    if (child.nodeType == 1) {
+      initCompiler(slice(child.childNodes), item.children);
+    }
+    else if (new RegExp($chen).test(child.nodeValue)) {
+      initCompiler(node, item.children);
     };
   })
   return list;
