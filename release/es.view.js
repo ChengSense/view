@@ -14,7 +14,6 @@ var $event = /^@(.*)/;
 function code(_express, _scope) {
   try {
     global.$path = undefined;
-    _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
   } catch (e) {
     return undefined;
@@ -551,7 +550,7 @@ function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = Code(express[1])(scope);
+      node.nodeValue = code(express[1], scope);
     }
   }
 

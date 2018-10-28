@@ -155,7 +155,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = Code(express[1])(scope);
+      node.nodeValue = code(express[1], scope);
     }
   }
 
