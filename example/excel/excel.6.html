@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>canvas</title>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+  <style type="text/css">
+    canvas {
+      border: 1px solid #d0d3d7;
+      display: block;
+      /* background: #f0f0f0; */
+    }
+
+    textarea {
+      border: 2px solid #006dff;
+      width: 116px;
+      height: 26px;
+      position: absolute;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <textarea></textarea>
+
+</html>
+<script type="text/javascript">
+  var canvas = document.querySelector('#canvas');
+
+  var context = canvas.getContext('2d');
+
+  var background = document.createElement("canvas");
+  var backContext = background.getContext("2d");
+
+  var textarea = document.createElement("canvas");
+  var textContext = textarea.getContext("2d");
+
+  var rows = [];
+  function init() {
+    width = window.innerWidth - 18, height = window.innerHeight - 18;
+    if (window.devicePixelRatio) {
+
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      context.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      background.style.width = width + "px";
+      background.style.height = height + "px";
+      background.width = canvas.width;
+      background.height = canvas.height;
+      backContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      textarea.style.width = width + "px";
+      textarea.style.height = height + "px";
+      textarea.width = canvas.width;
+      textarea.height = canvas.height;
+      textContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    Background(width, height);
+    context.drawImage(background, 0, 0, width, height);
+    Textarea();
+    context.drawImage(textarea, 0, 0, width, height);
+  }
+
+  function Background(width, height) {
+    setting(backContext, {
+      strokeStyle: "#d0d3d7",
+      lineCap: "butt"
+    });
+
+    grid(width, height, 100, 100);
+  }
+
+  var topList = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+
+  function grid(width, height, rows, cels) {
+    var i = rows, l = cels;
+    backContext.beginPath();
+    for (let i = 0; i < rows; i++) {
+      var y = i * 30 + 0.5;
+      backContext.moveTo(0.5, y);
+      backContext.lineTo(width + 0.5, y);
+      if (0 < i) {
+        backContext.fillStyle = "#f7f7f7";
+        backContext.fillRect(0, y, 60, 30);
+        backContext.fillStyle = "black";
+        backContext.fillText(i, 23.5, y + 21.5);
+      }
+    }
+    for (let l = 0; l < 50; l++) {
+      var x = l * 120 - 59.5;
+      if (0 < l) {
+        backContext.moveTo(x, 0.5);
+        backContext.lineTo(x, height + 0.5);
+        backContext.fillStyle = "#f7f7f7";
+        backContext.fillRect(x, 0, 120, 30);
+        backContext.fillStyle = "black";
+        backContext.fillText(topList[l - 1], x + 53.5, 21.5);
+      } else {
+        backContext.moveTo(x, 0.5);
+        backContext.lineTo(x, height + 0.5);
+      }
+    }
+    backContext.stroke();
+  }
+
+  function Textarea() {
+    setting(context, {
+      font: "14px Arial"
+    });
+    book(100, 100);
+  }
+
+  var map = {};
+  function book(irow, icel) {
+    for (let i = 1; i < irow; i++) {
+      var cels = [];
+      rows.push(cels);
+      for (let l = 1; l < icel; l++) {
+        var cel = { x: i * 120 - 59.5, y: l * 30, width: 120, height: 30, text: "Hello world" };
+        map[`${parseInt(cel.x)}&${parseInt(cel.y)}`] = cel;
+        cels.push(cel);
+        textContext.fillText(cel.text, cel.x + 3, cel.y + 15);
+      }
+    }
+  }
+
+  function text(cel) {
+    textContext.clearRect(cel.x, cel.y, cel.width, cel.height);
+    textContext.fillText(cel.text, cel.x + 3, cel.y + 15);
+  }
+
+  var cel;
+  $("canvas").mousedown(function (ev) {
+    var p = position(ev), col;
+    cel = cal = block(p.x, p.y);
+    $("textarea").hide();
+    if (cel) {
+      context.beginPath();
+      context.clearRect(0, 0, width, height);
+      context.rect(cel.x, cel.y, cel.width, cel.height);
+      context.drawImage(background, 0, 0, width, height);
+      context.drawImage(textarea, 0, 0, width, height);
+      context.strokeStyle = "#006dff";
+      context.lineWidth = 2;
+      context.stroke();
+    }
+    $("canvas").mousemove(function (ev) {
+      var p = position(ev);
+      if ((cal.x + cal.width) < p.x || (cal.y + cal.height) < p.y) {
+        col = block(p.x, p.y);
+        area(col);
+      }
+    })
+    ev.cancelBubble = true;
+  }).mouseup(function (ev) {
+    $("canvas").off("click");
+    $("canvas").off("mousemove");
+  });
+
+  $("#canvas").dblclick(function (ev) {
+    var p = position(ev);
+    $("textarea").show();
+    $("textarea").css({ width: "116px", height: "26px" }).focus()
+    cel = block(p.x, p.y);
+    if (cel) {
+      context.beginPath();
+      context.rect(cel.x, cel.y, cel.width, cel.height);
+      var top = cel.y + $("canvas").position().top;
+      var left = cel.x + $("canvas").position().left;
+      $("textarea").css({ left: left, top: top });
+      $("textarea").val(cel.text);
+    }
+  });
+
+  $("textarea").change(function () {
+    cel.text = this.value;
+    context.beginPath();
+    context.clearRect(0, 0, width, height);
+    context.drawImage(background, 0, 0, width, height);
+    text(cel);
+    context.drawImage(textarea, 0, 0, width, height);
+    context.stroke();
+  })
+
+  function block(x, y) {
+    var col, l = y;
+    while (l--) {
+      var i = x;
+      while (i--) {
+        col = map[`${i}&${l}`];
+        if (col) {
+          return col;
+        }
+      }
+    }
+  }
+
+  function area(col) {
+    context.beginPath();
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#e3edf9";
+    context.fillRect(cel.x, cel.y, col.x - cel.x + col.width, col.y - cel.y + col.height)
+    context.rect(cel.x, cel.y, col.x - cel.x + col.width, col.y - cel.y + col.height);
+    context.drawImage(background, 0, 0, width, height);
+    context.drawImage(textarea, 0, 0, width, height);
+    context.strokeStyle = "#006dff";
+    context.lineWidth = 2;
+    context.stroke();
+  }
+
+  function setting(object, src) {
+    for (var key in src) object[key] = src[key];
+    return object;
+  }
+
+  function position(ev) {
+    var x, y;
+    if (ev.layerX || ev.layerX == 0) {
+      x = ev.layerX;
+      y = ev.layerY;
+    } else if (ev.offsetX || ev.offsetX == 0) {
+      x = ev.offsetX;
+      y = ev.offsetY;
+    }
+    return { x: x, y: y };
+  }
+
+  init();
+</script>

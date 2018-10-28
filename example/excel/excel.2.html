@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>canvas</title>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+  <style type="text/css">
+    #canvas {
+      border: 1px solid #d0d3d7;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="1000" height="600"></canvas>
+</body>
+
+</html>
+<script type="text/javascript">
+
+  var canvas = document.querySelector('#canvas');
+  var cxt = canvas.getContext('2d');
+
+  var width = canvas.width, height = canvas.height;
+  if (window.devicePixelRatio) {
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    canvas.height = height * window.devicePixelRatio;
+    canvas.width = width * window.devicePixelRatio;
+    cxt.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+
+  cxt.beginPath();
+  cxt.strokeStyle = "#d0d3d7";
+  cxt.lineCap = "butt";
+  var i = 50, l = 50;
+
+  while (i--) {
+    var y = i * 30 - 1.5;
+    cxt.moveTo(-1.5, y);
+    cxt.lineTo(1000, y);
+  }
+
+  while (l--) {
+
+    cxt.font = '13px Arial';
+    cxt.textAlign = 'center';
+    cxt.textBaseline = 'middle';
+
+    var textString = "I love MDN";
+    cxt.fillText(textString, x, 10);
+
+    var x = l * 120 - 1.5;
+    cxt.moveTo(x, -1.5);
+    cxt.lineTo(x, 600);
+  }
+
+  cxt.stroke();
+  cxt.closePath();
+
+</script>

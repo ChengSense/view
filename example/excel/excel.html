@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>canvas</title>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+  <style type="text/css">
+    #canvas {
+      border: 1px solid #d0d3d7;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="1000" height="600"></canvas>
+</body>
+
+</html>
+<script type="text/javascript">
+
+  var canvas = $('#canvas')[0];
+  var cxt = canvas.getContext('2d');
+  var rows = [];
+  for (var i = 0; i < 50; i++) {
+    var cles = []; rows.push(cles);
+    for (var l = 0; l < 50; l++) {
+      cles.push({ X: i * 120, Y: l * 30, H: 30, W: 120 });
+    }
+  }
+
+  draw();
+  $("#canvas").click(function (ev) {
+    var p = getEventPosition(ev);
+    rows.forEach(cels => {
+      cels.forEach(cel => {
+        cxt.beginPath();
+        cxt.strokeStyle = "#d0d3d7";
+        cxt.rect(cel.X, cel.Y, cel.W, cel.H);
+        cxt.stroke();
+        if (cxt.isPointInPath(p.x, p.y)) {
+          cxt.strokeStyle = "#73a2e3";
+          cxt.stroke();
+        }
+      });
+    });
+  });
+
+  $("#canvas").mousedown(function (ev) {
+    var b = getEventPosition(ev);
+    $("#canvas").mousemove(function (ev) {
+      var p = getEventPosition(ev);
+      rows.forEach(cels => {
+        cels.forEach(cel => {
+          cxt.beginPath();
+          cxt.strokeStyle = "#d0d3d7";
+          cxt.rect(cel.X, cel.Y, cel.W, cel.H);
+          if (cxt.isPointInPath(p.x, p.y)) {
+            cxt.strokeStyle = "#73a2e3";
+            cxt.stroke();
+          }
+        });
+      });
+    });
+  }).mouseup(function (ev) {
+    $("#canvas").off("mousemove");
+  });
+
+
+  function draw() {
+    cxt.strokeStyle = "#d0d3d7";
+    rows.forEach(cels => {
+      cels.forEach(cel => {
+        cxt.beginPath();
+        cxt.rect(cel.X, cel.Y, cel.W, cel.H);
+        cxt.stroke();
+      });
+    });
+  }
+
+  function getEventPosition(ev) {
+    var x, y;
+    if (ev.layerX || ev.layerX == 0) {
+      x = ev.layerX;
+      y = ev.layerY;
+    } else if (ev.offsetX || ev.offsetX == 0) {
+      x = ev.offsetX;
+      y = ev.offsetY;
+    }
+    return { x: x, y: y };
+  }
+</script>

@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+    <center>
+        <canvas id="canvas" width="1200" height="700" style="border: 10px solid #13c3c3;">
+        </canvas>
+    </center>
+    <script type="text/javascript">
+        var c = document.getElementById("canvas");
+        var ctx = c.getContext("2d");
+        //圆角矩形
+        function roundedRectangle(ctx, bx, by, tw, th, tr) {
+            this.c = ctx;
+            this.x = bx;
+            this.y = by;
+            this.w = tw;
+            this.h = th;
+            this.r = tr;
+            c.lineWidth = 1;
+            c.strokeStyle = "rgba(0, 0, 0, 0.8)";
+            c.fillStyle = "rgba(137, 96, 145, 0.5)";
+            c.beginPath();
+            c.moveTo(x + r, y);
+            c.lineTo(x + w - r, y);
+            var a = x + w - r;
+            var b = y + r;
+            c.arc(a, b, r, Math.PI * 1.5, Math.PI * 0, false);
+            c.lineTo(x + w, y + r);
+            c.lineTo(x + w, y + h - r);
+            var a1 = x + w - r;
+            var b1 = y + h - r;
+            c.arc(a1, b1, r, Math.PI * 2, Math.PI * 2.5, false);
+            c.lineTo(x + w - r, y + h);
+            c.lineTo(x + r, y + h);
+            var a2 = x + r;
+            var b2 = y + h - r;
+            c.arc(a2, b2, r, -Math.PI * 1.5, -Math.PI * 1, false);
+            c.lineTo(x, y + h - r);
+            c.lineTo(x, y + r);
+            var a3 = x + r;
+            var b3 = y + r;
+            c.arc(a3, b3, r, -Math.PI * 1, -Math.PI * 0.5, false);
+            c.stroke();
+            c.fill();
+        }
+        //圆角矩形
+        function roundedRectangleO(ctx, bx, by, tw, th, tr) {
+            this.c = ctx;
+            this.x = bx;
+            this.y = by;
+            this.w = tw;
+            this.h = th;
+            this.r = tr;
+            c.lineWidth = 2;
+            c.strokeStyle = "rgba(32, 13, 32, 0.3)";
+            c.fillStyle = "rgba(137, 96, 145, 0.5)";
+            c.beginPath();
+            c.moveTo(x + r, y);
+            c.lineTo(x + w - r, y);
+            var a = x + w - r;
+            var b = y + r;
+            c.arc(a, b, r, Math.PI * 1.5, Math.PI * 0, false);
+            c.lineTo(x + w, y + r);
+            c.lineTo(x + w, y + h - r);
+            var a1 = x + w - r;
+            var b1 = y + h - r;
+            c.arc(a1, b1, r, Math.PI * 2, Math.PI * 2.5, false);
+            c.lineTo(x + w - r, y + h);
+            c.lineTo(x + r, y + h);
+            var a2 = x + r;
+            var b2 = y + h - r;
+            c.arc(a2, b2, r, -Math.PI * 1.5, -Math.PI * 1, false);
+            c.lineTo(x, y + h - r);
+            c.lineTo(x, y + r);
+            var a3 = x + r;
+            var b3 = y + r;
+            c.arc(a3, b3, r, -Math.PI * 1, -Math.PI * 0.5, false);
+            c.stroke();
+            c.fill();
+
+        }
+        //矩形
+        function rectangle(ctx, bx, by, tw, th, tr) {
+            ctx.strokeStyle = "rgba(77, 71, 95, 0.4)";
+            ctx.fillStyle = "rgba(255, 255, 255,0.9)";
+            c.lineWidth = 2;
+            ctx.strokeRect(bx + 7, by + 25, tw - 14, th - 32);
+            ctx.fillRect(bx + 7, by + 25, tw - 14, th - 32);
+        }
+        //最小化按钮    (ctx, (bx + w) * 0.845, by * 1, 35, 20, 0.5 * r)
+        function minButtom(ctx, bx, by, tw, th, tr) {
+            this.c = ctx;
+            this.x = bx + tw - 112;
+            this.y = by + 2;
+            this.w = 30;
+            this.h = 18;
+            this.r = 2;
+            c.strokeStyle = "rgba(255, 255, 255,0.7)";
+            c.fillStyle = "rgba(183, 151, 187, 0.4)";
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(x, y);
+            c.lineTo(x + w, y);
+            c.lineTo(x + w, y);
+            c.lineTo(x + w, y + h);
+            c.lineTo(x + w - r, y + h);
+            c.lineTo(x + r, y + h);
+            var a2 = x + r;
+            var b2 = y + h - r;
+            c.arc(a2, b2, r, -Math.PI * 1.5, -Math.PI * 1, false);
+            c.lineTo(x, y + h);
+            c.lineTo(x, y);
+            c.stroke();
+            c.fill();
+        }
+
+        //最大化按钮
+        function maxButtom(ctx, bx, by, tw, th, tr) {
+            this.c = ctx;
+            this.x = bx + tw - 82;
+            this.y = by + 2;
+            this.w = 30;
+            this.h = 18;
+            this.c = ctx;
+            c.strokeStyle = "rgba(255, 255, 255,0.7)";
+            c.lineWidth = 2;
+            c.fillStyle = "rgba(183, 151, 187, 0.4)";
+            c.strokeRect(x, y, w, h);
+            c.fillRect(x, y, w, h);
+        }
+        //关闭按钮
+        function closeButtom(ctx, bx, by, tw, th, tr) {
+            this.c = ctx;
+            this.x = bx + tw - 52;
+            this.y = by + 2;
+            this.w = 45;
+            this.h = 18;
+            this.r = 2;
+            c.strokeStyle = "rgba(255, 255, 255, 0.7)";
+            c.fillStyle = "rgba(183, 151, 187, 0.4)";
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(x, y);
+            c.lineTo(x + w, y);
+            c.lineTo(x + w, y + r);
+            c.lineTo(x + w, y + h - r);
+            var a1 = x + w - r;
+            var b1 = y + h - r;
+            c.arc(a1, b1, r, Math.PI * 2, Math.PI * 2.5, false);
+            c.lineTo(x + w - r, y + h);
+            c.lineTo(x + r, y + h);
+            c.lineTo(x, y + h);
+            c.lineTo(x, y);
+            c.stroke();
+            c.fill();
+            c.font = 'bold 100px';
+            ctx.strokeText('X', x + 20, y + 13);
+        }
+        function windows(ctx, bx, by, tw, th, tr) {
+            this.ctx = ctx;
+            this.bx = bx;
+            this.by = by;
+            this.tw = tw;
+            this.th = th;
+            this.tr = tr;
+            roundedRectangleO(ctx, bx, by, tw, th, tr);
+            rectangle(ctx, bx, by, tw, th, tr);
+            minButtom(ctx, bx, by, tw, th, tr);
+            maxButtom(ctx, bx, by, tw, th, tr);
+            closeButtom(ctx, bx, by, tw, th, tr);
+        }
+        function cnvs_getCoordinates(e, bx, by, tw, th) {
+            var cx = e.clientX;
+            var cy = e.clientY;
+            var bw = document.getElementById('canvas').style.borderWidth;
+            bw = parseInt(bw);
+            var pot = new getAbsPoint('canvas');
+            var px = parseInt(pot.x);
+            var py = parseInt(pot.y);
+            var ax = px + bw + bx;
+            var ay = py + bw + by;
+            if ((ax < cx && cx < ax + tw) && (ay < cy && cy < ay + th)) {
+                ctx.clearRect(bx - 1, by - 1, tw + 2, th + 2);
+            }
+        }
+
+        function cnvs_Object(e, ob, cid) {
+            if (cid == null) {
+                cid = 'canvas'
+            }
+            //屏幕坐标
+            this.x = e.clientX;
+            this.y = e.clientY;
+            var obj = document.getElementById(cid)
+
+            this.bw = parseInt(obj.style.borderWidth);
+
+            var oRect = obj.getBoundingClientRect();
+            this.cx = oRect.left;
+            this.cy = oRect.top;
+
+            var px = parseInt(this.cx);
+            var py = parseInt(this.cy);
+
+            //cnvs内相对零坐标 ，左上角坐标
+            this.zx = px + this.bw;
+            this.zy = py + this.bw;
+
+            //cnvs内对象地绝对坐标
+            var ax = zx + ob.bx;
+            var ay = zy + ob.by;
+
+            //判断鼠标是不是在对象上
+            if ((ax < x && x < ax + ob.tw) && (ay < y && y < ay + ob.th)) {
+                return ob;
+            }
+        }
+
+        function cnvs_Coordinate(e, cid) {
+            if (cid == null) {
+                cid = 'canvas'
+            }
+            //屏幕坐标
+            this.x = e.clientX;
+            this.y = e.clientY;
+            var obj = document.getElementById(cid)
+            this.bw = parseInt(obj.style.borderWidth);
+
+            var oRect = obj.getBoundingClientRect();
+            this.cx = oRect.left;
+            this.cy = oRect.top;
+
+            var px = parseInt(this.cx);
+            var py = parseInt(this.cy);
+
+            //cnvs内相对零坐标 ，左上角坐标
+            this.zx = px + this.bw;
+            this.zy = py + this.bw;
+        }
+
+
+        function getAbsPoint(id) {
+            this.x, this.y;
+            var obj = document.getElementById(id)
+            var oRect = obj.getBoundingClientRect();
+            this.x = oRect.left;
+            this.y = oRect.top;
+        }
+
+        var win0 = new windows(ctx, 300, 100, 500, 350, 6);
+        var win1 = new windows(ctx, 310, 110, 500, 350, 6);
+        var win2 = new windows(ctx, 320, 120, 500, 350, 6);
+        var win3 = new windows(ctx, 330, 130, 500, 350, 6);
+        var objArr = new Array();
+        objArr.push(win0);
+        objArr.push(win1);
+        objArr.push(win2);
+        objArr.push(win3);
+
+        var md = false;
+        document.documentElement.onmousedown = function (e) {
+            md = true;
+            for (var i = 0; i < objArr.length; i++) {
+                if (objArr[i] != null) {
+                    if (cnvs_Object(e, objArr[i]) != null) {
+                        var win = new windows(objArr[i].ctx, objArr[i].bx, objArr[i].by, objArr[i].tw, objArr[i].th, objArr[i].tr);
+                        objArr[i] = null;
+                        objArr.push(win);
+                        return;
+                    }
+                }
+            }
+        }
+        var mm = false;
+        var cx1;
+        var cy1;
+        document.documentElement.onmousemove = function (e) {
+            mm = true;
+            cx1 = e.clientX;
+            cy1 = e.clientY;
+            if (mm && md) {
+                reLoadeObjects(e);
+            }
+        }
+        var mu = false;
+        document.documentElement.onmouseup = function (e) {
+            md = false;
+            mm = false;
+        }
+
+        function reLoadeObjects(e) {
+            ctx.clearRect(0, 0, 1200, 700);
+            for (var i = 0; i < objArr.length; i++) {
+                if (objArr[i] != null) {
+                    var win = new windows(objArr[i].ctx, objArr[i].bx, objArr[i].by, objArr[i].tw, objArr[i].th, objArr[i].tr);
+                }
+            }
+            var lastObj = objArr[objArr.length - 1];
+            var coor = new cnvs_Coordinate(e);
+            var win = new windows(lastObj.ctx, cx1 - coor.zx, cy1 - coor.zy, 500, 350, 6);
+            objArr[objArr.length - 1] = null;
+            objArr.push(win);
+        }
+
+//        var img = new Image();
+//        img.onload = function () {
+//            ctx.drawImage(img, 25, 25, 100, 100);
+//        }
+//        img.src = "Chrysanthemum.jpg";
+    </script>
+    <div id="Coordinates">
+    </div>
+</body>
+</html>

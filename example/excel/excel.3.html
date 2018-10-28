@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>canvas</title>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+  <style type="text/css">
+    #canvas {
+      border: 1px solid #d0d3d7;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="1000" height="600"></canvas>
+</body>
+
+</html>
+<script type="text/javascript">
+  var canvas = document.querySelector('#canvas');
+  var context = canvas.getContext('2d');
+  var rows = [];
+
+  function init() {
+
+    var width = canvas.width, height = canvas.height;
+    if (window.devicePixelRatio) {
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      canvas.height = height * window.devicePixelRatio;
+      canvas.width = width * window.devicePixelRatio;
+      context.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    var gridGrush = Brush({
+      strokeStyle: "#d0d3d7",
+      lineCap: "butt"
+    });
+
+    grid(gridGrush, width, height, 50, 50);
+
+    var bookBrush = Brush({
+      font: "14px Arial"
+    });
+
+    book(bookBrush, 50, 50);
+
+  }
+
+  function grid(brush, width, height, rows, cels) {
+    var i = rows, l = cels;
+    brush.beginPath();
+    while (i--) {
+      var y = i * 30 + 0.5;
+      brush.moveTo(0.5, y);
+      brush.lineTo(width + 0.5, y);
+    }
+    while (l--) {
+      var x = l * 120 + 0.5;
+      brush.moveTo(x, 0.5);
+      brush.lineTo(x, height + 0.5);
+    }
+    brush.stroke();
+  }
+
+  function book(brush, irow, icel) {
+    for (let i = 0; i < irow; i++) {
+      var cels = [];
+      rows.push(cels);
+      for (let l = 0; l < icel; l++) {
+        var cel = { x: i * 120, y: l * 30, width: 120, height: 30, text: "Hello world" };
+        cels.push(cel);
+        brush.fillText(cel.text, cel.x + 3, cel.y + 15);
+      }
+    }
+  }
+
+  function Brush(style) {
+    setting(context, style);
+    return context;
+  }
+
+  function setting(object, src) {
+    for (var key in src) object[key] = src[key];
+    return object;
+  }
+
+  init();
+</script>

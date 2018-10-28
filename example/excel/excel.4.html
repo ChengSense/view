@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <title>html5 canvas 画图移动端出现锯齿毛边的解决方法</title>
+</head>
+
+<body style="background: url(blue_bj.jpg);">
+  <canvas id="canvas" width="1000" height="600"></canvas>
+</body>
+
+</html>
+<script type="text/javascript">
+  var canvas = document.getElementById("canvas");
+  var cxt = canvas.getContext("2d");
+  //画一个空心圆
+  cxt.beginPath();
+  var width = canvas.width,
+    height = canvas.height;
+  if (window.devicePixelRatio) {
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    canvas.height = height * window.devicePixelRatio;
+    canvas.width = width * window.devicePixelRatio;
+    cxt.scale(window.devicePixelRatio, window.devicePixelRatio);
+    cxt.strokeStyle = "#d0d3d7";
+    grid(width, height, 50, 50);
+  }
+
+  function grid(width, height, rows, cels) {
+    var i = rows, l = cels;
+    while (i--) {
+      var y = i * 30 + 0.5;
+      cxt.moveTo(0.5, y);
+      cxt.lineTo(width + 0.5, y);
+    }
+    while (l--) {
+      var x = l * 120 + 0.5;
+      cxt.moveTo(x, 0.5);
+      cxt.lineTo(x, height + 0.5);
+    }
+    cxt.stroke();
+  }
+</script>
