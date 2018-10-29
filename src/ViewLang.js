@@ -75,6 +75,10 @@ extend(Array, {
     if (index > -1)
       return true;
     return false
+  },
+  ones(o) {
+    if (!this.has(o))
+      this.push(o);
   }
 });
 

@@ -15,9 +15,10 @@ export var resolver = {
       console.log(e);
     }
   },
-  component: function (node) {
+  component: function (node, we) {
     try {
       let app = code(node.clas.nodeValue, node.scope);
+      let cache = global.$cache;
       node.path = [global.$path];
       if (blank(app)) return;
       extention(app.model, node.scope);
@@ -26,6 +27,7 @@ export var resolver = {
       clearNodes(node.childNodes);
       let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
+      deeping(clasNodes, we, cache);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -61,18 +63,20 @@ export var resolver = {
       console.log(e);
     }
   },
-  express: function (node) {
+  express: function (node, we) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+      deeping(node, we, global.$cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node) {
+  attribute: function (node, we) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
+      deeping(node, we, global.$cache);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -81,6 +85,15 @@ export var resolver = {
     }
   }
 };
+
+export function deeping(clas, we, caches) {
+  let cache = caches.get(we);
+  if (cache) {
+    cache.ones(clas)
+  } else {
+    caches.set(we, [clas]);
+  }
+}
 
 function insertion(nodes, node) {
   try {

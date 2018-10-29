@@ -11,15 +11,11 @@
 
   @each(item:list){
   <div @click="alert(param1)">
-    {{param1}}
-    @each(item:list){
-    <div @click="alert(param1)">
-      {{item}}
-    </div>
-    }
+    {{item}}
   </div>
   }
   <input value="{{param1}}" />
+  <div>{{list[1]}}</div>
 
 </body>
 

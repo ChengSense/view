@@ -1,5 +1,5 @@
 import { Path } from "./ViewScope";
-import { View, global } from "./ViewIndex";
+import { View, global, deepen } from "./ViewIndex";
 
 export function observe(target, callSet, callGet) {
   var setable = true;
@@ -26,20 +26,55 @@ export function observe(target, callSet, callGet) {
   }
 
   function define(object, prop, path, oldValue) {
-    var value = object[prop], attres = new Map();
+    var value = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
         mq.publish(target, "get", [path]);
-        global.$attres = attres;
+        global.$cache = cache;
         return value;
       },
       set(val) {
         var oldValue = value;
+        var oldCache = cache;
+        cache = new Map();
         watcher(value = val, path, oldValue);
-        global.$attres = attres;
-        if (setable) mq.publish(target, "set", [path]);
+        clearCache(oldValue);
+        if (setable) deepen(oldCache);
       }
     });
+  }
+
+  function clearCache(object) {
+    if (typeof object == "object" && !(object instanceof View))
+      setTimeout(() => {
+        Object.keys(object).forEach(prop => {
+          var value = object[prop];
+          let cache = global.$cache;
+          deepen(cache);
+          cache.forEach(nodes => clearNodes(nodes));
+          clearCache(value);
+        })
+      }, 500);
+  }
+
+  function clearNodes(childNodes) {
+    childNodes.forEach(function (clas) {
+      if (clas.path)
+        clas.path.forEach(path => {
+          getValue(path);
+          global.$cache.forEach(nodes => nodes.remove(clas));
+        })
+      if (clas.childNodes[0])
+        clearNodes(clas.childNodes);
+    });
+  }
+
+  function getValue(path) {
+    return new Function('scope',
+      `
+      return scope${Path(path)};
+      `
+    )(target);
   }
 
   function def(obj, key, val) {

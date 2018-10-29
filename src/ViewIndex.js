@@ -12,8 +12,7 @@ export function View(app) {
   var we = this;
 
   observe(app.model, function set(path) {
-    deepen(content, path, we);
-    attrDeepen(global.$attres.get(we));
+    deepen(global.$cache.get(we), we);
   }, function get(path) {
     global.$path = path;
   });
@@ -42,23 +41,11 @@ export function View(app) {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
+export function deepen(cache, we) {
+  cache.forEach((nodes, we) => {
+    nodes.forEach(node => {
       resolver[node.resolver](node, we);
-      return false;
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
-}
-
-function attrDeepen(attres) {
-  if (!attres) return;
-  each(slice(attres), function (node) {
-    if (node.node && !node.node.ownerElement.parentNode)
-      attres.remove(node);
-    resolver[node.resolver](node);
+    });
   });
 }
 
