@@ -1,9 +1,10 @@
 import { observe } from "./ViewObserve";
 import { query } from "./ViewElmemt";
 import { init, initCompiler } from "./ViewInit";
-import { each, slice, clone } from "./ViewLang";
+import { slice, clone } from "./ViewLang";
 import { resolver } from "./ViewResolver";
 import { Router } from "./ViewRouter";
+import { Path } from "./ViewScope";
 
 export let global = { $path: undefined };
 
@@ -11,12 +12,46 @@ export function View(app) {
   var content = { childNodes: [], children: [] };
   var we = this;
 
-  observe(app.model, function set(path) {
-    deepen(content, path, we);
-    attrDeepen(global.$attres.get(we));
+  observe(app.model, function set(oldValue, cache) {
+    clearCache(oldValue, app.model);
+    deepen(cache);
   }, function get(path) {
     global.$path = path;
   });
+
+  function clearCache(object) {
+    if (typeof object == "object" && !(object instanceof View))
+      setTimeout(() => {
+        Object.keys(object).forEach(prop => {
+          var value = object[prop];
+          var cache = global.$cache;
+          deepen(cache);
+          cache.forEach(nodes => clearNodes(nodes));
+          clearCache(value);
+        })
+      }, 500);
+  }
+
+  function clearNodes(nodes) {
+    nodes.forEach(function (clas) {
+      if (clas.path)
+        clas.path.forEach(path => {
+          getValue(path);
+          var cache = global.$cache;
+          cache.forEach(nodes => nodes.remove(clas))
+        })
+      if (clas.childNodes[0])
+        clearNodes(clas.childNodes);
+    });
+  }
+
+  function getValue(path) {
+    return new Function('scope',
+      `
+      return scope${Path(path)};
+      `
+    )(app.model);
+  }
 
   switch (app.view ? "view" : "component") {
     case "view":
@@ -42,23 +77,11 @@ export function View(app) {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
+function deepen(childNodes) {
+  childNodes.forEach((nodes, we) => {
+    nodes.forEach(node => {
       resolver[node.resolver](node, we);
-      return false;
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
-}
-
-function attrDeepen(attres) {
-  if (!attres) return;
-  each(slice(attres), function (node) {
-    if (node.node && !node.node.ownerElement.parentNode)
-      attres.remove(node);
-    resolver[node.resolver](node);
+    })
   });
 }
 

@@ -26,18 +26,19 @@ export function observe(target, callSet, callGet) {
   }
 
   function define(object, prop, path, oldValue) {
-    var value = object[prop], attres = new Map();
+    var value = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
         mq.publish(target, "get", [path]);
-        global.$attres = attres;
+        global.$cache = cache;
         return value;
       },
       set(val) {
         var oldValue = value;
+        var oldCache = cache;
+        cache = new Map();
         watcher(value = val, path, oldValue);
-        global.$attres = attres;
-        if (setable) mq.publish(target, "set", [path]);
+        if (setable) mq.publish(target, "set", [oldValue, oldCache]);
       }
     });
   }

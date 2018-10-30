@@ -98,18 +98,19 @@ function observe(target, callSet, callGet) {
   }
 
   function define(object, prop, path, oldValue) {
-    var value = object[prop], attres = new Map();
+    var value = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
         mq.publish(target, "get", [path]);
-        global.$attres = attres;
+        global.$cache = cache;
         return value;
       },
       set(val) {
         var oldValue = value;
+        var oldCache = cache;
+        cache = new Map();
         watcher(value = val, path, oldValue);
-        global.$attres = attres;
-        if (setable) mq.publish(target, "set", [path]);
+        if (setable) mq.publish(target, "set", [oldValue, oldCache]);
       }
     });
   }
@@ -325,6 +326,10 @@ extend(Array, {
     if (index > -1)
       return true;
     return false
+  },
+  ones(o) {
+    if (this.has(o)) return;
+    this.push(o);
   }
 });
 
@@ -567,6 +572,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      deeping(clas, we, global.$cache);
     },
     each(node, scope, clas, content, value) {
       if (value == undefined || global.$path == undefined) return;
@@ -575,6 +581,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      deeping(clas, we, global.$cache);
     },
     when(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -611,14 +618,7 @@ function Compiler(node, scopes, childNodes, content, we) {
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
       if (code(key, scope) == undefined || global.$path == undefined) return;
-      if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(we);
-        if (attres) {
-          attres.push(clas);
-        } else {
-          global.$attres.set(we, [clas]);
-        }
-      }
+      deeping(clas, we, global.$cache);
       clas.path.push(global.$path);
     });
   }
@@ -640,13 +640,27 @@ function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function classNode(newNode, child) {
-    return {
-      node: newNode,
-      clas: child.clas,
-      children: child.children,
-      scope: child.scope,
-      childNodes: []
-    };
+    if (global.$path) {
+      return {
+        node: newNode,
+        clas: child.clas,
+        path: [global.$path],
+        children: child.children,
+        scope: child.scope,
+        childNodes: []
+      };
+
+    }
+    else {
+      return {
+        node: newNode,
+        clas: child.clas,
+        path: [global.$path],
+        children: child.children,
+        scope: child.scope,
+        childNodes: []
+      };
+    }
   }
 
   function eachNode(newNode, node, child) {
@@ -751,9 +765,10 @@ var resolver = {
       console.log(e);
     }
   },
-  component: function (node) {
+  component: function (node, we) {
     try {
       let app = code(node.clas.nodeValue, node.scope);
+      let $cache = global.$cache;
       node.path = [global.$path];
       if (blank(app)) return;
       extention(app.model, node.scope);
@@ -762,6 +777,7 @@ var resolver = {
       clearNodes(node.childNodes);
       let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
+      deeping(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -797,18 +813,20 @@ var resolver = {
       console.log(e);
     }
   },
-  express: function (node) {
+  express: function (node, we) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+      deeping(node, we, global.$cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node) {
+  attribute: function (node, we) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
+      deeping(node, we, global.$cache);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -817,6 +835,15 @@ var resolver = {
     }
   }
 };
+
+function deeping(clas, we, $cache) {
+  let cache = $cache.get(we);
+  if (cache) {
+    cache.ones(clas);
+  } else {
+    $cache.set(we, [clas]);
+  }
+}
 
 function insertion(nodes, node) {
   try {
@@ -925,12 +952,46 @@ function View(app) {
   var content = { childNodes: [], children: [] };
   var we = this;
 
-  observe(app.model, function set(path) {
-    deepen(content, path, we);
-    attrDeepen(global.$attres.get(we));
+  observe(app.model, function set(oldValue, cache) {
+    clearCache(oldValue, app.model);
+    deepen(cache);
   }, function get(path) {
     global.$path = path;
   });
+
+  function clearCache(object) {
+    if (typeof object == "object" && !(object instanceof View))
+      setTimeout(() => {
+        Object.keys(object).forEach(prop => {
+          var value = object[prop];
+          var cache = global.$cache;
+          deepen(cache);
+          cache.forEach(nodes => clearNodes(nodes));
+          clearCache(value);
+        });
+      }, 500);
+  }
+
+  function clearNodes(nodes) {
+    nodes.forEach(function (clas) {
+      if (clas.path)
+        clas.path.forEach(path => {
+          getValue(path);
+          var cache = global.$cache;
+          cache.forEach(nodes => nodes.remove(clas));
+        });
+      if (clas.childNodes[0])
+        clearNodes(clas.childNodes);
+    });
+  }
+
+  function getValue(path) {
+    return new Function('scope',
+      `
+      return scope${Path(path)};
+      `
+    )(app.model);
+  }
 
   switch (app.view ? "view" : "component") {
     case "view":
@@ -956,23 +1017,11 @@ function View(app) {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
+function deepen(childNodes) {
+  childNodes.forEach((nodes, we) => {
+    nodes.forEach(node => {
       resolver[node.resolver](node, we);
-      return false;
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
-}
-
-function attrDeepen(attres) {
-  if (!attres) return;
-  each(slice(attres), function (node) {
-    if (node.node && !node.node.ownerElement.parentNode)
-      attres.remove(node);
-    resolver[node.resolver](node);
+    });
   });
 }
 

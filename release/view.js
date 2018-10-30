@@ -121,18 +121,19 @@ var view = (function (exports) {
 
     function define(object, prop, path, oldValue) {
       var value = object[prop],
-          attres = new Map();
+          cache = new Map();
       Object.defineProperty(object, prop, {
         get: function get$$1() {
           mq.publish(target, "get", [path]);
-          global$1.$attres = attres;
+          global$1.$cache = cache;
           return value;
         },
         set: function set$$1(val) {
           var oldValue = value;
+          var oldCache = cache;
+          cache = new Map();
           watcher(value = val, path, oldValue);
-          global$1.$attres = attres;
-          if (setable) mq.publish(target, "set", [path]);
+          if (setable) mq.publish(target, "set", [oldValue, oldCache]);
         }
       });
     }
@@ -359,6 +360,10 @@ var view = (function (exports) {
       var index = this.indexOf(o);
       if (index > -1) return true;
       return false;
+    },
+    ones: function ones(o) {
+      if (this.has(o)) return;
+      this.push(o);
     }
   });
 
@@ -588,6 +593,7 @@ var view = (function (exports) {
         clas.scope = scope;
         clas.path = [global$1.$path];
         clas.node = node;
+        deeping(clas, we, global$1.$cache);
       },
       each: function each$$1(node, scope, clas, content, value) {
         if (value == undefined || global$1.$path == undefined) return;
@@ -596,6 +602,7 @@ var view = (function (exports) {
         clas.scope = scope;
         clas.path = [global$1.$path];
         clas.node = node;
+        deeping(clas, we, global$1.$cache);
       },
       when: function when(node, scope, clas) {
         var nodeValue = clas.clas.nodeValue;
@@ -631,14 +638,7 @@ var view = (function (exports) {
     function dep(key, scope, clas) {
       key.replace($word, function (key) {
         if (code(key, scope) == undefined || global$1.$path == undefined) return;
-        if (clas.clas.nodeType == 2) {
-          var attres = global$1.$attres.get(we);
-          if (attres) {
-            attres.push(clas);
-          } else {
-            global$1.$attres.set(we, [clas]);
-          }
-        }
+        deeping(clas, we, global$1.$cache);
         clas.path.push(global$1.$path);
       });
     }
@@ -657,13 +657,25 @@ var view = (function (exports) {
     }
 
     function classNode(newNode, child) {
-      return {
-        node: newNode,
-        clas: child.clas,
-        children: child.children,
-        scope: child.scope,
-        childNodes: []
-      };
+      if (global$1.$path) {
+        return {
+          node: newNode,
+          clas: child.clas,
+          path: [global$1.$path],
+          children: child.children,
+          scope: child.scope,
+          childNodes: []
+        };
+      } else {
+        return {
+          node: newNode,
+          clas: child.clas,
+          path: [global$1.$path],
+          children: child.children,
+          scope: child.scope,
+          childNodes: []
+        };
+      }
     }
 
     function eachNode(newNode, node, child) {
@@ -767,9 +779,10 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    component: function component(node) {
+    component: function component(node, we) {
       try {
         var app = code(node.clas.nodeValue, node.scope);
+        var $cache = global$1.$cache;
         node.path = [global$1.$path];
         if (blank(app)) return;
         extention(app.model, node.scope);
@@ -778,6 +791,7 @@ var view = (function (exports) {
         clearNodes(node.childNodes);
         var component = new View({ view: app.component, model: app.model, action: app.action });
         var clasNodes = compoNode(insert, node, component);
+        deeping(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
       } catch (e) {
@@ -810,17 +824,19 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    express: function express(node) {
+    express: function express(node, we) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+        deeping(node, we, global$1.$cache);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
       } catch (e) {
         console.log(e);
       }
     },
-    attribute: function attribute(node) {
+    attribute: function attribute(node, we) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
+        deeping(node, we, global$1.$cache);
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
@@ -829,6 +845,15 @@ var view = (function (exports) {
       }
     }
   };
+
+  function deeping(clas, we, $cache) {
+    var cache = $cache.get(we);
+    if (cache) {
+      cache.ones(clas);
+    } else {
+      $cache.set(we, [clas]);
+    }
+  }
 
   function insertion(nodes, node) {
     try {
@@ -933,12 +958,43 @@ var view = (function (exports) {
     var content = { childNodes: [], children: [] };
     var we = this;
 
-    observe(app.model, function set(path) {
-      deepen(content, path, we);
-      attrDeepen(global$1.$attres.get(we));
-    }, function get(path) {
+    observe(app.model, function set$$1(oldValue, cache) {
+      clearCache(oldValue, app.model);
+      deepen(cache);
+    }, function get$$1(path) {
       global$1.$path = path;
     });
+
+    function clearCache(object) {
+      if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object" && !(object instanceof View)) setTimeout(function () {
+        Object.keys(object).forEach(function (prop) {
+          var value = object[prop];
+          var cache = global$1.$cache;
+          deepen(cache);
+          cache.forEach(function (nodes) {
+            return clearNodes(nodes);
+          });
+          clearCache(value);
+        });
+      }, 500);
+    }
+
+    function clearNodes(nodes) {
+      nodes.forEach(function (clas) {
+        if (clas.path) clas.path.forEach(function (path) {
+          getValue(path);
+          var cache = global$1.$cache;
+          cache.forEach(function (nodes) {
+            return nodes.remove(clas);
+          });
+        });
+        if (clas.childNodes[0]) clearNodes(clas.childNodes);
+      });
+    }
+
+    function getValue(path) {
+      return new Function('scope', "\n      return scope" + Path(path) + ";\n      ")(app.model);
+    }
 
     switch (app.view ? "view" : "component") {
       case "view":
@@ -964,21 +1020,11 @@ var view = (function (exports) {
     }
   }
 
-  function deepen(content, path, we) {
-    each(content.childNodes, function (node) {
-      if (node.path && node.path.has(path)) {
+  function deepen(childNodes) {
+    childNodes.forEach(function (nodes, we) {
+      nodes.forEach(function (node) {
         resolver[node.resolver](node, we);
-        return false;
-      }
-      if (node.childNodes[0]) deepen(node, path, we);
-    });
-  }
-
-  function attrDeepen(attres) {
-    if (!attres) return;
-    each(slice(attres), function (node) {
-      if (node.node && !node.node.ownerElement.parentNode) attres.remove(node);
-      resolver[node.resolver](node);
+      });
     });
   }
 

@@ -2,7 +2,7 @@ import { forEach, whiles, slice, blank } from "./ViewLang";
 import { code, codev, codex, Path, setVariable } from "./ViewScope";
 import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
-import { resolver } from "./ViewResolver";
+import { resolver, deeping } from "./ViewResolver";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
@@ -171,6 +171,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      deeping(clas, we, global.$cache);
     },
     each(node, scope, clas, content, value) {
       if (value == undefined || global.$path == undefined) return;
@@ -179,6 +180,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      deeping(clas, we, global.$cache);
     },
     when(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -215,14 +217,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
       if (code(key, scope) == undefined || global.$path == undefined) return;
-      if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(we);
-        if (attres) {
-          attres.push(clas)
-        } else {
-          global.$attres.set(we, [clas]);
-        }
-      }
+      deeping(clas, we, global.$cache);
       clas.path.push(global.$path);
     });
   }
@@ -244,13 +239,27 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function classNode(newNode, child) {
-    return {
-      node: newNode,
-      clas: child.clas,
-      children: child.children,
-      scope: child.scope,
-      childNodes: []
-    };
+    if (global.$path) {
+      return {
+        node: newNode,
+        clas: child.clas,
+        path: [global.$path],
+        children: child.children,
+        scope: child.scope,
+        childNodes: []
+      };
+
+    }
+    else {
+      return {
+        node: newNode,
+        clas: child.clas,
+        path: [global.$path],
+        children: child.children,
+        scope: child.scope,
+        childNodes: []
+      };
+    }
   }
 
   function eachNode(newNode, node, child) {
