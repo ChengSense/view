@@ -8,77 +8,84 @@ import { Path } from "./ViewScope";
 
 export let global = { $path: undefined };
 
-export function View(app) {
-  var content = { childNodes: [], children: [] };
-  var we = this;
+export class View {
+  constructor(app) {
+    this.content = { childNodes: [], children: [] };
+    this.model = app.model;
+    this.action = app.action;
 
-  observe(app.model, function set(oldValue, cache) {
-    clearCache(oldValue, app.model);
-    deepen(cache);
-  }, function get(path) {
-    global.$path = path;
-  });
-
-  function clearCache(object) {
-    if (typeof object == "object" && !(object instanceof View))
-      setTimeout(() => {
-        Object.keys(object).forEach(prop => {
-          var value = object[prop];
-          var cache = global.$cache;
-          deepen(cache);
-          cache.forEach(nodes => clearNodes(nodes));
-          clearCache(value);
-        })
-      }, 500);
-  }
-
-  function clearNodes(nodes) {
-    nodes.forEach(function (clas) {
-      if (clas.path)
-        clas.path.forEach(path => {
-          getValue(path);
-          var cache = global.$cache;
-          cache.forEach(nodes => nodes.remove(clas))
-        })
-      if (clas.childNodes[0])
-        clearNodes(clas.childNodes);
+    observe(app.model, function set(oldValue, cache) {
+      clearCache(oldValue, app.model);
+      deepen(cache, app.model);
+    }, function get(path) {
+      global.$path = path;
     });
-  }
 
-  function getValue(path) {
+    if (app.view) {
+      this.view(app)
+    }
+    else if (app.component) {
+      this.component(app)
+    }
+
+  }
+  view(app) {
+    var view = query(app.view);
+    var node = initCompiler(init(slice(view)))[0];
+    this.node = node;
+    this.view = view[0];
+    app.model.$action = app.action;
+    resolver["view"](this.view, node, app.model, this.content, this);
+  }
+  component(app) {
+    var view = query(app.component);
+    this.view = view[0];
+    this.view.parentNode.removeChild(this.view);
+    this.component = this.view.outerHTML;
+  }
+}
+
+function clearCache(object, scope) {
+  if (typeof object == "object" && !(object instanceof View))
+    Object.keys(object).forEach(prop => {
+      var value = object[prop];
+      var cache = global.$cache;
+      var path = global.$path;
+      clearCache(value, scope);
+      cache.forEach(nodes => clearNodes(nodes, scope));
+      if (getValue(path, scope) == undefined) deepen(cache);
+    })
+}
+
+function clearNodes(nodes, scope) {
+  nodes.forEach(function (clas) {
+    if (clas.path)
+      clas.path.forEach(path => {
+        if (getValue(path, scope) == undefined) return;
+        var cache = global.$cache;
+        cache.forEach(nodes => nodes.remove(clas));
+      })
+    if (clas.childNodes[0])
+      clearNodes(clas.childNodes, scope);
+  });
+}
+
+function getValue(path, scope) {
+  try {
+    global.$cache = undefined;
     return new Function('scope',
       `
       return scope${Path(path)};
       `
-    )(app.model);
-  }
-
-  switch (app.view ? "view" : "component") {
-    case "view":
-      var view = query(app.view);
-      var node = initCompiler(init(slice(view)))[0];
-      this.content = content;
-      this.model = app.model;
-      this.action = app.action;
-      this.node = node;
-      this.view = view[0];
-      app.model.$action = app.action;
-      resolver["view"](this.view, node, app.model, content, we);
-      break;
-    case "component":
-      var view = query(app.component);
-      this.view = view[0];
-      this.view.parentNode.removeChild(this.view);
-      this.content = content;
-      this.model = app.model;
-      this.action = app.action;
-      this.component = this.view.outerHTML;
-      break;
+    )(scope);
+  } catch (error) {
+    return undefined;
   }
 }
 
-function deepen(childNodes) {
-  childNodes.forEach((nodes, we) => {
+function deepen(cache, scope) {
+  cache.forEach((nodes, we) => {
+    clearNodes(nodes, scope);
     nodes.forEach(node => {
       resolver[node.resolver](node, we);
     })

@@ -4,12 +4,8 @@ import { View, global } from "./ViewIndex";
 export function observe(target, callSet, callGet) {
   var setable = true;
   function watcher(object, root, oldObject) {
-    if (Array.isArray(object)) {
+    if (typeof object == "object") {
       array(object, root);
-      object.forEach((a, prop) => {
-        walk(object, prop, root, oldObject);
-      })
-    } else if (typeof object == "object") {
       Object.keys(object).forEach(prop => {
         walk(object, prop, root, oldObject);
       })
@@ -51,6 +47,7 @@ export function observe(target, callSet, callGet) {
   }
 
   function array(object, root) {
+    if (Array.isArray(object)) return;
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     var prototype = Array.prototype;
     meths.forEach(function (name) {
@@ -125,10 +122,12 @@ class Mess {
       let action = cache.get(event);
       if (action) {
         action.data.push(data);
-      } else {
+      }
+      else {
         cache.set(event, { data: [data], queue: [] });
       }
-    } else {
+    }
+    else {
       let data = new Map();
       data.set(event, { data: [data], queue: [] });
       this.map.set(scope, data);
@@ -164,10 +163,12 @@ class Mess {
       const action = cache.get(event);
       if (action) {
         action.queue.push(call);
-      } else {
+      }
+      else {
         cache.set(event, { data: [], queue: [call] });
       }
-    } else {
+    }
+    else {
       let data = new Map();
       data.set(event, { data: [], queue: [call] });
       this.map.set(scope, data);

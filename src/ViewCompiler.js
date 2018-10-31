@@ -151,7 +151,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     attrExpress(node, scope);
     if (new RegExp($component).test(node.nodeValue)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas);
+      resolver["component"](clas, we);
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
@@ -254,7 +254,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
       return {
         node: newNode,
         clas: child.clas,
-        path: [global.$path],
         children: child.children,
         scope: child.scope,
         childNodes: []

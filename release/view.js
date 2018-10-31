@@ -97,12 +97,8 @@ var view = (function (exports) {
   function observe(target, callSet, callGet) {
     var setable = true;
     function watcher(object, root, oldObject) {
-      if (Array.isArray(object)) {
+      if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
         array(object, root);
-        object.forEach(function (a, prop) {
-          walk(object, prop, root, oldObject);
-        });
-      } else if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
         Object.keys(object).forEach(function (prop) {
           walk(object, prop, root, oldObject);
         });
@@ -146,6 +142,7 @@ var view = (function (exports) {
     }
 
     function array(object, root) {
+      if (Array.isArray(object)) return;
       var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
       var prototype = Array.prototype;
       meths.forEach(function (name) {
@@ -574,7 +571,7 @@ var view = (function (exports) {
       attrExpress(node, scope);
       if (new RegExp($component).test(node.nodeValue)) {
         comNode(node, scope, clas, content);
-        resolver["component"](clas);
+        resolver["component"](clas, we);
       } else if (express = new RegExp($express).exec(node.nodeValue)) {
         binding.express(node, scope, clas, express[0]);
         node.nodeValue = code(express[1], scope);
@@ -670,7 +667,6 @@ var view = (function (exports) {
         return {
           node: newNode,
           clas: child.clas,
-          path: [global$1.$path],
           children: child.children,
           scope: child.scope,
           childNodes: []
@@ -954,74 +950,88 @@ var view = (function (exports) {
 
   var global$1 = { $path: undefined };
 
-  function View(app) {
-    var content = { childNodes: [], children: [] };
-    var we = this;
+  var View = function () {
+    function View(app) {
+      classCallCheck(this, View);
 
-    observe(app.model, function set$$1(oldValue, cache) {
-      clearCache(oldValue, app.model);
-      deepen(cache);
-    }, function get$$1(path) {
-      global$1.$path = path;
-    });
+      this.content = { childNodes: [], children: [] };
+      this.model = app.model;
+      this.action = app.action;
 
-    function clearCache(object) {
-      if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object" && !(object instanceof View)) setTimeout(function () {
-        Object.keys(object).forEach(function (prop) {
-          var value = object[prop];
-          var cache = global$1.$cache;
-          deepen(cache);
-          cache.forEach(function (nodes) {
-            return clearNodes(nodes);
-          });
-          clearCache(value);
-        });
-      }, 500);
-    }
-
-    function clearNodes(nodes) {
-      nodes.forEach(function (clas) {
-        if (clas.path) clas.path.forEach(function (path) {
-          getValue(path);
-          var cache = global$1.$cache;
-          cache.forEach(function (nodes) {
-            return nodes.remove(clas);
-          });
-        });
-        if (clas.childNodes[0]) clearNodes(clas.childNodes);
+      observe(app.model, function set$$1(oldValue, cache) {
+        clearCache(oldValue, app.model);
+        deepen(cache, app.model);
+      }, function get$$1(path) {
+        global$1.$path = path;
       });
+
+      if (app.view) {
+        this.view(app);
+      } else if (app.component) {
+        this.component(app);
+      }
     }
 
-    function getValue(path) {
-      return new Function('scope', "\n      return scope" + Path(path) + ";\n      ")(app.model);
-    }
-
-    switch (app.view ? "view" : "component") {
-      case "view":
+    createClass(View, [{
+      key: "view",
+      value: function view(app) {
         var view = query(app.view);
         var node = initCompiler(init(slice(view)))[0];
-        this.content = content;
-        this.model = app.model;
-        this.action = app.action;
         this.node = node;
         this.view = view[0];
         app.model.$action = app.action;
-        resolver["view"](this.view, node, app.model, content, we);
-        break;
-      case "component":
+        resolver["view"](this.view, node, app.model, this.content, this);
+      }
+    }, {
+      key: "component",
+      value: function component(app) {
         var view = query(app.component);
         this.view = view[0];
         this.view.parentNode.removeChild(this.view);
-        this.content = content;
-        this.model = app.model;
-        this.action = app.action;
         this.component = this.view.outerHTML;
-        break;
+      }
+    }]);
+    return View;
+  }();
+
+  function clearCache(object, scope) {
+    if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object" && !(object instanceof View)) Object.keys(object).forEach(function (prop) {
+      var value = object[prop];
+      var cache = global$1.$cache;
+      var path = global$1.$path;
+      cache.forEach(function (nodes) {
+        return clearNodes$1(nodes, scope);
+      });
+      if (getValue(path, scope) == undefined) deepen(cache);
+      clearCache(value, scope);
+    });
+  }
+
+  function clearNodes$1(nodes, scope) {
+    nodes.forEach(function (clas) {
+      if (clas.path) clas.path.forEach(function (path) {
+        if (getValue(path, scope) == undefined) return;
+        var cache = global$1.$cache;
+        cache.forEach(function (nodes) {
+          return nodes.remove(clas);
+        });
+      });
+      if (clas.childNodes[0]) clearNodes$1(clas.childNodes, scope);
+    });
+  }
+
+  function getValue(path, scope) {
+    try {
+      global$1.$cache = undefined;
+      return new Function('scope', "\n      return scope" + Path(path) + ";\n      ")(scope);
+    } catch (error) {
+      return undefined;
     }
   }
 
-  function deepen(childNodes) {
-    childNodes.forEach(function (nodes, we) {
+  function deepen(cache, scope) {
+    cache.forEach(function (nodes, we) {
+      clearNodes$1(nodes, scope);
       nodes.forEach(function (node) {
         resolver[node.resolver](node, we);
       });
