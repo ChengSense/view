@@ -51,9 +51,9 @@ function clearCache(object, scope) {
       var value = object[prop];
       var cache = global.$cache;
       var path = global.$path;
-      clearCache(value, scope);
       cache.forEach(nodes => clearNodes(nodes, scope));
-      if (getValue(path, scope) == undefined) deepen(cache);
+      clearCache(value, scope);
+      deepen(cache);
     })
 }
 

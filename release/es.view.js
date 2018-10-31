@@ -990,10 +990,9 @@ function clearCache(object, scope) {
     Object.keys(object).forEach(prop => {
       var value = object[prop];
       var cache = global.$cache;
-      var path = global.$path;
       cache.forEach(nodes => clearNodes$1(nodes, scope));
-      if (getValue(path, scope) == undefined) deepen(cache);
       clearCache(value, scope);
+      deepen(cache);
     });
 }
 

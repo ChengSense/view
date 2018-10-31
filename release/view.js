@@ -998,12 +998,11 @@ var view = (function (exports) {
     if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object" && !(object instanceof View)) Object.keys(object).forEach(function (prop) {
       var value = object[prop];
       var cache = global$1.$cache;
-      var path = global$1.$path;
       cache.forEach(function (nodes) {
         return clearNodes$1(nodes, scope);
       });
-      if (getValue(path, scope) == undefined) deepen(cache);
       clearCache(value, scope);
+      deepen(cache);
     });
   }
 
