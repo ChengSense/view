@@ -142,7 +142,7 @@ var view = (function (exports) {
     }
 
     function array(object, root) {
-      if (Array.isArray(object)) return;
+      if (!Array.isArray(object)) return;
       var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
       var prototype = Array.prototype;
       meths.forEach(function (name) {

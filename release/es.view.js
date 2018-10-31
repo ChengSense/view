@@ -119,7 +119,7 @@ function observe(target, callSet, callGet) {
   }
 
   function array(object, root) {
-    if (Array.isArray(object)) return;
+    if (!Array.isArray(object)) return;
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     var prototype = Array.prototype;
     meths.forEach(function (name) {
