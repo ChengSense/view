@@ -929,56 +929,62 @@ var view = (function (exports) {
 
   var global$1 = { $path: undefined };
 
-  function View(app) {
-    var content = { childNodes: [], children: [] };
-    var we = this;
+  var View = function () {
+    function View(app) {
+      classCallCheck(this, View);
 
-    observe(app.model, function set(path) {
-      deepen(content, path, we);
-      attrDeepen(global$1.$attres.get(we));
-    }, function get(path) {
-      global$1.$path = path;
-    });
+      this.content = { childNodes: [], children: [] };
+      this.model = app.model;
+      this.action = app.action;
+      var we = this;
 
-    switch (app.view ? "view" : "component") {
-      case "view":
+      observe(app.model, function set$$1(path, value, oldValue) {
+        deepen(we.content, path, we);
+        attrDeepen(global$1.$attres);
+      }, function get$$1(path) {
+        global$1.$path = path;
+      });
+
+      app.view ? this.view(app) : this.component(app);
+    }
+
+    createClass(View, [{
+      key: "view",
+      value: function view(app) {
         var view = query(app.view);
         var node = initCompiler(init(slice(view)))[0];
-        this.content = content;
-        this.model = app.model;
-        this.action = app.action;
         this.node = node;
         this.view = view[0];
         app.model.$action = app.action;
-        resolver["view"](this.view, node, app.model, content, we);
-        break;
-      case "component":
+        resolver["view"](this.view, node, app.model, this.content, this);
+      }
+    }, {
+      key: "component",
+      value: function component(app) {
         var view = query(app.component);
         this.view = view[0];
         this.view.parentNode.removeChild(this.view);
-        this.content = content;
-        this.model = app.model;
-        this.action = app.action;
         this.component = this.view.outerHTML;
-        break;
-    }
-  }
+      }
+    }]);
+    return View;
+  }();
 
   function deepen(content, path, we) {
     each(content.childNodes, function (node) {
       if (node.path && node.path.has(path)) {
-        resolver[node.resolver](node, we);
-        return false;
+        return resolver[node.resolver](node, we);
       }
       if (node.childNodes[0]) deepen(node, path, we);
     });
   }
 
   function attrDeepen(attres) {
-    if (!attres) return;
-    each(slice(attres), function (node) {
-      if (node.node && !node.node.ownerElement.parentNode) attres.remove(node);
-      resolver[node.resolver](node);
+    attres.forEach(function (attre) {
+      each(slice(attre), function (node) {
+        if (node.node && !node.node.ownerElement.parentNode) attre.remove(node);
+        resolver[node.resolver](node);
+      });
     });
   }
 
