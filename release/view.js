@@ -1,6 +1,157 @@
 var view = (function (exports) {
   'use strict';
 
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  };
+
+  var classCallCheck = function (instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+
+  var createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  function whiles(obj, methd, me) {
+    while (obj.length) {
+      var data = obj[0];
+      if (methd.call(me, data, obj)) break;
+    }
+  }
+
+  function each(obj, methd, arg) {
+    if (!obj) return;
+    arg = arg || obj;
+    Object.keys(obj).every(function (i) {
+      var data = obj[i];
+      return !methd.call(data, data, i, arg);
+    });
+    return arg;
+  }
+
+  function forEach(obj, methd, me) {
+    if (!obj) return;
+    Object.keys(obj).forEach(function (i) {
+      methd.call(me, obj[i], i);
+    });
+  }
+
+  function slice(obj) {
+    return [].slice.call(obj);
+  }
+
+  function extention(object, parent) {
+    object.__proto__ = parent;
+    return object;
+  }
+
+  function extend(object, src) {
+    var prototype = object.prototype || object.__proto__;
+    for (var key in src) {
+      prototype[key] = src[key];
+    }
+    return object;
+  }
+
+  function blank(str) {
+    return str == null || str == undefined || str == "";
+  }
+
+  function clone(value) {
+    if (Array.isArray(value)) {
+      return value.map(clone);
+    }
+    if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object') {
+      var obj = {};
+      for (var key in value) {
+        obj[key] = clone(value[key]);
+      }
+      return obj;
+    }
+    return value;
+  }
+
+  extend(Array, {
+    remove: function remove(n) {
+      var index = this.indexOf(n);
+      if (index > -1) this.splice(index, 1);
+      return this;
+    },
+    replace: function replace(o, n) {
+      var index = this.indexOf(o);
+      if (index > -1) this.splice(index, 1, n);
+    },
+    has: function has(o) {
+      var index = this.indexOf(o);
+      if (index > -1) return true;
+      return false;
+    },
+    ones: function ones(o) {
+      if (this.has(o)) return;
+      this.push(o);
+    }
+  });
+
+  function query(express) {
+    try {
+      var doc = document.querySelectorAll(express);
+      return doc;
+    } catch (e) {
+      var newNode = document.createElement("div");
+      newNode.innerHTML = express.trim();
+      return newNode.childNodes;
+    }
+  }
+
+  extend(Node, {
+    on: function on(type, methd) {
+      this.addEventListener(type, methd);
+      return this;
+    },
+    reappend: function reappend(node) {
+      each(slice(this.childNodes), function (child) {
+        child.parentNode.removeChild(child);
+      });
+      this.appendChild(node);
+      return this;
+    },
+    before: function before(node) {
+      this.parentNode.insertBefore(node, this);
+    }
+  });
+
+  extend(NodeList, {
+    on: function on(type, call) {
+      each(this, function (node) {
+        node.on(type, call);
+      });
+    },
+    off: function off(type, call) {
+      each(this, function (node) {
+        node.off(type, call);
+      });
+    }
+  });
+
   var $lang = /((@each|@when|\.when)\s*\((.*)\)\s*\{|\{\s*\{([^\{\}]*)\}\s*\}|\s*\}\s*|\.when\s*\{)/g;
   var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
@@ -13,6 +164,34 @@ var view = (function (exports) {
   var $close = /(^\s*\}\s*$)/;
   var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
   var $event = /^@(.*)/;
+
+  function init(dom) {
+    each(dom, function (node) {
+      if (node.childNodes[0] && !/(CODE|SCRIPT)/.test(node.nodeName)) init(slice(node.childNodes));
+      if (node.nodeType == 3) node.nodeValue.replace($lang, function (tag) {
+        var nodes = node.nodeValue.split(tag);
+        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
+        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
+        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
+      });
+    });
+    return dom;
+  }
+
+  function initCompiler(node, children) {
+    var list = children || [];
+    whiles(node, function (child) {
+      node.shift();
+      if (new RegExp($close).test(child.nodeValue)) return true;
+      var item = { clas: child.cloneNode(true), children: [] };
+      if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+      if (child.nodeType == 1) {
+        initCompiler(slice(child.childNodes), item.children);
+      } else if (new RegExp($chen).test(child.nodeValue)) {
+        initCompiler(node, item.children);
+      }  });
+    return list;
+  }
 
   function code(_express, _scope) {
     try {
@@ -64,41 +243,12 @@ var view = (function (exports) {
     });
   }
 
-  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  };
-
-  var classCallCheck = function (instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  };
-
-  var createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
-
   function observe(target, callSet, callGet) {
     var setable = true;
     function watcher(object, root, oldObject) {
+      if (object instanceof View) return;
+      if (Array.isArray(object)) array(object, root);
       if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
-        array(object, root);
         Object.keys(object).forEach(function (prop) {
           walk(object, prop, root, oldObject);
         });
@@ -107,12 +257,17 @@ var view = (function (exports) {
 
     function walk(object, prop, root, oldObject) {
       var value = object[prop],
-          oldValue = (oldObject || {})[prop];
+          oldValue;
+      if (oldObject != undefined) oldValue = oldObject[prop];
       var path = root ? root + "." + prop : prop;
-      if (!(value instanceof View) && (typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
+      if (value instanceof View) {
+        define(object, prop, path, oldValue);
+      } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
         watcher(value, path, oldValue);
+        define(object, prop, path, oldValue);
+      } else {
+        define(object, prop, path, oldValue);
       }
-      define(object, prop, path, oldValue);
     }
 
     function define(object, prop, path, oldValue) {
@@ -142,11 +297,9 @@ var view = (function (exports) {
     }
 
     function array(object, root) {
-      if (!Array.isArray(object)) return;
       var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
-      var prototype = Array.prototype;
       meths.forEach(function (name) {
-        var method = prototype[name];
+        var method = Array.prototype[name];
         switch (name) {
           case "shift":
             def(object, name, function () {
@@ -283,155 +436,6 @@ var view = (function (exports) {
   }();
 
   var mq = new Mess();
-
-  function whiles(obj, methd, me) {
-    while (obj.length) {
-      var data = obj[0];
-      if (methd.call(me, data, obj)) break;
-    }
-  }
-
-  function each(obj, methd, arg) {
-    if (!obj) return;
-    arg = arg || obj;
-    Object.keys(obj).every(function (i) {
-      var data = obj[i];
-      return !methd.call(data, data, i, arg);
-    });
-    return arg;
-  }
-
-  function forEach(obj, methd, me) {
-    if (!obj) return;
-    Object.keys(obj).forEach(function (i) {
-      methd.call(me, obj[i], i);
-    });
-  }
-
-  function slice(obj) {
-    return [].slice.call(obj);
-  }
-
-  function extention(object, parent) {
-    object.__proto__ = parent;
-    return object;
-  }
-
-  function extend(object, src) {
-    var prototype = object.prototype || object.__proto__;
-    for (var key in src) {
-      prototype[key] = src[key];
-    }
-    return object;
-  }
-
-  function blank(str) {
-    return str == null || str == undefined || str == "";
-  }
-
-  function clone(value) {
-    if (Array.isArray(value)) {
-      return value.map(clone);
-    }
-    if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object') {
-      var obj = {};
-      for (var key in value) {
-        obj[key] = clone(value[key]);
-      }
-      return obj;
-    }
-    return value;
-  }
-
-  extend(Array, {
-    remove: function remove(n) {
-      var index = this.indexOf(n);
-      if (index > -1) this.splice(index, 1);
-      return this;
-    },
-    replace: function replace(o, n) {
-      var index = this.indexOf(o);
-      if (index > -1) this.splice(index, 1, n);
-    },
-    has: function has(o) {
-      var index = this.indexOf(o);
-      if (index > -1) return true;
-      return false;
-    },
-    ones: function ones(o) {
-      if (this.has(o)) return;
-      this.push(o);
-    }
-  });
-
-  function query(express) {
-    try {
-      var doc = document.querySelectorAll(express);
-      return doc;
-    } catch (e) {
-      var newNode = document.createElement("div");
-      newNode.innerHTML = express.trim();
-      return newNode.childNodes;
-    }
-  }
-
-  extend(Node, {
-    on: function on(type, methd) {
-      this.addEventListener(type, methd);
-      return this;
-    },
-    reappend: function reappend(node) {
-      each(slice(this.childNodes), function (child) {
-        child.parentNode.removeChild(child);
-      });
-      this.appendChild(node);
-      return this;
-    },
-    before: function before(node) {
-      this.parentNode.insertBefore(node, this);
-    }
-  });
-
-  extend(NodeList, {
-    on: function on(type, call) {
-      each(this, function (node) {
-        node.on(type, call);
-      });
-    },
-    off: function off(type, call) {
-      each(this, function (node) {
-        node.off(type, call);
-      });
-    }
-  });
-
-  function init(dom) {
-    each(dom, function (node) {
-      if (node.childNodes[0] && !/(CODE|SCRIPT)/.test(node.nodeName)) init(slice(node.childNodes));
-      if (node.nodeType == 3) node.nodeValue.replace($lang, function (tag) {
-        var nodes = node.nodeValue.split(tag);
-        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
-        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
-        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
-      });
-    });
-    return dom;
-  }
-
-  function initCompiler(node, children) {
-    var list = children || [];
-    whiles(node, function (child) {
-      node.shift();
-      if (new RegExp($close).test(child.nodeValue)) return true;
-      var item = { clas: child.cloneNode(true), children: [] };
-      if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
-      if (child.nodeType == 1) {
-        initCompiler(slice(child.childNodes), item.children);
-      } else if (new RegExp($chen).test(child.nodeValue)) {
-        initCompiler(node, item.children);
-      }  });
-    return list;
-  }
 
   function Compiler(node, scopes, childNodes, content, we) {
 
@@ -747,7 +751,6 @@ var view = (function (exports) {
     node.before(comment);
     component.content.node = component.view;
     return {
-      node: child.node,
       clas: child.clas,
       children: [component.node],
       scope: child.scope,
@@ -959,17 +962,12 @@ var view = (function (exports) {
       this.action = app.action;
 
       observe(app.model, function set$$1(oldValue, cache) {
-        clearCache(oldValue, app.model);
-        deepen(cache, app.model);
+        deepen(cache);
       }, function get$$1(path) {
         global$1.$path = path;
       });
 
-      if (app.view) {
-        this.view(app);
-      } else if (app.component) {
-        this.component(app);
-      }
+      app.view ? this.view(app) : this.component(app);
     }
 
     createClass(View, [{
@@ -994,45 +992,25 @@ var view = (function (exports) {
     return View;
   }();
 
-  function clearCache(object, scope) {
-    if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object" && !(object instanceof View)) Object.keys(object).forEach(function (prop) {
-      var value = object[prop];
-      var cache = global$1.$cache;
-      cache.forEach(function (nodes) {
-        return clearNodes$1(nodes, scope);
-      });
-      clearCache(value, scope);
-      deepen(cache);
-    });
-  }
-
-  function clearNodes$1(nodes, scope) {
-    nodes.forEach(function (clas) {
-      if (clas.path) clas.path.forEach(function (path) {
-        if (getValue(path, scope) == undefined) return;
-        var cache = global$1.$cache;
-        cache.forEach(function (nodes) {
-          return nodes.remove(clas);
-        });
-      });
-      if (clas.childNodes[0]) clearNodes$1(clas.childNodes, scope);
-    });
-  }
-
-  function getValue(path, scope) {
+  function clearNode(nodes, status) {
     try {
-      global$1.$cache = undefined;
-      return new Function('scope', "\n      return scope" + Path(path) + ";\n      ")(scope);
-    } catch (error) {
-      return undefined;
+      nodes.every(function (child) {
+        if (child.node) {
+          var node = child.node.ownerElement || child.node;
+          status = document.body.contains(node);
+          return false;
+        }      status = clearNode(child.childNodes);
+      });
+      return status;
+    } catch (e) {
+      console.log(e);
     }
   }
 
-  function deepen(cache, scope) {
+  function deepen(cache) {
     cache.forEach(function (nodes, we) {
-      clearNodes$1(nodes, scope);
-      nodes.forEach(function (node) {
-        resolver[node.resolver](node, we);
+      slice(nodes).forEach(function (node) {
+        if (clearNode([node])) resolver[node.resolver](node, we);else nodes.remove(node);
       });
     });
   }

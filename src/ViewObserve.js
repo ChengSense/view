@@ -1,11 +1,12 @@
+import { global, View } from "./ViewIndex";
 import { Path } from "./ViewScope";
-import { View, global } from "./ViewIndex";
 
 export function observe(target, callSet, callGet) {
   var setable = true;
   function watcher(object, root, oldObject) {
+    if (object instanceof View) return;
+    if (Array.isArray(object)) array(object, root);
     if (typeof object == "object") {
-      array(object, root);
       Object.keys(object).forEach(prop => {
         walk(object, prop, root, oldObject);
       })
@@ -13,12 +14,19 @@ export function observe(target, callSet, callGet) {
   }
 
   function walk(object, prop, root, oldObject) {
-    var value = object[prop], oldValue = (oldObject || {})[prop];
-    var path = root ? root + "." + prop : prop;
-    if (!(value instanceof View) && typeof value == "object") {
-      watcher(value, path, oldValue);
+    var value = object[prop], oldValue;
+    if (oldObject != undefined) oldValue = oldObject[prop];
+    var path = root ? `${root}.${prop}` : prop;
+    if (value instanceof View) {
+      define(object, prop, path, oldValue);
     }
-    define(object, prop, path, oldValue);
+    else if (typeof value == "object") {
+      watcher(value, path, oldValue);
+      define(object, prop, path, oldValue);
+    }
+    else {
+      define(object, prop, path, oldValue);
+    }
   }
 
   function define(object, prop, path, oldValue) {
@@ -47,11 +55,9 @@ export function observe(target, callSet, callGet) {
   }
 
   function array(object, root) {
-    if (!Array.isArray(object)) return;
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
-    var prototype = Array.prototype;
     meths.forEach(function (name) {
-      var method = prototype[name];
+      var method = Array.prototype[name];
       switch (name) {
         case "shift":
           def(object, name, function () {
@@ -122,12 +128,10 @@ class Mess {
       let action = cache.get(event);
       if (action) {
         action.data.push(data);
-      }
-      else {
+      } else {
         cache.set(event, { data: [data], queue: [] });
       }
-    }
-    else {
+    } else {
       let data = new Map();
       data.set(event, { data: [data], queue: [] });
       this.map.set(scope, data);
@@ -163,12 +167,10 @@ class Mess {
       const action = cache.get(event);
       if (action) {
         action.queue.push(call);
-      }
-      else {
+      } else {
         cache.set(event, { data: [], queue: [call] });
       }
-    }
-    else {
+    } else {
       let data = new Map();
       data.set(event, { data: [], queue: [call] });
       this.map.set(scope, data);

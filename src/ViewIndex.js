@@ -1,10 +1,9 @@
-import { observe } from "./ViewObserve";
 import { query } from "./ViewElmemt";
 import { init, initCompiler } from "./ViewInit";
-import { slice, clone } from "./ViewLang";
+import { clone, slice } from "./ViewLang";
+import { observe } from "./ViewObserve";
 import { resolver } from "./ViewResolver";
 import { Router } from "./ViewRouter";
-import { Path } from "./ViewScope";
 
 export let global = { $path: undefined };
 
@@ -15,18 +14,12 @@ export class View {
     this.action = app.action;
 
     observe(app.model, function set(oldValue, cache) {
-      clearCache(oldValue, app.model);
-      deepen(cache, app.model);
+      deepen(cache);
     }, function get(path) {
       global.$path = path;
     });
 
-    if (app.view) {
-      this.view(app)
-    }
-    else if (app.component) {
-      this.component(app)
-    }
+    app.view ? this.view(app) : this.component(app)
 
   }
   view(app) {
@@ -45,49 +38,29 @@ export class View {
   }
 }
 
-function clearCache(object, scope) {
-  if (typeof object == "object" && !(object instanceof View))
-    Object.keys(object).forEach(prop => {
-      var value = object[prop];
-      var cache = global.$cache;
-      var path = global.$path;
-      cache.forEach(nodes => clearNodes(nodes, scope));
-      clearCache(value, scope);
-      deepen(cache);
-    })
-}
-
-function clearNodes(nodes, scope) {
-  nodes.forEach(function (clas) {
-    if (clas.path)
-      clas.path.forEach(path => {
-        if (getValue(path, scope) == undefined) return;
-        var cache = global.$cache;
-        cache.forEach(nodes => nodes.remove(clas));
-      })
-    if (clas.childNodes[0])
-      clearNodes(clas.childNodes, scope);
-  });
-}
-
-function getValue(path, scope) {
+function clearNode(nodes, status) {
   try {
-    global.$cache = undefined;
-    return new Function('scope',
-      `
-      return scope${Path(path)};
-      `
-    )(scope);
-  } catch (error) {
-    return undefined;
+    nodes.every(child => {
+      if (child.node) {
+        let node = child.node.ownerElement || child.node;
+        status = document.body.contains(node);
+        return false;
+      };
+      status = clearNode(child.childNodes);
+    });
+    return status;
+  } catch (e) {
+    console.log(e);
   }
 }
 
-function deepen(cache, scope) {
+function deepen(cache) {
   cache.forEach((nodes, we) => {
-    clearNodes(nodes, scope);
-    nodes.forEach(node => {
-      resolver[node.resolver](node, we);
+    slice(nodes).forEach(node => {
+      if (clearNode([node])) 
+        resolver[node.resolver](node, we);
+       else 
+        nodes.remove(node);
     })
   });
 }

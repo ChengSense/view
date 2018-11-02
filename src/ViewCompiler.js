@@ -1,8 +1,8 @@
-import { forEach, whiles, slice, blank } from "./ViewLang";
-import { code, codev, codex, Path, setVariable } from "./ViewScope";
-import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
-import { resolver, deeping } from "./ViewResolver";
+import { blank, forEach, slice, whiles } from "./ViewLang";
+import { deeping, resolver } from "./ViewResolver";
+import { code, codev, codex, Path, setVariable } from "./ViewScope";
+import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
@@ -335,7 +335,6 @@ export function compoNode(node, child, component) {
   node.before(comment);
   component.content.node = component.view;
   return {
-    node: child.node,
     clas: child.clas,
     children: [component.node],
     scope: child.scope,
