@@ -652,7 +652,6 @@ function Compiler(node, scopes, childNodes, content, we) {
         scope: child.scope,
         childNodes: []
       };
-
     }
     else {
       return {
