@@ -165,20 +165,18 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   let binding = {
     attrEach(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
     each(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
@@ -189,14 +187,12 @@ export function Compiler(node, scopes, childNodes, content, we) {
       let key = whens.pop();
       clas.resolver = "when";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
       dep(key, scope, clas);
     },
     express(node, scope, clas, key) {
       clas.resolver = "express";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
       dep(key, scope, clas);
     },
@@ -205,7 +201,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
       nodeValue.replace($expres, function (key) {
         clas.resolver = "express";
         clas.scope = scope;
-        clas.path = [];
         clas.node = node;
         dep(key, scope, clas);
       });
@@ -216,9 +211,9 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
-      if (code(key, scope) == undefined || global.$path == undefined) return;
+      code(key, scope);
+      if (global.$cache == undefined) return;
       deeping(clas, we, global.$cache);
-      clas.path.push(global.$path);
     });
   }
 
@@ -239,25 +234,13 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function classNode(newNode, child) {
-    if (global.$path) {
-      return {
-        node: newNode,
-        clas: child.clas,
-        path: [global.$path],
-        children: child.children,
-        scope: child.scope,
-        childNodes: []
-      };
-    }
-    else {
-      return {
-        node: newNode,
-        clas: child.clas,
-        children: child.children,
-        scope: child.scope,
-        childNodes: []
-      };
-    }
+    return {
+      node: newNode,
+      clas: child.clas,
+      children: child.children,
+      scope: child.scope,
+      childNodes: []
+    };
   }
 
   function eachNode(newNode, node, child) {
@@ -339,7 +322,6 @@ export function compoNode(node, child, component) {
     scope: child.scope,
     resolver: child.resolver,
     content: child.content,
-    path: child.path,
     childNodes: [{
       node: comment,
       children: [],

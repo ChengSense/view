@@ -67,25 +67,11 @@
         "username": "借款人",
         "address": "住址"
       },
-      list: [{
-        "id": 10000,
-        "age": "宁波店",
-        "username": "小小的-0",
-        "address": "未知"
-      }]
+      list: data()
     },
     methods: {
       add: function () {
-        var data = [];
-        for (var i = 0; i < 1000; i++) {
-          data.push({
-            "id": 10000 + data.length,
-            "age": "宁波店" + data.length,
-            "username": "小小的-" + data.length,
-            "address": "西湖区-" + data.length
-          })
-        }
-        this.list = data;
+        this.list = data();
       },
       edi: function (id) {
         this.edit = this.edit == id ? "edit" : id;
@@ -95,16 +81,18 @@
       }
     }
   });
-  var data = [];
-  for (var i = 0; i < 1000; i++) {
-    data.push({
-      "id": 10000 + data.length,
-      "age": "宁波店" + data.length,
-      "username": "小小的-" + data.length,
-      "address": "西湖区-" + data.length
-    })
+  function data() {
+    var data = [];
+    for (var i = 0; i < 1000; i++) {
+      data.push({
+        "id": 10000 + data.length,
+        "age": "宁波店" + data.length,
+        "username": "小小的-" + data.length,
+        "address": "西湖区-" + data.length
+      })
+    }
+    return data;
   }
-  grid.list = data;
 
 </script>
 

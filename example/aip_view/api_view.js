@@ -231,6 +231,7 @@ var iface_save = new View({
       if (app.model.add == "add") {
         let a = clone(app.model.iface);
         a.id = api.getId();
+        a.group_name = api.group.getGroup(a.gid).group_name
         api.api.add(a);
       } else {
         let a = clone(app.model.iface);

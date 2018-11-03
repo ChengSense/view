@@ -4,6 +4,7 @@ import { global } from "./ViewIndex";
 export function code(_express, _scope) {
   try {
     global.$path = undefined;
+    global.$cache = undefined;
     _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
   } catch (e) {

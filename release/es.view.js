@@ -170,6 +170,7 @@ function initCompiler(node, children) {
 function code(_express, _scope) {
   try {
     global.$path = undefined;
+    global.$cache = undefined;
     _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
   } catch (e) {
@@ -230,11 +231,11 @@ function setVariable(scope, variable, path) {
 }
 
 function observe(target, callSet, callGet) {
-  var setable = true;
+
   function watcher(object, root, oldObject) {
     if (object instanceof View) return;
-    if (Array.isArray(object)) array(object, root);
     if (typeof object == "object") {
+      if (Array.isArray(object)) array(object, root);
       Object.keys(object).forEach(prop => {
         walk(object, prop, root, oldObject);
       });
@@ -270,63 +271,66 @@ function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = val, path, oldValue);
-        if (setable) mq.publish(target, "set", [oldValue, oldCache]);
+        mq.publish(target, "set", [oldValue, oldCache]);
       }
     });
   }
 
-  function def(obj, key, val) {
-    Object.defineProperty(obj, key, {
-      writable: true,
-      value: val
-    });
-  }
-
+  const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
   function array(object, root) {
-    const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     meths.forEach(function (name) {
       var method = Array.prototype[name];
       switch (name) {
         case "shift":
-          def(object, name, function () {
-            setable = false;
-            var data = method.apply(this, arguments);
-            setable = true;
-            notify([0]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([0]);
+              return data;
+            }
           });
           break;
         case "pop":
-          def(object, name, function () {
-            var data = method.apply(this, arguments);
-            notify([this.length]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([this.length]);
+              return data;
+            }
           });
           break;
         case "splice":
-          def(object, name, function (i, l) {
-            setable = false;
-            var data = method.apply(this, arguments);
-            var params = [], m = new Number(i) + new Number(l);
-            while (i < m) params.push(i++);
-            setable = true;
-            notify(params);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i, l) {
+              var data = method.apply(this, arguments);
+              var params = [], m = new Number(i) + new Number(l);
+              while (i < m) params.push(i++);
+              //notify(params);
+              return data;
+            }
           });
           break;
         case "push":
-          def(object, name, function (i) {
-            var data = method.call(this, i);
-            notify([]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i) {
+              var data = method.call(this, i);
+              notify([]);
+              return data;
+            }
           });
           break;
         default:
-          def(object, name, function () {
-            setable = false;
-            var data = method.apply(this, arguments);
-            notify([]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([]);
+              return data;
+            }
           });
           break;
       }
@@ -569,20 +573,18 @@ function Compiler(node, scopes, childNodes, content, we) {
 
   let binding = {
     attrEach(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
     each(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
@@ -593,14 +595,12 @@ function Compiler(node, scopes, childNodes, content, we) {
       let key = whens.pop();
       clas.resolver = "when";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
       dep(key, scope, clas);
     },
     express(node, scope, clas, key) {
       clas.resolver = "express";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
       dep(key, scope, clas);
     },
@@ -609,7 +609,6 @@ function Compiler(node, scopes, childNodes, content, we) {
       nodeValue.replace($expres, function (key) {
         clas.resolver = "express";
         clas.scope = scope;
-        clas.path = [];
         clas.node = node;
         dep(key, scope, clas);
       });
@@ -620,9 +619,9 @@ function Compiler(node, scopes, childNodes, content, we) {
 
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
-      if (code(key, scope) == undefined || global.$path == undefined) return;
+      code(key, scope);
+      if (global.$cache == undefined) return;
       deeping(clas, we, global.$cache);
-      clas.path.push(global.$path);
     });
   }
 
@@ -643,25 +642,13 @@ function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function classNode(newNode, child) {
-    if (global.$path) {
-      return {
-        node: newNode,
-        clas: child.clas,
-        path: [global.$path],
-        children: child.children,
-        scope: child.scope,
-        childNodes: []
-      };
-    }
-    else {
-      return {
-        node: newNode,
-        clas: child.clas,
-        children: child.children,
-        scope: child.scope,
-        childNodes: []
-      };
-    }
+    return {
+      node: newNode,
+      clas: child.clas,
+      children: child.children,
+      scope: child.scope,
+      childNodes: []
+    };
   }
 
   function eachNode(newNode, node, child) {
@@ -743,7 +730,6 @@ function compoNode(node, child, component) {
     scope: child.scope,
     resolver: child.resolver,
     content: child.content,
-    path: child.path,
     childNodes: [{
       node: comment,
       children: [],

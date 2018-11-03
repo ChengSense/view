@@ -2,11 +2,11 @@ import { global, View } from "./ViewIndex";
 import { Path } from "./ViewScope";
 
 export function observe(target, callSet, callGet) {
-  var setable = true;
+
   function watcher(object, root, oldObject) {
     if (object instanceof View) return;
-    if (Array.isArray(object)) array(object, root);
     if (typeof object == "object") {
+      if (Array.isArray(object)) array(object, root);
       Object.keys(object).forEach(prop => {
         walk(object, prop, root, oldObject);
       })
@@ -42,63 +42,66 @@ export function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = val, path, oldValue);
-        if (setable) mq.publish(target, "set", [oldValue, oldCache]);
+        mq.publish(target, "set", [oldValue, oldCache]);
       }
     });
   }
 
-  function def(obj, key, val) {
-    Object.defineProperty(obj, key, {
-      writable: true,
-      value: val
-    });
-  }
-
+  const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
   function array(object, root) {
-    const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     meths.forEach(function (name) {
       var method = Array.prototype[name];
       switch (name) {
         case "shift":
-          def(object, name, function () {
-            setable = false;
-            var data = method.apply(this, arguments);
-            setable = true;
-            notify([0]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([0]);
+              return data;
+            }
           });
           break;
         case "pop":
-          def(object, name, function () {
-            var data = method.apply(this, arguments);
-            notify([this.length]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([this.length]);
+              return data;
+            }
           });
           break;
         case "splice":
-          def(object, name, function (i, l) {
-            setable = false;
-            var data = method.apply(this, arguments);
-            var params = [], m = new Number(i) + new Number(l);
-            while (i < m) params.push(i++);
-            setable = true;
-            notify(params);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i, l) {
+              var data = method.apply(this, arguments);
+              var params = [], m = new Number(i) + new Number(l);
+              while (i < m) params.push(i++);
+              //notify(params);
+              return data;
+            }
           });
           break;
         case "push":
-          def(object, name, function (i) {
-            var data = method.call(this, i);
-            notify([]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i) {
+              var data = method.call(this, i);
+              notify([]);
+              return data;
+            }
           });
           break;
         default:
-          def(object, name, function () {
-            setable = false;
-            var data = method.apply(this, arguments);
-            notify([]);
-            return data;
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function () {
+              var data = method.apply(this, arguments);
+              notify([]);
+              return data;
+            }
           });
           break;
       }

@@ -15,7 +15,7 @@
   </div>
   }
   <input value="{{param1}}" />
-  <div>{{list[1]}}</div>
+  <div @click="setlist()">{{list[2]}}11111</div>
 
 </body>
 
@@ -32,7 +32,10 @@
     action: {
       alert(el) {
         this.param1 = "我变成了你！";
-        this.list = [4, 5, 6]
+        this.list = [4, 5]
+      },
+      setlist() {
+        this.list = [4, 5, false]
       }
     }
   });
