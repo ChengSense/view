@@ -308,7 +308,7 @@ function observe(target, callSet, callGet) {
               var data = method.apply(this, arguments);
               var params = [], m = new Number(i) + new Number(l);
               while (i < m) params.push(i++);
-              //notify(params);
+              notify(params);
               return data;
             }
           });
