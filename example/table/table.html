@@ -16,6 +16,11 @@
       width: 100%;
       height: 20px
     }
+    .k-unselect {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+}
   </style>
 </head>
 
@@ -26,7 +31,7 @@
         <table>
           <thead>
             <tr>
-              <th each="item:i:columns" class="k-header" data-field="{{i}}">{{item}}</th>
+              <th each="item:i:columns" class="k-header k-unselect" data-field="{{i}}">{{item}}</th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>
@@ -98,28 +103,30 @@
       }
     }
   });
-  var reseiz, pageX, width, resizer;
+  var pageX, width, resizer;
   var Resizer = {
     inResize(e) {
-      if (Math.abs($(this).offset().left + $(this).outerWidth(true) - e.pageX) < 5) {
-        $(this).on("mousedown", Resizer.startResize).css("cursor", "col-resize");
+      if (Math.abs($(this).offset().left + $(this).outerWidth(true) - e.pageX) < 8) {
+        $(this).on("mousedown", Resizer.startResize)
+        $(".k-grid").css("cursor", "col-resize");
       } else {
-        $(this).off("mousedown", Resizer.startResize).css("cursor", "default");
+        $(this).off("mousedown", Resizer.startResize)
+        $(".k-grid").css("cursor", "default");
       }
     },
     startResize(e) {
-      reseiz = this, pageX = e.pageX, width = $(this).width();
-      resizer = $(`[data-field='${$(reseiz).attr("data-field")}']:lt(3)`);
+      pageX = e.pageX, width = $(this).width();
+      resizer = $(`[data-field='${$(this).attr("data-field")}']:lt(3)`);
+      $(this).off("mousedown", Resizer.startResize);
       $(".k-header").off("mousemove", Resizer.inResize);
       $(document).on("mousemove", Resizer.onResize).on("mouseup", Resizer.stopResize);
     },
     onResize(e) {
       var th = e.pageX - pageX;
-      resizer.width(width + th);
+      resizer.width(width + e.pageX - pageX);
     },
     stopResize(e) {
       $(".k-header").on("mousemove", Resizer.inResize);
-      $(reseiz).off("mousedown", Resizer.startResize);
       $(document).off("mousemove", Resizer.onResize).off("mouseup", Resizer.stopResize);
     }
   }
@@ -130,7 +137,6 @@
     $(e).width($(e).width());
   });
   $(".k-header").on("mousemove", Resizer.inResize);
-
 </script>
 
 </html>
