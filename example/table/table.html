@@ -128,7 +128,12 @@
     stopResize(e) {
       $(".k-header").on("mousemove", Resizer.inResize);
       $(document).off("mousemove", Resizer.onResize).off("mouseup", Resizer.stopResize);
-    }
+    },
+    scroll() {
+      $(".k-grid-content").on("scroll", function () {
+        $(".k-auto-scrollable").scrollLeft($(this).scrollLeft());
+      });
+    },
   }
   $(`th[data-field]`).each((i, e) => {
     $(e).width($(e).width());
@@ -137,6 +142,7 @@
     $(e).width($(e).width());
   });
   $(".k-header").on("mousemove", Resizer.inResize);
+  Resizer.scroll();
 </script>
 
 </html>
