@@ -8,7 +8,7 @@
 </head>
 
 <body>
-  <div each="item:id:list" data-row="{id}"> {item.i} </div>
+  <div each="item:id:list" data-row="{id}"> {item} </div>
   <button @click="shift()">{shift}</button>
   <button @click="pop()">{pop}</button>
   <button @click="push()">{push}</button>
@@ -20,7 +20,7 @@
   var app = new View({
     view: "body",
     model: {
-      list: [{ i: 1 }, { i: 2 }, { i: 3 }, { i: 4 }, { i: 5 }, { i: 6 }, { i: 7 }, { i: 8 }, { i: 9 }, { i: 10 }],
+      list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       pop: "pop！",
       shift: "shift！",
       push: "push！",
@@ -34,10 +34,10 @@
         this.list.shift();
       },
       push() {
-        this.list.push({ i: this.list.length + 1 });
+        this.list.push(this.list.length + 1);
       },
       splice() {
-        this.list.splice(10, 0,{ i: 555555555 },{ i: 555555555 });
+        this.list.splice(0, 1);
       }
     }
   });

@@ -1,6 +1,6 @@
 import { query } from "./ViewElmemt";
 import { init, initCompiler } from "./ViewInit";
-import { clone, slice } from "./ViewLang";
+import { clone, slice, extend } from "./ViewLang";
 import { observe } from "./ViewObserve";
 import { resolver } from "./ViewResolver";
 import { Router } from "./ViewRouter";
@@ -13,8 +13,8 @@ export class View {
     this.model = app.model;
     this.action = app.action;
 
-    observe(app.model, function set(oldValue, cache) {
-      deepen(cache);
+    observe(app.model, function set(oldValue, cache, object) {
+      deepen(cache, object);
     }, function get(path) {
       global.$path = path;
     });
@@ -54,13 +54,16 @@ function clearNode(nodes, status) {
   }
 }
 
-function deepen(cache) {
+function deepen(cache, object) {
   cache.forEach((nodes, we) => {
     slice(nodes).forEach(node => {
-      if (clearNode([node])) 
+      if (clearNode([node])) {
+        extend(object, { $change: true });
         resolver[node.resolver](node, we);
-       else 
+      }
+      else {
         nodes.remove(node);
+      }
     })
   });
 }

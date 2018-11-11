@@ -1,5 +1,5 @@
 import { View, global } from "./ViewIndex";
-import { each, slice, extention, blank } from "./ViewLang";
+import { each, slice, extention, extend, blank } from "./ViewLang";
 import { Compiler, compoNode } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
 
@@ -63,6 +63,23 @@ export var resolver = {
       console.log(e);
     }
   },
+  arrayEach: function (node, we, m, nodes) {
+    try {
+      var insert = insertNode([node.childNodes[m]]);
+      var doc = document.createDocumentFragment();
+      var child = { clas: node.clas, children: node.children, scope: node.scope };
+      var content = { childNodes: [], children: [] };
+      new Compiler(doc, node.scope, [child], content, we);
+      doc.removeChild(doc.childNodes[0]);
+      var childNodes = slice(content.childNodes[0].childNodes);
+      childNodes.splice(0, 1, m + 1, 0);
+      node.childNodes.splices(childNodes);
+      nodes.remove(content.childNodes[0]);
+      if (insert.parentNode) insert.after(doc);
+    } catch (e) {
+      console.log(e);
+    }
+  },
   express: function (node, we) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
@@ -86,6 +103,38 @@ export var resolver = {
   }
 };
 
+export var cacher = function (cache, m, n, scope, add) {
+  try {
+    cache.forEach((nodes, we) => {
+      nodes.forEach(node => {
+        arrayEach[node.resolver](node, m, n, scope, add, we, nodes);
+      })
+    });
+    extend(scope, { $change: false });
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+var arrayEach = {
+  each: function (node, m, n, scope, add, we, children) {
+    try {
+      var l = scope.length;
+      if (scope.$change) {
+        var nodes = node.childNodes.splice(l + 2 - n, n);
+        clearNodes(nodes);
+      }
+      else {
+        var nodes = node.childNodes.splice(m + 1, n);
+        clearNodes(nodes);
+      }
+      if (add) resolver.arrayEach(node, we, m, children);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+};
+
 export function deeping(clas, we, $cache) {
   let cache = $cache.get(we);
   if (cache) {
@@ -104,6 +153,21 @@ function insertion(nodes, node) {
         return node;
       };
       node = insertion(child.childNodes);
+    });
+    return node;
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function insertNode(nodes, node) {
+  try {
+    each(nodes, child => {
+      if (child.node && child.node.parentNode) {
+        node = child.node;
+        return node;
+      };
+      node = insertNode(child.childNodes);
     });
     return node;
   } catch (e) {

@@ -26,6 +26,12 @@ extend(Node, {
   before(node) {
     this.parentNode.insertBefore(node, this);
   },
+  after(node) {
+    if (this.nextSibling)
+      this.parentNode.insertBefore(node, this.nextSibling);
+    else
+      this.parentNode.appendChild(node);
+  }
 });
 
 extend(NodeList, {

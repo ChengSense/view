@@ -1,5 +1,7 @@
 import { global, View } from "./ViewIndex";
+import { cacher } from "./ViewResolver";
 import { Path } from "./ViewScope";
+import { slice } from "./ViewLang";
 
 export function observe(target, callSet, callGet) {
 
@@ -42,7 +44,7 @@ export function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = val, path, oldValue);
-        mq.publish(target, "set", [oldValue, oldCache]);
+        mq.publish(target, "set", [oldValue, oldCache, object]);
       }
     });
   }
@@ -57,7 +59,7 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function () {
               var data = method.apply(this, arguments);
-              notify([0]);
+              cacher(getCache(), 0, 1, this);
               return data;
             }
           });
@@ -67,7 +69,7 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function () {
               var data = method.apply(this, arguments);
-              notify([this.length]);
+              cacher(getCache(), this.length, 1, this);
               return data;
             }
           });
@@ -76,11 +78,21 @@ export function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function (i, l) {
-              var data = method.apply(this, arguments);
-              var params = [], m = new Number(i) + new Number(l);
-              while (i < m) params.push(i++);
-              notify(params);
-              return data;
+              if (0 < this.length) {
+                let index = this.$index = new Number(i), length = this.length;
+                var data = method.apply(this, arguments);
+                if (index < length && arguments.length > 2) {
+                  this.$index = index, this.$length = index + arguments.length - 2;
+                  while (index < this.$length) walk(this, index++, root);
+                }
+                else if (arguments.length > 2) {
+                  this.$index = index = length, this.$length = this.length;
+                  while (index < this.$length) walk(this, index++, root);
+                }
+                cacher(getCache(), this.$index, l, this, arguments.length > 2);
+                delete this.$index; delete this.$length;
+                return data;
+              }
             }
           });
           break;
@@ -88,8 +100,12 @@ export function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function (i) {
+              let index = this.length;
               var data = method.call(this, i);
-              notify([]);
+              this.$index = index, this.$length = this.length;
+              while (index < this.length) walk(this, index++, root);
+              cacher(getCache(), this.$index, 0, this, true);
+              delete this.$index; delete this.$length;
               return data;
             }
           });
@@ -112,6 +128,14 @@ export function observe(target, callSet, callGet) {
         scope${Path(root)}=val;
         `
       )(target, object);
+    }
+    function getCache() {
+      new Function('scope',
+        `
+        return scope${Path(root)};
+        `
+      )(target)
+      return global.$cache;
     }
   }
 

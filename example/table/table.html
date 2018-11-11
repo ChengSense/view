@@ -16,11 +16,12 @@
       width: 100%;
       height: 20px
     }
+  
     .k-unselect {
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
-}
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+    }
   </style>
 </head>
 
@@ -31,7 +32,7 @@
         <table>
           <thead>
             <tr>
-              <th each="item:i:columns" class="k-header k-unselect" data-field="{{i}}">{{item}}</th>
+              <th each="item:i:columns" class="k-header k-unselect" data-field="{i}">{item}</th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>
@@ -41,20 +42,20 @@
     <div class="k-grid-content k-auto-scrollable" style="height: 643px;">
       <table style="height: auto;">
         <tbody>
-          <tr each="item:id:list" class="{{id%2?'k-alt':''}}">
-            <td each="col:i:item" data-field="{{i}}" data-row="{{id}}">
+          <tr each="item:id:list" class="{id%2?'k-alt':''}">
+            <td each="col:i:item" data-field="{i}" data-row="{id}">
               @when(edit==id){
-                <input value="{{col}}">
-              }.when{
-                {{col}}
+                <input value="{col}">
+              }.when{ 
+                {col} 
               }
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
               <span class="k-button k-button-icontext k-grid-edit" @click="edit(id)">
-                @when(edit==id){
+                @when(edit==id){ 
                   保存
-                }.when{
+                }.when{ 
                   编辑
                 }
               </span>
@@ -69,7 +70,7 @@
 <script type="text/javascript">
   function data() {
     var data = [];
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 10; i++) {
       data.push({
         "id": 10000 + data.length,
         "age": "宁波店" + data.length,
@@ -103,46 +104,6 @@
       }
     }
   });
-  var pageX, width, resizer;
-  var Resizer = {
-    inResize(e) {
-      if (Math.abs($(this).offset().left + $(this).outerWidth(true) - e.pageX) < 8) {
-        $(this).on("mousedown", Resizer.startResize)
-        $(".k-grid").css("cursor", "col-resize");
-      } else {
-        $(this).off("mousedown", Resizer.startResize)
-        $(".k-grid").css("cursor", "default");
-      }
-    },
-    startResize(e) {
-      pageX = e.pageX, width = $(this).width();
-      resizer = $(`[data-field='${$(this).attr("data-field")}']:lt(3)`);
-      $(this).off("mousedown", Resizer.startResize);
-      $(".k-header").off("mousemove", Resizer.inResize);
-      $(document).on("mousemove", Resizer.onResize).on("mouseup", Resizer.stopResize);
-    },
-    onResize(e) {
-      var th = e.pageX - pageX;
-      resizer.width(width + e.pageX - pageX);
-    },
-    stopResize(e) {
-      $(".k-header").on("mousemove", Resizer.inResize);
-      $(document).off("mousemove", Resizer.onResize).off("mouseup", Resizer.stopResize);
-    },
-    scroll() {
-      $(".k-grid-content").on("scroll", function () {
-        $(".k-auto-scrollable").scrollLeft($(this).scrollLeft());
-      });
-    },
-  }
-  $(`th[data-field]`).each((i, e) => {
-    $(e).width($(e).width());
-  });
-  $(`td[data-row='0']`).each((i, e) => {
-    $(e).width($(e).width());
-  });
-  $(".k-header").on("mousemove", Resizer.inResize);
-  Resizer.scroll();
 </script>
 
 </html>

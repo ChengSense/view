@@ -18,9 +18,15 @@ export function each(obj, methd, arg) {
 
 export function forEach(obj, methd, me) {
   if (!obj) return;
-  Object.keys(obj).forEach(i => {
-    methd.call(me, obj[i], i);
-  })
+  if (obj.hasOwnProperty("$index")) {
+    for (let i = obj.$index; i < obj.$length; i++) {
+      methd.call(me, obj[i], i);
+    }
+  } else {
+    Object.keys(obj).forEach(i => {
+      methd.call(me, obj[i], i);
+    })
+  }
 }
 
 export function slice(obj) {
@@ -69,6 +75,9 @@ extend(Array, {
     var index = this.indexOf(o);
     if (index > -1)
       this.splice(index, 1, n);
+  },
+  splices(items) {
+    this["splice"].apply(this, items);
   },
   has(o) {
     var index = this.indexOf(o);
