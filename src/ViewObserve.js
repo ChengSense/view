@@ -1,7 +1,6 @@
 import { global, View } from "./ViewIndex";
 import { cacher } from "./ViewResolver";
 import { Path } from "./ViewScope";
-import { slice } from "./ViewLang";
 
 export function observe(target, callSet, callGet) {
 

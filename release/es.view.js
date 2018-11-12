@@ -405,7 +405,7 @@ function Compiler(node, scopes, childNodes, content, we) {
   }
 
   let binding = {
-    attrEach(node, scope, clas, content, value) {
+    attrEach(node, scope, clas, content) {
       if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
@@ -413,7 +413,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
-    each(node, scope, clas, content, value) {
+    each(node, scope, clas, content) {
       if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
@@ -690,7 +690,7 @@ var arrayEach = {
     try {
       var l = scope.length;
       if (scope.$change) {
-        var nodes = node.childNodes.splice(l + 2 - n, n);
+        var nodes = node.childNodes.splice(l + 1);
         clearNodes(nodes);
       }
       else {

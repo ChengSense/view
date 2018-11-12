@@ -406,7 +406,7 @@ var view = (function (exports) {
     }
 
     var binding = {
-      attrEach: function attrEach(node, scope, clas, content, value) {
+      attrEach: function attrEach(node, scope, clas, content) {
         if (global$1.$cache == undefined) return;
         clas.resolver = "each";
         clas.content = content;
@@ -414,7 +414,7 @@ var view = (function (exports) {
         clas.node = node;
         deeping(clas, we, global$1.$cache);
       },
-      each: function each$$1(node, scope, clas, content, value) {
+      each: function each$$1(node, scope, clas, content) {
         if (global$1.$cache == undefined) return;
         clas.resolver = "each";
         clas.content = content;
@@ -682,7 +682,7 @@ var view = (function (exports) {
       try {
         var l = scope.length;
         if (scope.$change) {
-          var nodes = node.childNodes.splice(l + 2 - n, n);
+          var nodes = node.childNodes.splice(l + 1);
           clearNodes(nodes);
         } else {
           var nodes = node.childNodes.splice(m + 1, n);

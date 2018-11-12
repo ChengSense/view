@@ -121,7 +121,7 @@ var arrayEach = {
     try {
       var l = scope.length;
       if (scope.$change) {
-        var nodes = node.childNodes.splice(l + 2 - n, n);
+        var nodes = node.childNodes.splice(l + 1);
         clearNodes(nodes);
       }
       else {

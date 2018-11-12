@@ -164,7 +164,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   let binding = {
-    attrEach(node, scope, clas, content, value) {
+    attrEach(node, scope, clas, content) {
       if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
@@ -172,7 +172,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.node = node;
       deeping(clas, we, global.$cache);
     },
-    each(node, scope, clas, content, value) {
+    each(node, scope, clas, content) {
       if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
