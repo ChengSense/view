@@ -120,7 +120,18 @@ var arrayEach = {
   each: function (node, m, n, scope, add, we, children) {
     try {
       var l = scope.length;
-      if (scope.$change) {
+      if (add > 0 && scope.$change) {
+        var nodes = node.childNodes.splice(l + 1);
+        clearNodes(nodes);
+        resolver.arrayEach(node, we, node.childNodes.length - 1, children);
+      }
+      else if (add > 0) {
+        var nodes = node.childNodes.splice(m + 1, n);
+        clearNodes(nodes);
+        scope.$index = m; scope.$length = m + add;
+        resolver.arrayEach(node, we, m, children);
+      }
+      else if (scope.$change) {
         var nodes = node.childNodes.splice(l + 1);
         clearNodes(nodes);
       }
@@ -128,7 +139,6 @@ var arrayEach = {
         var nodes = node.childNodes.splice(m + 1, n);
         clearNodes(nodes);
       }
-      if (add) resolver.arrayEach(node, we, m, children);
     } catch (e) {
       console.error(e);
     }

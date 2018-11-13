@@ -78,17 +78,19 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function (i, l) {
               if (0 < this.length) {
-                let index = this.$index = new Number(i), length = this.length;
+                i = new Number(i); let length = this.length;
                 var data = method.apply(this, arguments);
-                if (index < length && arguments.length > 2) {
-                  this.$index = index, this.$length = index + arguments.length - 2;
+                if (i < length && arguments.length > 2) {
+                  var index = length; this.$index = length;
+                  this.$length = this.length;
                   while (index < this.$length) walk(this, index++, root);
                 }
                 else if (arguments.length > 2) {
-                  this.$index = index = length, this.$length = this.length;
+                  var index = i = this.$index = length;
+                  this.$length = this.length;
                   while (index < this.$length) walk(this, index++, root);
                 }
-                cacher(getCache(), this.$index, l, this, arguments.length > 2);
+                cacher(getCache(), i, l, this, arguments.length - 2);
                 delete this.$index; delete this.$length;
                 return data;
               }
@@ -103,7 +105,7 @@ export function observe(target, callSet, callGet) {
               var data = method.call(this, i);
               this.$index = index, this.$length = this.length;
               while (index < this.length) walk(this, index++, root);
-              cacher(getCache(), this.$index, 0, this, true);
+              cacher(getCache(), this.$index, 0, this, 1);
               delete this.$index; delete this.$length;
               return data;
             }

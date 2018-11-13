@@ -681,14 +681,22 @@ var view = (function (exports) {
     each: function each$$1(node, m, n, scope, add, we, children) {
       try {
         var l = scope.length;
-        if (scope.$change) {
+        if (add > 0 && scope.$change) {
+          var nodes = node.childNodes.splice(l + 1);
+          clearNodes(nodes);
+          resolver.arrayEach(node, we, node.childNodes.length - 1, children);
+        } else if (add > 0) {
+          var nodes = node.childNodes.splice(m + 1, n);
+          clearNodes(nodes);
+          scope.$index = m;scope.$length = m + add;
+          resolver.arrayEach(node, we, m, children);
+        } else if (scope.$change) {
           var nodes = node.childNodes.splice(l + 1);
           clearNodes(nodes);
         } else {
           var nodes = node.childNodes.splice(m + 1, n);
           clearNodes(nodes);
         }
-        if (add) resolver.arrayEach(node, we, m, children);
       } catch (e) {
         console.error(e);
       }
@@ -816,21 +824,22 @@ var view = (function (exports) {
               writable: true,
               value: function value(i, l) {
                 if (0 < this.length) {
-                  var index = this.$index = new Number(i),
-                      length = this.length;
+                  i = new Number(i);var length = this.length;
                   var data = method.apply(this, arguments);
-                  if (index < length && arguments.length > 2) {
-                    this.$index = index, this.$length = index + arguments.length - 2;
+                  if (i < length && arguments.length > 2) {
+                    var index = length;this.$index = length;
+                    this.$length = this.length;
                     while (index < this.$length) {
                       walk(this, index++, root);
                     }
                   } else if (arguments.length > 2) {
-                    this.$index = index = length, this.$length = this.length;
+                    var index = i = this.$index = length;
+                    this.$length = this.length;
                     while (index < this.$length) {
                       walk(this, index++, root);
                     }
                   }
-                  cacher(getCache(), this.$index, l, this, arguments.length > 2);
+                  cacher(getCache(), i, l, this, arguments.length - 2);
                   delete this.$index;delete this.$length;
                   return data;
                 }
@@ -846,7 +855,7 @@ var view = (function (exports) {
                 this.$index = index, this.$length = this.length;
                 while (index < this.length) {
                   walk(this, index++, root);
-                }cacher(getCache(), this.$index, 0, this, true);
+                }cacher(getCache(), this.$index, 0, this, 1);
                 delete this.$index;delete this.$length;
                 return data;
               }
