@@ -51,8 +51,13 @@ export function blank(str) {
 }
 
 export function clone(value) {
-  if (value instanceof View) return value;
-  if (Array.isArray(value)) {
+  if (value instanceof Boolean ||
+    value instanceof String ||
+    value instanceof Number ||
+    value instanceof Date ||
+    value instanceof View) {
+    return value;
+  } else if (Array.isArray(value)) {
     const obj = [];
     Object.keys(value).forEach(key => {
       obj[key] = clone(value[key]);

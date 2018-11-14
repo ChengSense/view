@@ -83,8 +83,9 @@ var view = (function (exports) {
   }
 
   function clone(value) {
-    if (value instanceof View) return value;
-    if (Array.isArray(value)) {
+    if (value instanceof Boolean || value instanceof String || value instanceof Number || value instanceof Date || value instanceof View) {
+      return value;
+    } else if (Array.isArray(value)) {
       var obj = [];
       Object.keys(value).forEach(function (key) {
         obj[key] = clone(value[key]);
@@ -791,11 +792,12 @@ var view = (function (exports) {
           var oldCache = cache;
           cache = new Map();
           watcher(value = clone(val), path, oldValue);
-          if ((typeof value === "undefined" ? "undefined" : _typeof(value)) != "object" || value instanceof View$1) mq.publish(target, "set", [oldValue, oldCache, object]);
+          if (setable || (typeof value === "undefined" ? "undefined" : _typeof(value)) != "object") mq.publish(target, "set", [oldValue, oldCache, object]);
         }
       });
     }
 
+    var setable = true;
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     function array(object, root) {
       meths.forEach(function (name) {
@@ -805,8 +807,10 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
+                setable = false;
                 var data = method.apply(this, arguments);
                 cacher(getCache(), this);
+                setable = true;
                 return data;
               }
             });
@@ -815,8 +819,10 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
+                setable = false;
                 var data = method.apply(this, arguments);
                 cacher(getCache(), this);
+                setable = true;
                 return data;
               }
             });
@@ -826,6 +832,7 @@ var view = (function (exports) {
               writable: true,
               value: function value(i, l) {
                 if (0 < this.length) {
+                  setable = false;
                   var length = this.length;
                   var data = method.apply(this, arguments);
                   if (arguments.length > 2) {
@@ -837,6 +844,7 @@ var view = (function (exports) {
                   }
                   cacher(getCache(), this, arguments.length - 2);
                   delete this.$index;delete this.$length;
+                  setable = true;
                   return data;
                 }
               }
@@ -846,6 +854,7 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value(i) {
+                setable = false;
                 var index = this.length;
                 var data = method.call(this, i);
                 this.$index = index, this.$length = this.length;
@@ -853,6 +862,7 @@ var view = (function (exports) {
                   walk(this, index++, root);
                 }cacher(getCache(), this, 1);
                 delete this.$index;delete this.$length;
+                setable = true;
                 return data;
               }
             });
@@ -861,8 +871,10 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
+                setable = false;
                 var data = method.apply(this, arguments);
                 notify([]);
+                setable = true;
                 return data;
               }
             });
