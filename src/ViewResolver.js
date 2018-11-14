@@ -103,11 +103,11 @@ export var resolver = {
   }
 };
 
-export var cacher = function (cache, m, n, scope, add) {
+export var cacher = function (cache, scope, add) {
   try {
     cache.forEach((nodes, we) => {
       nodes.forEach(node => {
-        arrayEach[node.resolver](node, m, n, scope, add, we, nodes);
+        arrayEach[node.resolver](node, scope, add, we, nodes);
       })
     });
     extend(scope, { $change: false });
@@ -117,26 +117,16 @@ export var cacher = function (cache, m, n, scope, add) {
 };
 
 var arrayEach = {
-  each: function (node, m, n, scope, add, we, children) {
+  each: function (node, scope, add, we, children) {
     try {
       var l = scope.length;
-      if (add > 0 && scope.$change) {
+      if (add > 0) {
         var nodes = node.childNodes.splice(l + 1);
         clearNodes(nodes);
         resolver.arrayEach(node, we, node.childNodes.length - 1, children);
       }
-      else if (add > 0) {
-        var nodes = node.childNodes.splice(m + 1, n);
-        clearNodes(nodes);
-        scope.$index = m; scope.$length = m + add;
-        resolver.arrayEach(node, we, m, children);
-      }
-      else if (scope.$change) {
-        var nodes = node.childNodes.splice(l + 1);
-        clearNodes(nodes);
-      }
       else {
-        var nodes = node.childNodes.splice(m + 1, n);
+        var nodes = node.childNodes.splice(l + 1);
         clearNodes(nodes);
       }
     } catch (e) {

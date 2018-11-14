@@ -58,7 +58,6 @@ function deepen(cache, object) {
   cache.forEach((nodes, we) => {
     slice(nodes).forEach(node => {
       if (clearNode([node])) {
-        extend(object, { $change: true });
         resolver[node.resolver](node, we);
       }
       else {

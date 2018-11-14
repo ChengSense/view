@@ -83,15 +83,19 @@ var view = (function (exports) {
   }
 
   function clone(value) {
+    if (value instanceof View) return value;
     if (Array.isArray(value)) {
-      return value.map(clone);
-    }
-    if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object') {
-      var obj = {};
-      for (var key in value) {
+      var obj = [];
+      Object.keys(value).forEach(function (key) {
         obj[key] = clone(value[key]);
-      }
+      });
       return obj;
+    } else if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object') {
+      var _obj = {};
+      Object.keys(value).forEach(function (key) {
+        _obj[key] = clone(value[key]);
+      });
+      return _obj;
     }
     return value;
   }
@@ -590,7 +594,7 @@ var view = (function (exports) {
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        var component = new View({ view: app.component, model: app.model, action: app.action });
+        var component = new View$1({ view: app.component, model: app.model, action: app.action });
         var clasNodes = compoNode(insert, node, component);
         deeping(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
@@ -664,11 +668,11 @@ var view = (function (exports) {
     }
   };
 
-  var cacher = function cacher(cache, m, n, scope, add) {
+  var cacher = function cacher(cache, scope, add) {
     try {
       cache.forEach(function (nodes, we) {
         nodes.forEach(function (node) {
-          arrayEach[node.resolver](node, m, n, scope, add, we, nodes);
+          arrayEach[node.resolver](node, scope, add, we, nodes);
         });
       });
       extend(scope, { $change: false });
@@ -678,23 +682,15 @@ var view = (function (exports) {
   };
 
   var arrayEach = {
-    each: function each$$1(node, m, n, scope, add, we, children) {
+    each: function each$$1(node, scope, add, we, children) {
       try {
         var l = scope.length;
-        if (add > 0 && scope.$change) {
+        if (add > 0) {
           var nodes = node.childNodes.splice(l + 1);
           clearNodes(nodes);
           resolver.arrayEach(node, we, node.childNodes.length - 1, children);
-        } else if (add > 0) {
-          var nodes = node.childNodes.splice(m + 1, n);
-          clearNodes(nodes);
-          scope.$index = m;scope.$length = m + add;
-          resolver.arrayEach(node, we, m, children);
-        } else if (scope.$change) {
-          var nodes = node.childNodes.splice(l + 1);
-          clearNodes(nodes);
         } else {
-          var nodes = node.childNodes.splice(m + 1, n);
+          var nodes = node.childNodes.splice(l + 1);
           clearNodes(nodes);
         }
       } catch (e) {
@@ -751,7 +747,7 @@ var view = (function (exports) {
   function observe(target, callSet, callGet) {
 
     function watcher(object, root, oldObject) {
-      if (object instanceof View) return;
+      if (object instanceof View$1) return;
       if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
         if (Array.isArray(object)) array(object, root);
         Object.keys(object).forEach(function (prop) {
@@ -761,21 +757,27 @@ var view = (function (exports) {
     }
 
     function walk(object, prop, root, oldObject) {
-      var value = object[prop],
-          oldValue;
-      if (oldObject != undefined) oldValue = oldObject[prop];
       var path = root ? root + "." + prop : prop;
-      if (value instanceof View) {
-        define(object, prop, path, oldValue);
+      var value = object[prop];
+      if (value instanceof View$1) {
+        define(object, prop, path);
+      } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object" && oldObject != undefined) {
+        watcher(value, path, oldObject[prop]);
+        define(object, prop, path);
       } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
-        watcher(value, path, oldValue);
-        define(object, prop, path, oldValue);
+        watcher(value, path);
+        define(object, prop, path);
+      } else if (oldObject != undefined) {
+        define(object, prop, path);
+        var oldValue = oldObject[prop];
+        var oldCache = global$1.$cache;
+        mq.publish(target, "set", [oldValue, oldCache, object]);
       } else {
-        define(object, prop, path, oldValue);
+        define(object, prop, path);
       }
     }
 
-    function define(object, prop, path, oldValue) {
+    function define(object, prop, path) {
       var value = object[prop],
           cache = new Map();
       Object.defineProperty(object, prop, {
@@ -788,8 +790,8 @@ var view = (function (exports) {
           var oldValue = value;
           var oldCache = cache;
           cache = new Map();
-          watcher(value = val, path, oldValue);
-          mq.publish(target, "set", [oldValue, oldCache, object]);
+          watcher(value = clone(val), path, oldValue);
+          if ((typeof value === "undefined" ? "undefined" : _typeof(value)) != "object" || value instanceof View$1) mq.publish(target, "set", [oldValue, oldCache, object]);
         }
       });
     }
@@ -804,7 +806,7 @@ var view = (function (exports) {
               writable: true,
               value: function value() {
                 var data = method.apply(this, arguments);
-                cacher(getCache(), 0, 1, this);
+                cacher(getCache(), this);
                 return data;
               }
             });
@@ -814,7 +816,7 @@ var view = (function (exports) {
               writable: true,
               value: function value() {
                 var data = method.apply(this, arguments);
-                cacher(getCache(), this.length, 1, this);
+                cacher(getCache(), this);
                 return data;
               }
             });
@@ -824,22 +826,16 @@ var view = (function (exports) {
               writable: true,
               value: function value(i, l) {
                 if (0 < this.length) {
-                  i = new Number(i);var length = this.length;
+                  var length = this.length;
                   var data = method.apply(this, arguments);
-                  if (i < length && arguments.length > 2) {
-                    var index = length;this.$index = length;
-                    this.$length = this.length;
-                    while (index < this.$length) {
-                      walk(this, index++, root);
-                    }
-                  } else if (arguments.length > 2) {
-                    var index = i = this.$index = length;
+                  if (arguments.length > 2) {
+                    var index = this.$index = length;
                     this.$length = this.length;
                     while (index < this.$length) {
                       walk(this, index++, root);
                     }
                   }
-                  cacher(getCache(), i, l, this, arguments.length - 2);
+                  cacher(getCache(), this, arguments.length - 2);
                   delete this.$index;delete this.$length;
                   return data;
                 }
@@ -855,7 +851,7 @@ var view = (function (exports) {
                 this.$index = index, this.$length = this.length;
                 while (index < this.length) {
                   walk(this, index++, root);
-                }cacher(getCache(), this.$index, 0, this, 1);
+                }cacher(getCache(), this, 1);
                 delete this.$index;delete this.$length;
                 return data;
               }
@@ -1044,7 +1040,7 @@ var view = (function (exports) {
 
   var global$1 = { $path: undefined };
 
-  var View = function () {
+  var View$1 = function () {
     function View(app) {
       classCallCheck(this, View);
 
@@ -1102,7 +1098,6 @@ var view = (function (exports) {
     cache.forEach(function (nodes, we) {
       slice(nodes).forEach(function (node) {
         if (clearNode([node])) {
-          extend(object, { $change: true });
           resolver[node.resolver](node, we);
         } else {
           nodes.remove(node);
@@ -1111,12 +1106,12 @@ var view = (function (exports) {
     });
   }
 
-  window.View = View;
+  window.View = View$1;
   window.Router = Router;
   window.clone = clone;
 
   exports.global = global$1;
-  exports.View = View;
+  exports.View = View$1;
 
   return exports;
 

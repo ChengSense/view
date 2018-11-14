@@ -46,7 +46,7 @@
     </div>
     <div class="card-body" style="overflow: auto;">
       <main class=" container">
-        {{@router}}
+        {@router}
 
         <div id="home">
           <div class="card text-left">
@@ -63,19 +63,19 @@
                   <tr>
                     <td sc>分组数量</td>
                     <td>
-                      <span class="badge badge-pill badge-primary">{{ifaces.length}}</span>
+                      <span class="badge badge-pill badge-primary">{ifaces.length}</span>
                     </td>
                   </tr>
                   <tr>
                     <td>接口数量</td>
                     <td>
-                      <span class="badge badge-pill badge-primary">{{ifaces.length}}</span>
+                      <span class="badge badge-pill badge-primary">{ifaces.length}</span>
                     </td>
                   </tr>
                   <tr>
                     <td>主机数量</td>
                     <td>
-                      <span class="badge badge-pill badge-primary">{{sets.length}}</span>
+                      <span class="badge badge-pill badge-primary">{sets.length}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -88,30 +88,30 @@
           <div class="card text-left" each="item:i:ifaces">
             <div class="card-header py-0">
               <h5 class="mb-0">
-                <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{{i}}" aria-expanded="true">
-                  {{item.group_name}}
-                  <span class="badge badge-pill badge-primary ml-2">{{item.list.length}}</span>
+                <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{i}" aria-expanded="true">
+                  {item.group_name}
+                  <span class="badge badge-pill badge-primary ml-2">{item.list.length}</span>
                 </button>
               </h5>
             </div>
-            <div id="collapse{{i}}" class="collapse show">
+            <div id="collapse{i}" class="collapse show">
               <div class="card-body">
                 <table class="table">
                   <tbody>
                     <tr each="iface:item.list">
                       <th scope="row">
-                        <span class="badge badge-success">{{iface.method}}</span>
+                        <span class="badge badge-success">{iface.method}</span>
                       </th>
-                      <td>{{iface.name}}</td>
-                      <td>{{iface.comment}}</td>
+                      <td>{iface.name}</td>
+                      <td>{iface.comment}</td>
                       <td>
                         <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
                           <div class="btn-group mr-2" role="group" aria-label="First group">
-                            <a class="btn btn-outline-primary btn-sm" href="#iface/detail/{{iface.id}}">详情</a>
-                            <a class="btn btn-outline-success btn-sm" href="#iface/save/add/{{iface.id}}">添加</a>
-                            <a class="btn btn-outline-secondary btn-sm" href="#iface/save/copy/{{iface.id}}">复制</a>
-                            <a class="btn btn-outline-success btn-sm" href="#iface/save/edit/{{iface.id}}">修改</a>
-                            <button type="button" class="btn btn btn-outline-danger btn-sm" @click="ifaceDle(`{{iface.id}}`)">删除</button>
+                            <a class="btn btn-outline-primary btn-sm" href="#iface/detail/{iface.id}">详情</a>
+                            <a class="btn btn-outline-success btn-sm" href="#iface/save/add/{iface.id}">添加</a>
+                            <a class="btn btn-outline-secondary btn-sm" href="#iface/save/copy/{iface.id}">复制</a>
+                            <a class="btn btn-outline-success btn-sm" href="#iface/save/edit/{iface.id}">修改</a>
+                            <button type="button" class="btn btn btn-outline-danger btn-sm" @click="ifaceDle(`{iface.id}`)">删除</button>
                           </div>
                         </div>
                       </td>
@@ -128,7 +128,7 @@
             <div class="card-header py-0">
               <h5 class="mb-0">
                 <button class="btn btn-link">
-                  接口详情 > {{iface.comment}}
+                  接口详情 > {iface.comment}
                 </button>
               </h5>
             </div>
@@ -138,7 +138,7 @@
                   <tr>
                     <th scope="row" class="text-right">请求方式：</th>
                     <td>
-                      <select class="form-control form-control-sm col-sm-2" value="{{iface.method}}">
+                      <select class="form-control form-control-sm col-sm-2" value="{iface.method}">
                         <option value="GET">GET</option>
                         <option value="POST" selected>POST</option>
                       </select>
@@ -147,14 +147,14 @@
                   <tr>
                     <th scope="row" class="text-right">主机列表：</th>
                     <td>
-                      <select class="form-control form-control-sm col-sm-2" value="{{iface.host}}">
-                        <option value="{{host.host}}" each="host:hosts">{{host.userName}}</option>
+                      <select class="form-control form-control-sm col-sm-2" value="{iface.host}">
+                        <option value="{host.host}" each="host:hosts">{host.userName}</option>
                       </select>
                     </td>
                   </tr>
                   <tr>
                     <th scope="row" class="text-right">接口地址：</th>
-                    <td>{{iface.url}}</td>
+                    <td>{iface.url}</td>
                   </tr>
                   <tr>
                     <th scope="row" class="text-right">输入参数：</th>
@@ -171,13 +171,13 @@
                         </thead>
                         <tbody>
                           <tr each="item:iface.params">
-                            <td>{{item.name}}</td>
+                            <td>{item.name}</td>
                             <td>
-                              <input type="text" class="form-control form-control-sm" value="{{item.value}}">
+                              <input type="text" class="form-control form-control-sm" value="{item.value}">
                             </td>
-                            <td>{{item.type}}</td>
-                            <td>{{item.required}}</td>
-                            <td>{{item.comment}}</td>
+                            <td>{item.type}</td>
+                            <td>{item.required}</td>
+                            <td>{item.comment}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -186,12 +186,12 @@
                   <tr>
                     <th scope="row" class="text-right">返回数据：</th>
                     <td>
-                      <textarea class="form-control col-sm-8" rows="8" value="{{iface.response}}">{{iface.response}}</textarea>
+                      <textarea class="form-control col-sm-8" rows="8" value="{iface.response}">{iface.response}</textarea>
                     </td>
                   </tr>
                   <tr>
                     <th scope="row" class="text-right">返备注：</th>
-                    <td>{{iface.comment}}</td>
+                    <td>{iface.comment}</td>
                   </tr>
                   <tr>
                     <td scope="row"></td>
@@ -220,28 +220,28 @@
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">接口名称：</label>
                   <div class="col-sm-8">
-                    <input type="text" class="form-control" placeholder="接口名称" value="{{iface.name}}">
+                    <input type="text" class="form-control" placeholder="接口名称" value="{iface.name}">
                   </div>
                 </div>
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">接口用途：</label>
                   <div class="col-sm-8">
-                    <input type="text" class="form-control" placeholder="接口用途" value="{{iface.comment}}">
+                    <input type="text" class="form-control" placeholder="接口用途" value="{iface.comment}">
                   </div>
                 </div>
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">选择分组：</label>
                   <div class="col-sm-4">
-                    <select class="form-control" value="{{iface.gid}}">
+                    <select class="form-control" value="{iface.gid}">
                       <option>选择分组</option>
-                      <option each="item:groups" value="{{item.id}}">{{item.group_name}}</option>
+                      <option each="item:groups" value="{item.id}">{item.group_name}</option>
                     </select>
                   </div>
                 </div>
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">请求方式：</label>
                   <div class="col-sm-4">
-                    <select class="form-control" value="{{iface.method}}">
+                    <select class="form-control" value="{iface.method}">
                       <option value="GET">GET</option>
                       <option value="POST" selected>POST</option>
                     </select>
@@ -250,7 +250,7 @@
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">调用地址：</label>
                   <div class="col-sm-8">
-                    <input type="text" class="form-control" placeholder="调用地址" value="{{iface.url}}">
+                    <input type="text" class="form-control" placeholder="调用地址" value="{iface.url}">
                   </div>
                 </div>
                 <fieldset class="form-group">
@@ -267,8 +267,8 @@
                     <div class="col-sm-8">
                       <div class="btn-toolbar">
                         <div class="btn-group">
-                          <input type="text" class="form-control mr-1" placeholder="参数名" value="{{item.name}}">
-                          <select name="para_type" class="form-control  mr-1" value="{{item.type}}">
+                          <input type="text" class="form-control mr-1" placeholder="参数名" value="{item.name}">
+                          <select name="para_type" class="form-control  mr-1" value="{item.type}">
                             <option value="int">int</option>
                             <option value="long">long</option>
                             <option value="float">float</option>
@@ -279,12 +279,12 @@
                             <option value="json">json</option>
                             <option value="xml">xml</option>
                           </select>
-                          <select class="form-control  mr-1" value="{{item.required}}">
+                          <select class="form-control  mr-1" value="{item.required}">
                             <option value="1">必须传入</option>
                             <option value="0" selected>可选传入</option>
                           </select>
-                          <input type="text" class="form-control mr-1" placeholder="参数备注" value="{{item.comment}}">
-                          <button type="button" class="btn btn-danger mr-1" @click="paramDel({{i}})">删除</button>
+                          <input type="text" class="form-control mr-1" placeholder="参数备注" value="{item.comment}">
+                          <button type="button" class="btn btn-danger mr-1" @click="paramDel({i})">删除</button>
                         </div>
                       </div>
                     </div>
@@ -294,14 +294,14 @@
                   <div class="row">
                     <legend class="col-form-label col-sm-2 pt-0">返回参数：</legend>
                     <div class="col-sm-8">
-                      <textarea class="form-control" rows="8" value="{{iface.response}}">{{iface.response}}</textarea>
+                      <textarea class="form-control" rows="8" value="{iface.response}">{iface.response}</textarea>
                     </div>
                   </div>
                 </fieldset>
                 <div class="form-group row">
                   <label for="inputText3" class="col-sm-2 col-form-label">备注信息：</label>
                   <div class="col-sm-8">
-                    <textarea class="form-control" rows="5" value="{{iface.comment}}">{{iface.comment}}</textarea>
+                    <textarea class="form-control" rows="5" value="{iface.comment}">{iface.comment}</textarea>
                     <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                   </div>
                 </div>
@@ -337,12 +337,12 @@
                 </thead>
                 <tbody>
                   <tr each="group:list">
-                    <td>{{group.group_name}}</td>
-                    <td>{{group.code}}</td>
+                    <td>{group.group_name}</td>
+                    <td>{group.code}</td>
                     <td>
-                      <a class="badge badge-primary pointer" href="#group/add/{{group.id}}"> 添加</a>
-                      <a class="badge badge-success pointer ml-2" href="#group/edit/{{group.id}}">修改</a>
-                      <span class="badge badge-danger pointer ml-2" style="cursor:pointer" @click="groupDel(`{{group.id}}`)">删除</span>
+                      <a class="badge badge-primary pointer" href="#group/add/{group.id}"> 添加</a>
+                      <a class="badge badge-success pointer ml-2" href="#group/edit/{group.id}">修改</a>
+                      <span class="badge badge-danger pointer ml-2" style="cursor:pointer" @click="groupDel(`{group.id}`)">删除</span>
                     </td>
                   </tr>
                 </tbody>
@@ -364,13 +364,13 @@
               <div class="form-group row">
                 <label for="inputText3" class="col-sm-2 col-form-label">显示名称：</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" placeholder="显示名称" value="{{group_name}}">
+                  <input type="text" class="form-control" placeholder="显示名称" value="{group_name}">
                 </div>
               </div>
               <div class="form-group row">
                 <label for="inputText3" class="col-sm-2 col-form-label">分组标识：</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" placeholder="分组标识" value="{{code}}">
+                  <input type="text" class="form-control" placeholder="分组标识" value="{code}">
                 </div>
               </div>
               <div class="form-group row">
@@ -406,12 +406,12 @@
                 </thead>
                 <tbody>
                   <tr each="set:list">
-                    <td>{{set.userName}}</td>
-                    <td>{{set.host}}</td>
+                    <td>{set.userName}</td>
+                    <td>{set.host}</td>
                     <td>
-                      <a class="badge badge-primary" href="#setting/add/{{set.id}}"> 添加</a>
-                      <a class="badge badge-success ml-2" href="#setting/edit/{{set.id}}">修改</a>
-                      <span class="badge badge-danger ml-2" style="cursor:pointer" @click="setDel(`{{set.id}}`)">删除</span>
+                      <a class="badge badge-primary" href="#setting/add/{set.id}"> 添加</a>
+                      <a class="badge badge-success ml-2" href="#setting/edit/{set.id}">修改</a>
+                      <span class="badge badge-danger ml-2" style="cursor:pointer" @click="setDel(`{set.id}`)">删除</span>
                     </td>
                   </tr>
                 </tbody>
@@ -435,13 +435,13 @@
               <div class="form-group row">
                 <label for="inputText3" class="col-sm-2 col-form-label pl-4">用户名称：</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" placeholder="用户名称" value="{{userName}}">
+                  <input type="text" class="form-control" placeholder="用户名称" value="{userName}">
                 </div>
               </div>
               <div class="form-group row">
                 <label for="inputText3" class="col-sm-2 col-form-label pl-4">主机名称：</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" placeholder="主机名称" value="{{host}}">
+                  <input type="text" class="form-control" placeholder="主机名称" value="{host}">
                 </div>
               </div>
               <div class="form-group row">

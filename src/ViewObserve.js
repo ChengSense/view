@@ -1,6 +1,7 @@
 import { global, View } from "./ViewIndex";
 import { cacher } from "./ViewResolver";
 import { Path } from "./ViewScope";
+import { clone } from "./ViewLang";
 
 export function observe(target, callSet, callGet) {
 
@@ -15,22 +16,31 @@ export function observe(target, callSet, callGet) {
   }
 
   function walk(object, prop, root, oldObject) {
-    var value = object[prop], oldValue;
-    if (oldObject != undefined) oldValue = oldObject[prop];
     var path = root ? `${root}.${prop}` : prop;
+    var value = object[prop];
     if (value instanceof View) {
-      define(object, prop, path, oldValue);
+      define(object, prop, path);
+    }
+    else if (typeof value == "object" && oldObject != undefined) {
+      watcher(value, path, oldObject[prop]);
+      define(object, prop, path);
     }
     else if (typeof value == "object") {
-      watcher(value, path, oldValue);
-      define(object, prop, path, oldValue);
+      watcher(value, path);
+      define(object, prop, path);
+    }
+    else if (oldObject != undefined) {
+      define(object, prop, path);
+      var oldValue = oldObject[prop];
+      var oldCache = global.$cache;
+      mq.publish(target, "set", [oldValue, oldCache, object]);
     }
     else {
-      define(object, prop, path, oldValue);
+      define(object, prop, path);
     }
   }
 
-  function define(object, prop, path, oldValue) {
+  function define(object, prop, path) {
     var value = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
@@ -42,8 +52,9 @@ export function observe(target, callSet, callGet) {
         var oldValue = value;
         var oldCache = cache;
         cache = new Map();
-        watcher(value = val, path, oldValue);
-        mq.publish(target, "set", [oldValue, oldCache, object]);
+        watcher(value = clone(val), path, oldValue);
+        if (typeof value != "object"||value instanceof View)
+          mq.publish(target, "set", [oldValue, oldCache, object]);
       }
     });
   }
@@ -58,7 +69,7 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function () {
               var data = method.apply(this, arguments);
-              cacher(getCache(), 0, 1, this);
+              cacher(getCache(), this);
               return data;
             }
           });
@@ -68,7 +79,7 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function () {
               var data = method.apply(this, arguments);
-              cacher(getCache(), this.length, 1, this);
+              cacher(getCache(), this);
               return data;
             }
           });
@@ -78,19 +89,14 @@ export function observe(target, callSet, callGet) {
             writable: true,
             value: function (i, l) {
               if (0 < this.length) {
-                i = new Number(i); let length = this.length;
+                let length = this.length;
                 var data = method.apply(this, arguments);
-                if (i < length && arguments.length > 2) {
-                  var index = length; this.$index = length;
+                if (arguments.length > 2) {
+                  var index = this.$index = length;
                   this.$length = this.length;
                   while (index < this.$length) walk(this, index++, root);
                 }
-                else if (arguments.length > 2) {
-                  var index = i = this.$index = length;
-                  this.$length = this.length;
-                  while (index < this.$length) walk(this, index++, root);
-                }
-                cacher(getCache(), i, l, this, arguments.length - 2);
+                cacher(getCache(), this, arguments.length - 2);
                 delete this.$index; delete this.$length;
                 return data;
               }
@@ -105,7 +111,7 @@ export function observe(target, callSet, callGet) {
               var data = method.call(this, i);
               this.$index = index, this.$length = this.length;
               while (index < this.length) walk(this, index++, root);
-              cacher(getCache(), this.$index, 0, this, 1);
+              cacher(getCache(), this, 1);
               delete this.$index; delete this.$length;
               return data;
             }

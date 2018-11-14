@@ -33,8 +33,8 @@
     <div class='x-calendar'>
       <div class='x-calendar-header text-center'>
         <span class='x-icon x-arrowhead-w' @click="ml()"><</span>
-        <span class='x-calendar-option' style='width: {{width}}px;'>
-          <span class='x-calendar-title' @click="go()">{{title}}</span>
+        <span class='x-calendar-option' style='width: {width}px;'>
+          <span class='x-calendar-title' @click="go()">{title}</span>
         </span>
         <span class='x-icon x-arrowhead-e' @click="mr()">></span>
       </div>
@@ -43,13 +43,13 @@
         <table class="table">
           <thead class='x-calendar-week-body'>
             <tr>
-              <td each='i:week'>{{i}}</td>
+              <td each='i:week'>{i}</td>
             </tr>
           </thead>
           <tbody class='x-calendar-date-body'>
             <tr each='cels:datePicker'>
-              <td class="text-center" role='handle' each='cel:cels' data-year='{{cel.year}}' data-month='{{cel.month}}' data-date='{{cel.date}}'>
-                <span>{{cel.date}}</span>
+              <td class="text-center" role='handle' each='cel:cels' data-year='{cel.year}' data-month='{cel.month}' data-date='{cel.date}'>
+                <span>{cel.date}</span>
               </td>
             </tr>
           </tbody>
@@ -58,21 +58,21 @@
         <table class='x-calendar-month-body table'>
           <tr each='cels:month'>
             <td role='mhandle' each='cel:cels' data-month='cel'>
-              <span>{{cel}}</span>
+              <span>{cel}</span>
             </td>
           </tr>
         </table>
         <table class='x-calendar-year-body table'>
           <tr each='cels:yearPicker'>
-            <td role='yhandle' each='cel:cels' data-year='{{cel}}'>
-              <span>{{cel}}</span>
+            <td role='yhandle' each='cel:cels' data-year='{cel}'>
+              <span>{cel}</span>
             </td>
           </tr>
         </table>
         }
       </div>
       <div class='x-calendar-footer   text-center'>
-        <span>{{now}}</span>
+        <span>{now}</span>
       </div>
     </div>
   </view>
