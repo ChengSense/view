@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>main.html</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div v-for="(item,id) in list" v-bind:data-row="[id]"> {{item.i}} </div>
+    <button @click="shift1()">{{shift}}</button>
+    <button @click="pop1()">{{pop}}</button>
+    <button @click="push1()">{{push}}</button>
+    <button @click="splice1()">{{splice}}</button>
+  </div>
+</body>
+
+</html>
+<script type="text/javascript">
+  var app = new Vue({
+    el: "#app",
+    data: {
+      list: [{ i: 1 }, { i: 2 }, { i: 3 }, { i: 4 }, { i: 5 }, { i: 6 }, { i: 7 }, { i: 8 }, { i: 9 }, { i: 10 }],
+      pop: "pop！",
+      shift: "shift！",
+      push: "push！",
+      splice: "splice！"
+    },
+    methods: {
+      pop1(el) {
+        this.list.pop();
+      },
+      shift1() {
+        this.list.shift();
+      },
+      push1() {
+        this.list.push({ i: this.list.length + 1 });
+      },
+      splice1() {
+        this.list.splice(8, 0,{ i: 555555555 },{ i: 555555555 });
+      }
+    }
+  });
+
+</script>
