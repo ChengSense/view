@@ -28,17 +28,10 @@
     .flex-column {
       box-shadow: 0 1px 2px hsla(0, 0%, 60%, .05);
       border-right: 1px solid #ebebeb;
-    }
-
-    .fixed-left {
       position: fixed;
-      height: calc(100vh);
-      width: 8%;
+      height: calc(100vh - 57px);
+      width: 160px;
       display: block;
-    }
-
-    .fixed-left a {
-      height: 60px;
     }
    
   </style>
@@ -48,19 +41,19 @@
   <header>
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
       <div class="container">
-        <div class="collapse navbar-collapse" id="navbarColor02">
+        <div class="collapse navbar-collapse">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#">首页</a>
+              <a class="nav-link" href="#home">首页</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">分组</a>
+              <a class="nav-link" href="#group">分组</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">接口</a>
+              <a class="nav-link" href="#iface">接口</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">设置</a>
+              <a class="nav-link" href="#setting">设置</a>
             </li>
           </ul>
           <form class="form-inline">
@@ -73,19 +66,17 @@
   <main class="container">
     <div class="row">
       <div class="col-2 text-center">
-        <div class="nav flex-column pt-5 fixed-left" role="tablist" aria-orientation="vertical">
-          <a class="nav-link nav-link-h" href="#home" role="tab">主页</a>
-          <a class="nav-link nav-link-h" href="#group" role="tab">分组</a>
-          <a class="nav-link nav-link-h" href="#iface" role="tab">接口</a>
-          <a class="nav-link nav-link-h" href="#setting" role="tab">设置</a>
-          <a class="nav-link nav-link-h" href="#iface" role="tab">成员</a>
+        <div class="nav flex-column pt-5" role="tablist" aria-orientation="vertical">
+          <a class="nav-link" href="#home" role="tab">主页</a>
+          <a class="nav-link" href="#group" role="tab">分组</a>
+          <a class="nav-link" href="#iface" role="tab">接口</a>
+          <a class="nav-link" href="#setting" role="tab">设置</a>
+          <a class="nav-link" href="#iface" role="tab">成员</a>
         </div>
       </div>
       <div class="col-10">
-        <div class="tab-content pt-5  text-left">
-
+        <div class="tab-content pt-5 text-left">
           {@router}
-
           <div id="home">
             <h5 class="mb-0 btn btn-link">
               项目统计
