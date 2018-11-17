@@ -137,9 +137,23 @@ var view = (function (exports) {
   }
 
   extend(Node, {
-    on: function on(type, methd) {
-      this.addEventListener(type, methd);
-      return this;
+    on: function on(type, handler) {
+      if (this.addEventListener) {
+        this.addEventListener(type, handler, false);
+      } else if (this.attachEvent) {
+        this.attachEvent('on' + type, handler);
+      } else {
+        element['on' + type] + handler;
+      }
+    },
+    off: function off(type, handler) {
+      if (this.addEventListener) {
+        this.removeEventListener(type, handler, false);
+      } else if (this.detachEvent) {
+        this.detachEvent('on' + type, handler);
+      } else {
+        element['on' + type] = null;
+      }
     },
     reappend: function reappend(node) {
       each(slice(this.childNodes), function (child) {
@@ -155,7 +169,6 @@ var view = (function (exports) {
       if (this.nextSibling) this.parentNode.insertBefore(node, this.nextSibling);else this.parentNode.appendChild(node);
     }
   });
-
   extend(NodeList, {
     on: function on(type, call) {
       each(this, function (node) {

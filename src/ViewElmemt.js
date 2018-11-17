@@ -12,9 +12,23 @@ export function query(express) {
 }
 
 extend(Node, {
-  on(type, methd) {
-    this.addEventListener(type, methd);
-    return this;
+  on: function (type, handler) {
+    if (this.addEventListener) {
+      this.addEventListener(type, handler, false);
+    } else if (this.attachEvent) {
+      this.attachEvent('on' + type, handler)
+    } else {
+      element['on' + type] + handler;
+    }
+  },
+  off: function (type, handler) {
+    if (this.addEventListener) {
+      this.removeEventListener(type, handler, false);
+    } else if (this.detachEvent) {
+      this.detachEvent('on' + type, handler)
+    } else {
+      element['on' + type] = null;
+    }
   },
   reappend(node) {
     each(slice(this.childNodes), function (child) {
@@ -33,7 +47,6 @@ extend(Node, {
       this.parentNode.appendChild(node);
   }
 });
-
 extend(NodeList, {
   on(type, call) {
     each(this, function (node) {
