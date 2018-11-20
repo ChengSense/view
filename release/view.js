@@ -805,12 +805,11 @@ var view = (function (exports) {
           var oldCache = cache;
           cache = new Map();
           watcher(value = clone(val), path, oldValue);
-          if (setable || (typeof value === "undefined" ? "undefined" : _typeof(value)) != "object") mq.publish(target, "set", [oldValue, oldCache, object]);
+          mq.publish(target, "set", [oldValue, oldCache, object]);
         }
       });
     }
 
-    var setable = true;
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     function array(object, root) {
       meths.forEach(function (name) {
@@ -820,10 +819,8 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
-                setable = false;
                 var data = method.apply(this, arguments);
                 cacher(getCache(), this);
-                setable = true;
                 return data;
               }
             });
@@ -832,10 +829,8 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
-                setable = false;
                 var data = method.apply(this, arguments);
                 cacher(getCache(), this);
-                setable = true;
                 return data;
               }
             });
@@ -845,7 +840,6 @@ var view = (function (exports) {
               writable: true,
               value: function value(i, l) {
                 if (0 < this.length) {
-                  setable = false;
                   var length = this.length;
                   var data = method.apply(this, arguments);
                   if (arguments.length > 2) {
@@ -857,7 +851,6 @@ var view = (function (exports) {
                   }
                   cacher(getCache(), this, arguments.length - 2);
                   delete this.$index;delete this.$length;
-                  setable = true;
                   return data;
                 }
               }
@@ -867,7 +860,6 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value(i) {
-                setable = false;
                 var index = this.length;
                 var data = method.call(this, i);
                 this.$index = index, this.$length = this.length;
@@ -875,7 +867,6 @@ var view = (function (exports) {
                   walk(this, index++, root);
                 }cacher(getCache(), this, 1);
                 delete this.$index;delete this.$length;
-                setable = true;
                 return data;
               }
             });
@@ -884,10 +875,8 @@ var view = (function (exports) {
             Object.defineProperty(object, name, {
               writable: true,
               value: function value() {
-                setable = false;
                 var data = method.apply(this, arguments);
                 notify([]);
-                setable = true;
                 return data;
               }
             });

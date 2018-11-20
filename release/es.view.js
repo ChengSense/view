@@ -824,13 +824,11 @@ function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = clone(val), path, oldValue);
-        if (setable || typeof value != "object")
-          mq.publish(target, "set", [oldValue, oldCache, object]);
+        mq.publish(target, "set", [oldValue, oldCache, object]);
       }
     });
   }
 
-  let setable = true;
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
   function array(object, root) {
     meths.forEach(function (name) {
@@ -840,10 +838,8 @@ function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              setable = false;
               var data = method.apply(this, arguments);
               cacher(getCache(), this);
-              setable = true;
               return data;
             }
           });
@@ -852,10 +848,8 @@ function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              setable = false;
               var data = method.apply(this, arguments);
               cacher(getCache(), this);
-              setable = true;
               return data;
             }
           });
@@ -865,7 +859,6 @@ function observe(target, callSet, callGet) {
             writable: true,
             value: function (i, l) {
               if (0 < this.length) {
-                setable = false;
                 let length = this.length;
                 var data = method.apply(this, arguments);
                 if (arguments.length > 2) {
@@ -875,7 +868,6 @@ function observe(target, callSet, callGet) {
                 }
                 cacher(getCache(), this, arguments.length - 2);
                 delete this.$index; delete this.$length;
-                setable = true;
                 return data;
               }
             }
@@ -885,14 +877,12 @@ function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function (i) {
-              setable = false;
               let index = this.length;
               var data = method.call(this, i);
               this.$index = index, this.$length = this.length;
               while (index < this.length) walk(this, index++, root);
               cacher(getCache(), this, 1);
               delete this.$index; delete this.$length;
-              setable = true;
               return data;
             }
           });
@@ -901,10 +891,8 @@ function observe(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              setable = false;
               var data = method.apply(this, arguments);
               notify([]);
-              setable = true;
               return data;
             }
           });
