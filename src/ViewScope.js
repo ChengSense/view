@@ -46,20 +46,21 @@ export function Path(path) {
 }
 
 export function setVariable(scope, variable, path) {
+  path = `${Path(path)}`
   Object.defineProperty(scope, variable, {
     get() {
       return new Function('scope',
         `
-        return scope${Path(path)};
+        return scope${path};
         `
-      )(scope);
+      )(scope, path);
     },
     set(val) {
-      new Function('scope', 'val',
+      new Function('scope', 'path', 'val',
         `
-        scope${Path(path)}=val;
+        scope${path}=val;
         `
-      )(scope, val);
+      )(scope, path, val);
     }
   });
 }

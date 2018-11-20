@@ -264,12 +264,13 @@ var view = (function (exports) {
   }
 
   function setVariable(scope, variable, path) {
+    path = "" + Path(path);
     Object.defineProperty(scope, variable, {
       get: function get() {
-        return new Function('scope', "\n        return scope" + Path(path) + ";\n        ")(scope);
+        return new Function('scope', "\n        return scope" + path + ";\n        ")(scope, path);
       },
       set: function set(val) {
-        new Function('scope', 'val', "\n        scope" + Path(path) + "=val;\n        ")(scope, val);
+        new Function('scope', 'path', 'val', "\n        scope" + path + "=val;\n        ")(scope, path, val);
       }
     });
   }
