@@ -1,7 +1,7 @@
 import { View, global } from "./ViewIndex";
 import { each, slice, extention, extend, blank } from "./ViewLang";
 import { Compiler, compoNode } from "./ViewCompiler";
-import { code, codex } from "./ViewScope";
+import { codec, codex } from "./ViewScope";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -17,7 +17,7 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = codec(node.clas.nodeValue, node.scope);
       let $cache = global.$cache;
       node.path = [global.$path];
       if (blank(app)) return;

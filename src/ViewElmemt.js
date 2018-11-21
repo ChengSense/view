@@ -20,6 +20,7 @@ extend(Node, {
     } else {
       element['on' + type] + handler;
     }
+    return this;
   },
   off: function (type, handler) {
     if (this.addEventListener) {
@@ -29,6 +30,7 @@ extend(Node, {
     } else {
       element['on' + type] = null;
     }
+    return this;
   },
   reappend(node) {
     each(slice(this.childNodes), function (child) {

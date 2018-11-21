@@ -121,6 +121,7 @@ extend(Node, {
     } else {
       element['on' + type] + handler;
     }
+    return this;
   },
   off: function (type, handler) {
     if (this.addEventListener) {
@@ -130,6 +131,7 @@ extend(Node, {
     } else {
       element['on' + type] = null;
     }
+    return this;
   },
   reappend(node) {
     each(slice(this.childNodes), function (child) {
@@ -205,11 +207,21 @@ function initCompiler(node, children) {
   return list;
 }
 
-function code(_express, _scope) {
+function codec(_express, _scope) {
   try {
     global.$path = undefined;
     global.$cache = undefined;
     _express = _express.replace($express, "$1");
+    return Code(_express)(_scope);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+function code(_express, _scope) {
+  try {
+    global.$path = undefined;
+    global.$cache = undefined;
     return Code(_express)(_scope);
   } catch (e) {
     return undefined;
@@ -257,14 +269,14 @@ function setVariable(scope, variable, path) {
         `
         return scope${path};
         `
-      )(scope, path);
+      )(scope);
     },
     set(val) {
-      new Function('scope', 'path', 'val',
+      new Function('scope', 'val',
         `
         scope${path}=val;
         `
-      )(scope, path, val);
+      )(scope, val);
     }
   });
 }
@@ -610,7 +622,7 @@ var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = codec(node.clas.nodeValue, node.scope);
       let $cache = global.$cache;
       node.path = [global.$path];
       if (blank(app)) return;

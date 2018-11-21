@@ -145,6 +145,7 @@ var view = (function (exports) {
       } else {
         element['on' + type] + handler;
       }
+      return this;
     },
     off: function off(type, handler) {
       if (this.addEventListener) {
@@ -154,6 +155,7 @@ var view = (function (exports) {
       } else {
         element['on' + type] = null;
       }
+      return this;
     },
     reappend: function reappend(node) {
       each(slice(this.childNodes), function (child) {
@@ -223,11 +225,21 @@ var view = (function (exports) {
     return list;
   }
 
-  function code(_express, _scope) {
+  function codec(_express, _scope) {
     try {
       global$1.$path = undefined;
       global$1.$cache = undefined;
       _express = _express.replace($express, "$1");
+      return Code(_express)(_scope);
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function code(_express, _scope) {
+    try {
+      global$1.$path = undefined;
+      global$1.$cache = undefined;
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
@@ -267,10 +279,10 @@ var view = (function (exports) {
     path = "" + Path(path);
     Object.defineProperty(scope, variable, {
       get: function get() {
-        return new Function('scope', "\n        return scope" + path + ";\n        ")(scope, path);
+        return new Function('scope', "\n        return scope" + path + ";\n        ")(scope);
       },
       set: function set(val) {
-        new Function('scope', 'path', 'val', "\n        scope" + path + "=val;\n        ")(scope, path, val);
+        new Function('scope', 'val', "\n        scope" + path + "=val;\n        ")(scope, val);
       }
     });
   }
@@ -601,7 +613,7 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
-        var app = code(node.clas.nodeValue, node.scope);
+        var app = codec(node.clas.nodeValue, node.scope);
         var $cache = global$1.$cache;
         node.path = [global$1.$path];
         if (blank(app)) return;

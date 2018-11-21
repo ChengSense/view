@@ -1,11 +1,21 @@
 import { $express, $expres } from "./ViewExpress";
 import { global } from "./ViewIndex";
 
-export function code(_express, _scope) {
+export function codec(_express, _scope) {
   try {
     global.$path = undefined;
     global.$cache = undefined;
     _express = _express.replace($express, "$1");
+    return Code(_express)(_scope);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+export function code(_express, _scope) {
+  try {
+    global.$path = undefined;
+    global.$cache = undefined;
     return Code(_express)(_scope);
   } catch (e) {
     return undefined;
@@ -53,14 +63,14 @@ export function setVariable(scope, variable, path) {
         `
         return scope${path};
         `
-      )(scope, path);
+      )(scope);
     },
     set(val) {
-      new Function('scope', 'path', 'val',
+      new Function('scope', 'val',
         `
         scope${path}=val;
         `
-      )(scope, path, val);
+      )(scope, val);
     }
   });
 }
