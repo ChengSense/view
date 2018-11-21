@@ -808,10 +808,19 @@ var view = (function (exports) {
   function insertNode(nodes, node) {
     try {
       each(nodes, function (child) {
-        if (child.node && child.node.parentNode) {
-          node = child.node;
-          return node;
-        }      node = insertNode(child.childNodes);
+        if (child.childNodes.length) {
+          var children = child.childNodes[child.childNodes.length - 1];
+          if (children.node && children.node.parentNode) {
+            node = children.node;
+            return node;
+          }
+          node = insertNode([children]);
+        } else {
+          if (child.node && child.node.parentNode) {
+            node = child.node;
+            return node;
+          }
+        }
       });
       return node;
     } catch (e) {
