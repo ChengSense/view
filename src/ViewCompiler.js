@@ -219,58 +219,68 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function model(node, scope) {
-    var owner = node.ownerElement;
-    (input[owner.type] || input[owner.localName] || input.other)(node, scope);
+    let owner = node.ownerElement;
+    owner._express = node.nodeValue.replace($express, "$1");
+    let _express = `scope${Path(owner._express)}`;
+    let methd = (input[owner.type] || input[owner.localName] || input.other);
+    methd(node, scope, _express);
   }
 
   let input = {
-    checkbox(node, scope) {
-      var owner = node.ownerElement, handle;
-      owner._express = node.nodeValue.replace($express, "$1");
-      owner.on("change", handle = function () {
-        new Function('scope',
-          `
-            scope${Path(owner._express)}.${owner.checked ? "ones" : "remove"}('${owner.value.replace(/(\'|\")/g, "\\$1")}');
-          `
-        )(scope);
-      });
+    checkbox(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
+          new Function('scope', express)(scope);
+        });
+        let value = code(owner._express, scope);
+        if (value.has(owner.value)) owner.checked = true;
+      } catch (e) {
+        console.log(e);
+      }
     },
-    radio(node, scope) {
-      var owner = node.ownerElement, handle;
-      owner._express = node.nodeValue.replace($express, "$1");
-      owner.on("change", handle = function () {
-        new Function('scope',
-          `
-          scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
-          `
-        )(scope);
-      });
-      let value = code(owner._express, scope);
-      owner.name = global.$path;
+    radio(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        });
+        let value = code(owner._express, scope);
+        if (value == owner.value) owner.checked = true;
+        owner.name = global.$path;
+      } catch (error) {
+        console.log(e);
+      }
     },
-    select(node, scope) {
-      var owner = node.ownerElement, handle;
-      owner._express = node.nodeValue.replace($express, "$1");
-      owner.on("change", handle = function () {
-        new Function('scope',
-          `
-          scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
-          `
-        )(scope);
-      });
-      let value = code(owner._express, scope);
-      blank(value) ? handle() : owner.value = value;
+    select(node, scope, _express) {
+      try {
+        var owner = node.ownerElement, handle;
+        owner.on("change", handle = function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        });
+        let value = code(owner._express, scope);
+        blank(value) ? handle() : owner.value = value;
+      } catch (error) {
+        console.log(e);
+      }
     },
-    other(node, scope) {
-      var owner = node.ownerElement, handle;
-      owner._express = node.nodeValue.replace($express, "$1");
-      owner.on("change", handle = function () {
-        new Function('scope',
-          `
-          scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
-          `
-        )(scope);
-      });
+    other(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        });
+      } catch (error) {
+        console.log(e);
+      }
     }
   }
 

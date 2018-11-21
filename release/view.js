@@ -492,45 +492,68 @@ var view = (function (exports) {
 
     function model(node, scope) {
       var owner = node.ownerElement;
-      (input[owner.type] || input[owner.localName] || input.other)(node, scope);
+      owner._express = node.nodeValue.replace($express, "$1");
+      var _express = "scope" + Path(owner._express);
+      var methd = input[owner.type] || input[owner.localName] || input.other;
+      methd(node, scope, _express);
     }
 
     var input = {
-      checkbox: function checkbox(node, scope) {
-        var owner = node.ownerElement,
-            handle;
-        owner._express = node.nodeValue.replace($express, "$1");
-        owner.on("change", handle = function handle() {
-          new Function('scope', "\n            scope" + Path(owner._express) + "." + (owner.checked ? "ones" : "remove") + "('" + owner.value.replace(/(\'|\")/g, "\\$1") + "');\n          ")(scope);
-        });
+      checkbox: function checkbox(node, scope, _express) {
+        try {
+          var owner = node.ownerElement;
+          owner.on("change", function () {
+            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
+            var express = _express + "." + (owner.checked ? "ones" : "remove") + "('" + _value + "');";
+            new Function('scope', express)(scope);
+          });
+          var value = code(owner._express, scope);
+          if (value.has(owner.value)) owner.checked = true;
+        } catch (e) {
+          console.log(e);
+        }
       },
-      radio: function radio(node, scope) {
-        var owner = node.ownerElement,
-            handle;
-        owner._express = node.nodeValue.replace($express, "$1");
-        owner.on("change", handle = function handle() {
-          new Function('scope', "\n          scope" + Path(owner._express) + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "';\n          ")(scope);
-        });
-        var value = code(owner._express, scope);
-        owner.name = global$1.$path;
+      radio: function radio(node, scope, _express) {
+        try {
+          var owner = node.ownerElement;
+          owner.on("change", function () {
+            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
+            var express = _express + "='" + _value + "';";
+            new Function('scope', express)(scope);
+          });
+          var value = code(owner._express, scope);
+          if (value == owner.value) owner.checked = true;
+          owner.name = global$1.$path;
+        } catch (error) {
+          console.log(e);
+        }
       },
-      select: function select(node, scope) {
-        var owner = node.ownerElement,
-            handle;
-        owner._express = node.nodeValue.replace($express, "$1");
-        owner.on("change", handle = function handle() {
-          new Function('scope', "\n          scope" + Path(owner._express) + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "';\n          ")(scope);
-        });
-        var value = code(owner._express, scope);
-        blank(value) ? handle() : owner.value = value;
+      select: function select(node, scope, _express) {
+        try {
+          var owner = node.ownerElement,
+              handle;
+          owner.on("change", handle = function handle() {
+            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
+            var express = _express + "='" + _value + "';";
+            new Function('scope', express)(scope);
+          });
+          var value = code(owner._express, scope);
+          blank(value) ? handle() : owner.value = value;
+        } catch (error) {
+          console.log(e);
+        }
       },
-      other: function other(node, scope) {
-        var owner = node.ownerElement,
-            handle;
-        owner._express = node.nodeValue.replace($express, "$1");
-        owner.on("change", handle = function handle() {
-          new Function('scope', "\n          scope" + Path(owner._express) + "='" + owner.value.replace(/(\'|\")/g, "\\$1") + "';\n          ")(scope);
-        });
+      other: function other(node, scope, _express) {
+        try {
+          var owner = node.ownerElement;
+          owner.on("change", function () {
+            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
+            var express = _express + "='" + _value + "';";
+            new Function('scope', express)(scope);
+          });
+        } catch (error) {
+          console.log(e);
+        }
       }
     };
 
