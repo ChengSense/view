@@ -27,6 +27,7 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
+    extend(app.action, { $action: app.action, $view: this.view });
     app.model.$action = app.action;
     resolver["view"](this.view, node, app.model, this.content, this);
   }

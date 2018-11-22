@@ -247,10 +247,16 @@ function Code(_express) {
 
 function codev(_express, _scope, _event) {
   var array = _express.toString().match(/\(([^)]*)\)/);
-  var name = _express.toString().replace(array[0], "");
-  var args = code(`[${array[1]}]`, _scope);
-  args.push(_event);
-  code(name, _scope.$action).apply(_scope, args);
+  if (array) {
+    var name = _express.toString().replace(array[0], "");
+    var args = code(`[${array[1]}]`, _scope);
+    args.push(_event);
+    code(name, _scope.$action).apply(_scope, args);
+  }
+  else {
+    var args = [_event];
+    code(_express, _scope.$action).apply(_scope, args);
+  }
 }
 
 function Path(path) {
@@ -818,6 +824,10 @@ function insertion(nodes, node) {
 function insertNode(nodes, node) {
   try {
     each(nodes, child => {
+      if (child.node && child.node.parentNode) {
+        node = child.node;
+        return node;
+      }
       if (child.childNodes.length) {
         let children = child.childNodes[child.childNodes.length - 1];
         if (children.node && children.node.parentNode) {
@@ -825,11 +835,6 @@ function insertNode(nodes, node) {
           return node;
         }
         node = insertNode([children]);
-      } else {
-        if (child.node && child.node.parentNode) {
-          node = child.node;
-          return node;
-        }
       }
     });
     return node;
@@ -1156,6 +1161,7 @@ class View$1 {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
+    extend(app.action, { $action: app.action, $view: this.view });
     app.model.$action = app.action;
     resolver["view"](this.view, node, app.model, this.content, this);
   }

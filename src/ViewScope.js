@@ -41,10 +41,16 @@ export function Code(_express) {
 
 export function codev(_express, _scope, _event) {
   var array = _express.toString().match(/\(([^)]*)\)/);
-  var name = _express.toString().replace(array[0], "");
-  var args = code(`[${array[1]}]`, _scope);
-  args.push(_event);
-  code(name, _scope.$action).apply(_scope, args);
+  if (array) {
+    var name = _express.toString().replace(array[0], "");
+    var args = code(`[${array[1]}]`, _scope);
+    args.push(_event);
+    code(name, _scope.$action).apply(_scope, args);
+  }
+  else {
+    var args = [_event];
+    code(_express, _scope.$action).apply(_scope, args);
+  }
 }
 
 export function Path(path) {

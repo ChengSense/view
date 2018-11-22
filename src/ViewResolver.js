@@ -163,6 +163,10 @@ function insertion(nodes, node) {
 function insertNode(nodes, node) {
   try {
     each(nodes, child => {
+      if (child.node && child.node.parentNode) {
+        node = child.node;
+        return node;
+      }
       if (child.childNodes.length) {
         let children = child.childNodes[child.childNodes.length - 1];
         if (children.node && children.node.parentNode) {
@@ -170,11 +174,6 @@ function insertNode(nodes, node) {
           return node;
         }
         node = insertNode([children]);
-      } else {
-        if (child.node && child.node.parentNode) {
-          node = child.node;
-          return node;
-        }
       }
     });
     return node;

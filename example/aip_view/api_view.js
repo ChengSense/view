@@ -1,7 +1,7 @@
 (function () {
 
   function getId() {
-    return (((1 + Math.random()) * 0x10000000) | 0).toString(16).substring(1);;
+    return (((1 + Math.random()) * 0x10000000) | 0).toString(16).substring(1);
   }
 
   let group = [{
@@ -228,13 +228,13 @@ var iface_save = new View({
   },
   action: {
     ifaceSave() {
-      if (app.model.add == "add") {
-        let a = clone(app.model.iface);
+      if (app.model.add == "add" || app.model.add == "copy") {
+        let a = app.model.iface;
         a.id = api.getId();
         a.group_name = api.group.getGroup(a.gid).group_name
         api.api.add(a);
       } else {
-        let a = clone(app.model.iface);
+        let a = app.model.iface;
         a.group_name = api.group.getGroup(a.gid).group_name
         api.api.save(a);
       }
@@ -374,12 +374,11 @@ let router = new Router(app, {
           app.model.iface = api.iface();
           break;
         case "edit":
-          app.model.iface = clone(iface);
+          app.model.iface = iface;
           break;
         case "copy":
-          app.model.iface = clone(iface);
+          app.model.iface = iface;
           app.model.iface.id = "";
-          app.model.add = "add";
           break;
       }
     }
@@ -389,7 +388,7 @@ let router = new Router(app, {
     router: "router",
     action(param) {
       let iface = api.api.getApi(param.id);
-      app.model.iface = clone(iface);
+      app.model.iface = iface;
     }
   },
   "group": {

@@ -243,10 +243,12 @@
               <div class="form-group row">
                 <div class="col-sm-2">
                   <h5 class="mb-0 btn btn-link">
-                    @when(add=="add"){ 
-                      新增接口 
-                    }.when{ 
-                      修改接口 
+                    @when(add=="add"){
+                      新增接口
+                    }.when(add=="edit"){
+                      修改接口
+                    }.when{
+                      复制接口
                     }
                   </h5>
                 </div>
