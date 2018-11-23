@@ -33,6 +33,23 @@ export function slice(obj) {
   return [].slice.call(obj);
 }
 
+export function inject(methds, parent) {
+  if (methds) 
+  Object.values(methds).forEach(methd => {
+    let root = assign(parent);
+    root.__proto__ = Function.__proto__;
+    methd.__proto__ = root;
+  });
+}
+
+function assign(object) {
+  let obj = {};
+  Object.keys(object).forEach(key => {
+    obj[key] = object[key];
+  });
+  return obj;
+}
+
 export function extention(object, parent) {
   object.__proto__ = parent;
   return object;
@@ -40,9 +57,9 @@ export function extention(object, parent) {
 
 export function extend(object, src) {
   var prototype = object.prototype || object.__proto__;
-  for (var key in src) {
+  Object.keys(src).forEach(key => {
     prototype[key] = src[key];
-  }
+  });
   return object;
 }
 

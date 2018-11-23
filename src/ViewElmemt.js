@@ -1,4 +1,5 @@
-import { each, extend, slice } from "./ViewLang";
+import { each, extend,extention, slice } from "./ViewLang";
+import { code } from "./ViewScope";
 
 export function query(express) {
   try {
@@ -11,24 +12,69 @@ export function query(express) {
   }
 }
 
+function listener(type, methds, scope) {
+  if (this.addEventListener) {
+    this.addEventListener(type, function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    }, false);
+  } 
+  else if (this.attachEvent) {
+    this.attachEvent('on' + type, function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(_event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    });
+  } 
+  else {
+    element['on' + type] = function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    };
+  }
+}
+
 extend(Node, {
-  on: function (type, handler) {
-    if (this.addEventListener) {
-      this.addEventListener(type, handler, false);
-    } else if (this.attachEvent) {
-      this.attachEvent('on' + type, handler)
-    } else {
-      element['on' + type] + handler;
+  on: function (type, handler, scope) {
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        this._manager.get(type).ones(handler);
+      }
+      else {
+        let methds = [handler];
+        this._manager.set(type, methds);
+        listener.call(this, type, methds, scope);
+      }
+    }
+    else {
+      let methds = [handler];
+      this._manager = new Map().set(type, methds);
+      listener.call(this, type, methds, scope);
     }
     return this;
   },
   off: function (type, handler) {
-    if (this.addEventListener) {
-      this.removeEventListener(type, handler, false);
-    } else if (this.detachEvent) {
-      this.detachEvent('on' + type, handler)
-    } else {
-      element['on' + type] = null;
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        this._manager.get(type).remove(handler);
+      }
     }
     return this;
   },
@@ -54,10 +100,12 @@ extend(NodeList, {
     each(this, function (node) {
       node.on(type, call);
     });
+    return this;
   },
   off(type, call) {
     each(this, function (node) {
       node.off(type, call);
     });
+    return this;
   }
 });

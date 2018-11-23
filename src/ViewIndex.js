@@ -1,6 +1,6 @@
 import { query } from "./ViewElmemt";
 import { init, initCompiler } from "./ViewInit";
-import { clone, slice, extend } from "./ViewLang";
+import { inject, slice } from "./ViewLang";
 import { observe } from "./ViewObserve";
 import { resolver } from "./ViewResolver";
 import { Router } from "./ViewRouter";
@@ -27,8 +27,11 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    extend(app.action, { $action: app.action, $view: this.view });
-    app.model.$action = app.action;
+    inject(app.action, {
+      $view: this.view,
+      $model: app.model,
+      $action: app.action
+    });
     resolver["view"](this.view, node, app.model, this.content, this);
   }
   component(app) {
@@ -70,4 +73,4 @@ function deepen(cache, object) {
 
 window.View = View;
 window.Router = Router;
-window.clone = clone;
+window.query = query;

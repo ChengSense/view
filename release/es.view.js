@@ -33,16 +33,41 @@ function slice(obj) {
   return [].slice.call(obj);
 }
 
+function inject(methds, parent) {
+  if (methds) 
+  Object.values(methds).forEach(methd => {
+    let root = assign(parent);
+    root.__proto__ = Function.__proto__;
+    methd.__proto__ = root;
+  });
+}
+
+function assign(object) {
+  let obj = {};
+  Object.keys(object).forEach(key => {
+    obj[key] = object[key];
+  });
+  return obj;
+}
+
 function extention(object, parent) {
   object.__proto__ = parent;
   return object;
 }
 
+function fextend(object, src) {
+  var prototype = object.__proto__;
+  Object.keys(src).forEach(key => {
+    prototype[key] = src[key];
+  });
+  return object;
+}
+
 function extend(object, src) {
   var prototype = object.prototype || object.__proto__;
-  for (var key in src) {
+  Object.keys(src).forEach(key => {
     prototype[key] = src[key];
-  }
+  });
   return object;
 }
 
@@ -101,68 +126,6 @@ extend(Array, {
   }
 });
 
-function query(express) {
-  try {
-    var doc = document.querySelectorAll(express);
-    return doc;
-  } catch (e) {
-    var newNode = document.createElement("div");
-    newNode.innerHTML = express.trim();
-    return newNode.childNodes;
-  }
-}
-
-extend(Node, {
-  on: function (type, handler) {
-    if (this.addEventListener) {
-      this.addEventListener(type, handler, false);
-    } else if (this.attachEvent) {
-      this.attachEvent('on' + type, handler);
-    } else {
-      element['on' + type] + handler;
-    }
-    return this;
-  },
-  off: function (type, handler) {
-    if (this.addEventListener) {
-      this.removeEventListener(type, handler, false);
-    } else if (this.detachEvent) {
-      this.detachEvent('on' + type, handler);
-    } else {
-      element['on' + type] = null;
-    }
-    return this;
-  },
-  reappend(node) {
-    each(slice(this.childNodes), function (child) {
-      child.parentNode.removeChild(child);
-    });
-    this.appendChild(node);
-    return this;
-  },
-  before(node) {
-    this.parentNode.insertBefore(node, this);
-  },
-  after(node) {
-    if (this.nextSibling)
-      this.parentNode.insertBefore(node, this.nextSibling);
-    else
-      this.parentNode.appendChild(node);
-  }
-});
-extend(NodeList, {
-  on(type, call) {
-    each(this, function (node) {
-      node.on(type, call);
-    });
-  },
-  off(type, call) {
-    each(this, function (node) {
-      node.off(type, call);
-    });
-  }
-});
-
 var $lang = /((@each|@when|\.when)\s*\((.*)\)\s*\{|\{\s*([^\{\}]*)\s*\}|\s*\}\s*|\.when\s*\{)/g;
 var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
@@ -175,37 +138,6 @@ var $component = /\{\s*\s*@([^\{\}]*)\s*\}/;
 var $close = /(^\s*\}\s*$)/;
 var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
 var $event = /^@(.*)/;
-
-function init(dom) {
-  each(dom, function (node) {
-    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
-      init(slice(node.childNodes));
-    if (node.nodeType == 3)
-      node.nodeValue.replace($lang, function (tag) {
-        var nodes = node.nodeValue.split(tag);
-        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
-        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
-        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
-      });
-  });
-  return dom;
-}
-
-function initCompiler(node, children) {
-  let list = children || [];
-  whiles(node, function (child) {
-    node.shift();
-    if (new RegExp($close).test(child.nodeValue)) return true;
-    var item = { clas: child.cloneNode(true), children: [] };
-    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
-    if (child.nodeType == 1) {
-      initCompiler(slice(child.childNodes), item.children);
-    }
-    else if (new RegExp($chen).test(child.nodeValue)) {
-      initCompiler(node, item.children);
-    }  });
-  return list;
-}
 
 function codec(_express, _scope) {
   try {
@@ -245,20 +177,6 @@ function Code(_express) {
   );
 }
 
-function codev(_express, _scope, _event) {
-  var array = _express.toString().match(/\(([^)]*)\)/);
-  if (array) {
-    var name = _express.toString().replace(array[0], "");
-    var args = code(`[${array[1]}]`, _scope);
-    args.push(_event);
-    code(name, _scope.$action).apply(_scope, args);
-  }
-  else {
-    var args = [_event];
-    code(_express, _scope.$action).apply(_scope, args);
-  }
-}
-
 function Path(path) {
   try {
     return path.replace(/(\w+)\.?/g, "['$1']");
@@ -285,6 +203,146 @@ function setVariable(scope, variable, path) {
       )(scope, val);
     }
   });
+}
+
+function query(express) {
+  try {
+    var doc = document.querySelectorAll(express);
+    return doc;
+  } catch (e) {
+    var newNode = document.createElement("div");
+    newNode.innerHTML = express.trim();
+    return newNode.childNodes;
+  }
+}
+
+function listener(type, methds, scope) {
+  if (this.addEventListener) {
+    this.addEventListener(type, function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    }, false);
+  } 
+  else if (this.attachEvent) {
+    this.attachEvent('on' + type, function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(_event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    });
+  } 
+  else {
+    element['on' + type] = function (event) {
+      methds.forEach(methd => {
+        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
+        args.push(event);
+        methd.apply(extention({
+          $view: methd.$view,
+          $action: methd.$action
+        }, methd.$model), args);
+      });
+    };
+  }
+}
+
+extend(Node, {
+  on: function (type, handler, scope) {
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        this._manager.get(type).ones(handler);
+      }
+      else {
+        let methds = [handler];
+        this._manager.set(type, methds);
+        listener.call(this, type, methds, scope);
+      }
+    }
+    else {
+      let methds = [handler];
+      this._manager = new Map().set(type, methds);
+      listener.call(this, type, methds, scope);
+    }
+    return this;
+  },
+  off: function (type, handler) {
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        this._manager.get(type).remove(handler);
+      }
+    }
+    return this;
+  },
+  reappend(node) {
+    each(slice(this.childNodes), function (child) {
+      child.parentNode.removeChild(child);
+    });
+    this.appendChild(node);
+    return this;
+  },
+  before(node) {
+    this.parentNode.insertBefore(node, this);
+  },
+  after(node) {
+    if (this.nextSibling)
+      this.parentNode.insertBefore(node, this.nextSibling);
+    else
+      this.parentNode.appendChild(node);
+  }
+});
+extend(NodeList, {
+  on(type, call) {
+    each(this, function (node) {
+      node.on(type, call);
+    });
+    return this;
+  },
+  off(type, call) {
+    each(this, function (node) {
+      node.off(type, call);
+    });
+    return this;
+  }
+});
+
+function init(dom) {
+  each(dom, function (node) {
+    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
+      init(slice(node.childNodes));
+    if (node.nodeType == 3)
+      node.nodeValue.replace($lang, function (tag) {
+        var nodes = node.nodeValue.split(tag);
+        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
+        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
+        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
+      });
+  });
+  return dom;
+}
+
+function initCompiler(node, children) {
+  let list = children || [];
+  whiles(node, function (child) {
+    node.shift();
+    if (new RegExp($close).test(child.nodeValue)) return true;
+    var item = { clas: child.cloneNode(true), children: [] };
+    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+    if (child.nodeType == 1) {
+      initCompiler(slice(child.childNodes), item.children);
+    }
+    else if (new RegExp($chen).test(child.nodeValue)) {
+      initCompiler(node, item.children);
+    }  });
+  return list;
 }
 
 function Compiler(node, scopes, childNodes, content, we) {
@@ -422,9 +480,17 @@ function Compiler(node, scopes, childNodes, content, we) {
       node.name.replace($event, function (key) {
         key = key.replace($event, "$1");
         let owner = node.ownerElement;
-        owner.on(key, function (event) {
-          codev(node.nodeValue, scope, event);
-        });
+        var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+        if (array) {
+          var name = node.nodeValue.toString().replace(array[0], "");
+          let methd = code(name, we.action);
+          if (array[1] != "") fextend(methd, { $params: array[1] });
+          owner.on(key, methd, scope);
+        }
+        else {
+          let methd = code(node.nodeValue, we.action);
+          owner.on(key, methd, scope);
+        }
       });
     }
   }
@@ -1161,8 +1227,11 @@ class View$1 {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    extend(app.action, { $action: app.action, $view: this.view });
-    app.model.$action = app.action;
+    inject(app.action, {
+      $view: this.view,
+      $model: app.model,
+      $action: app.action
+    });
     resolver["view"](this.view, node, app.model, this.content, this);
   }
   component(app) {
@@ -1203,6 +1272,6 @@ function deepen(cache, object) {
 
 window.View = View$1;
 window.Router = Router;
-window.clone = clone;
+window.query = query;
 
 export { global, View$1 as View };

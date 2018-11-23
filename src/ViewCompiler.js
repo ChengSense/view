@@ -1,7 +1,7 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles } from "./ViewLang";
+import { blank, forEach, slice, whiles, fextend } from "./ViewLang";
 import { deeping, resolver } from "./ViewResolver";
-import { code, codev, codex, Path, setVariable } from "./ViewScope";
+import { code, codex, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
@@ -139,9 +139,17 @@ export function Compiler(node, scopes, childNodes, content, we) {
       node.name.replace($event, function (key) {
         key = key.replace($event, "$1");
         let owner = node.ownerElement;
-        owner.on(key, function (event) {
-          codev(node.nodeValue, scope, event);
-        })
+        var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+        if (array) {
+          var name = node.nodeValue.toString().replace(array[0], "");
+          let methd = code(name, we.action);
+          if (array[1] != "") fextend(methd, { $params: array[1] });
+          owner.on(key, methd, scope);
+        }
+        else {
+          let methd = code(node.nodeValue, we.action);
+          owner.on(key, methd, scope);
+        }
       });
     }
   }

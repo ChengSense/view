@@ -28,18 +28,23 @@
 <body>
   <div id="grid" class="k-grid k-widget k-display-block">
     <div class="k-grid-header" style="padding-right: 17px;">
-      <div class="k-grid-header-wrap k-auto-scrollable">
+      <div class="k-grid-header-wrap k-auto-scrollable scrollable">
         <table>
           <thead>
             <tr>
-              <th each="item:i:columns" class="k-header k-unselect" data-field="{i}">{item}</th>
+              <th 
+                class="k-header k-unselect" 
+                data-field="{i}" 
+                @mousemove="resize"
+                each="item:i:columns">
+              {item}</th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>
         </table>
       </div>
     </div>
-    <div class="k-grid-content k-auto-scrollable" style="height: 643px;">
+    <div class="k-grid-content k-auto-scrollable" style="height: 643px;" @scroll="scroll">
       <table style="height: auto;">
         <tbody>
           <tr each="item:id:list" class="{id%2?'k-alt':''}">
@@ -80,9 +85,13 @@
     }
     return data;
   }
+
+  var resizer, header;
   var grid = new View({
     view: "#grid",
     model: {
+      pageX: 0,
+      width: 0,
       edit: "edit",
       columns: {
         "id": "档案编号",
@@ -101,8 +110,50 @@
       },
       del: function (id) {
         this.list.splice(id, 1);
+      },
+
+      scroll(event) {
+        $(this.$view).find(".scrollable").scrollLeft($(event.target).scrollLeft());
+      },
+
+      resize(event) {
+        let target = event.target;
+        header = target;
+        if (Math.abs(event.offsetX - $(target).outerWidth(true)) < 8) {
+          target.on("mousedown", this.$action.startResize)
+          $(this.$view).css("cursor", "col-resize");
+        } else {
+          target.off("mousedown", this.$action.startResize)
+          $(this.$view).css("cursor", "default");
+        }
+      },
+
+      startResize(event) {
+        let target = event.target;
+        this.pageX = event.pageX, this.width = $(target).width();
+        resizer = $(this.$view).find(`[data-field='${$(target).attr("data-field")}']`);
+        target.off("mousemove", this.$action.resize).off("mousedown", this.$action.startResize);
+        document.on("mousemove", this.$action.onResize).on("mouseup", this.$action.stopResize);
+      },
+
+      onResize(event) {
+        var th = event.pageX - this.pageX;
+        resizer.width(this.width + th);
+      },
+
+      stopResize(event) {
+        header.on("mousemove", this.$action.resize);
+        document.off("mousemove", this.$action.onResize).off("mouseup", this.$action.stopResize);
       }
+
     }
+  });
+
+  $(`th[data-field]`).each((i, e) => {
+    $(e).width($(e).width());
+  });
+  $(`td[data-row='0']`).each((i, e) => {
+    $(e).width($(e).width());
   });
 </script>
 
