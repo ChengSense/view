@@ -55,14 +55,6 @@ export function extention(object, parent) {
   return object;
 }
 
-export function fextend(object, src) {
-  var prototype = object.__proto__;
-  Object.keys(src).forEach(key => {
-    prototype[key] = src[key];
-  });
-  return object;
-}
-
 export function extend(object, src) {
   var prototype = object.prototype || object.__proto__;
   Object.keys(src).forEach(key => {

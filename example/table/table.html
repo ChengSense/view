@@ -118,7 +118,6 @@
 
       resize(event) {
         let target = event.target;
-        header = target;
         if (Math.abs(event.offsetX - $(target).outerWidth(true)) < 8) {
           target.on("mousedown", this.$action.startResize)
           $(this.$view).css("cursor", "col-resize");
@@ -130,6 +129,7 @@
 
       startResize(event) {
         let target = event.target;
+        header = target;
         this.pageX = event.pageX, this.width = $(target).width();
         resizer = $(this.$view).find(`[data-field='${$(target).attr("data-field")}']`);
         target.off("mousemove", this.$action.resize).off("mousedown", this.$action.startResize);

@@ -1,5 +1,5 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles, fextend } from "./ViewLang";
+import { blank, forEach, slice, whiles } from "./ViewLang";
 import { deeping, resolver } from "./ViewResolver";
 import { code, codex, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
@@ -143,8 +143,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         if (array) {
           var name = node.nodeValue.toString().replace(array[0], "");
           let methd = code(name, we.action);
-          if (array[1] != "") fextend(methd, { $params: array[1] });
-          owner.on(key, methd, scope);
+          owner.on(key, methd, scope, array[1]);
         }
         else {
           let methd = code(node.nodeValue, we.action);

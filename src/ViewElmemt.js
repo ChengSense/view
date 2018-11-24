@@ -1,4 +1,4 @@
-import { each, extend,extention, slice } from "./ViewLang";
+import { each, extend, extention, slice } from "./ViewLang";
 import { code } from "./ViewScope";
 
 export function query(express) {
@@ -12,69 +12,96 @@ export function query(express) {
   }
 }
 
-function listener(type, methds, scope) {
+function addListener(type, methds, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
-      methds.forEach(methd => {
-        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
-        args.push(event);
-        methd.apply(extention({
-          $view: methd.$view,
-          $action: methd.$action
-        }, methd.$model), args);
+      methds.forEach((params, methd) => {
+        params.forEach(param => {
+          var args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          methd.apply(extention({
+            $view: methd.$view,
+            $action: methd.$action
+          }, methd.$model), args);
+        })
       });
     }, false);
-  } 
+  }
   else if (this.attachEvent) {
     this.attachEvent('on' + type, function (event) {
-      methds.forEach(methd => {
-        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
-        args.push(_event);
-        methd.apply(extention({
-          $view: methd.$view,
-          $action: methd.$action
-        }, methd.$model), args);
+      methds.forEach((params, methd) => {
+        params.forEach(param => {
+          var args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          methd.apply(extention({
+            $view: methd.$view,
+            $action: methd.$action
+          }, methd.$model), args);
+        })
       });
     });
-  } 
+  }
   else {
     element['on' + type] = function (event) {
-      methds.forEach(methd => {
-        var args = methd.$params ? code(`[${methd.$params}]`, scope) : [];
-        args.push(event);
-        methd.apply(extention({
-          $view: methd.$view,
-          $action: methd.$action
-        }, methd.$model), args);
+      methds.forEach((params, methd) => {
+        params.forEach(param => {
+          var args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          methd.apply(extention({
+            $view: methd.$view,
+            $action: methd.$action
+          }, methd.$model), args);
+        })
       });
     };
   }
 }
 
+function removeListener(type, handler) {
+  if (this.addEventListener) {
+    this.removeEventListener(type, handler, false);
+  }
+  else if (this.detachEvent) {
+    this.detachEvent('on' + type, handler);
+  }
+  else {
+    element['on' + type] = null;
+  }
+}
+
 extend(Node, {
-  on: function (type, handler, scope) {
+  on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
-        this._manager.get(type).ones(handler);
+        let methds = this._manager.get(type);
+        if (methds.get(handler)) {
+          methds.get(handler).ones(params);
+        }
+        else {
+          methds.set(handler, [params]);
+        }
       }
       else {
-        let methds = [handler];
+        let methds = new Map().set(handler, [params]);
         this._manager.set(type, methds);
-        listener.call(this, type, methds, scope);
+        addListener.call(this, type, methds, scope);
       }
     }
     else {
-      let methds = [handler];
+      let methds = new Map().set(handler, [params]);
       this._manager = new Map().set(type, methds);
-      listener.call(this, type, methds, scope);
+      addListener.call(this, type, methds, scope);
     }
     return this;
   },
   off: function (type, handler) {
     if (this._manager) {
-      if (this._manager.get(type)) {
-        this._manager.get(type).remove(handler);
-      }
+      let methds = this._manager.get(type);
+      if (methds == undefined) return;
+      methds.delete(handler);
+      if (methds.size) return;
+      this._manager.delete(type);
+      removeListener.call(this, type, handler);
     }
     return this;
   },

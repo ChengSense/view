@@ -86,14 +86,6 @@ var view = (function (exports) {
     return object;
   }
 
-  function fextend(object, src) {
-    var prototype = object.__proto__;
-    Object.keys(src).forEach(function (key) {
-      prototype[key] = src[key];
-    });
-    return object;
-  }
-
   function extend(object, src) {
     var prototype = object.prototype || object.__proto__;
     Object.keys(src).forEach(function (key) {
@@ -227,65 +219,89 @@ var view = (function (exports) {
     }
   }
 
-  function listener(type, methds, scope) {
+  function addListener(type, methds, scope) {
     if (this.addEventListener) {
       this.addEventListener(type, function (event) {
-        methds.forEach(function (methd) {
-          var args = methd.$params ? code("[" + methd.$params + "]", scope) : [];
-          args.push(event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+        methds.forEach(function (params, methd) {
+          params.forEach(function (param) {
+            var args = param ? code("[" + param + "]", scope) : [];
+            args.push(event);
+            methd.apply(extention({
+              $view: methd.$view,
+              $action: methd.$action
+            }, methd.$model), args);
+          });
         });
       }, false);
     } else if (this.attachEvent) {
       this.attachEvent('on' + type, function (event) {
-        methds.forEach(function (methd) {
-          var args = methd.$params ? code("[" + methd.$params + "]", scope) : [];
-          args.push(_event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+        methds.forEach(function (params, methd) {
+          params.forEach(function (param) {
+            var args = param ? code("[" + param + "]", scope) : [];
+            args.push(event);
+            methd.apply(extention({
+              $view: methd.$view,
+              $action: methd.$action
+            }, methd.$model), args);
+          });
         });
       });
     } else {
       element['on' + type] = function (event) {
-        methds.forEach(function (methd) {
-          var args = methd.$params ? code("[" + methd.$params + "]", scope) : [];
-          args.push(event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+        methds.forEach(function (params, methd) {
+          params.forEach(function (param) {
+            var args = param ? code("[" + param + "]", scope) : [];
+            args.push(event);
+            methd.apply(extention({
+              $view: methd.$view,
+              $action: methd.$action
+            }, methd.$model), args);
+          });
         });
       };
     }
   }
 
+  function removeListener(type, handler) {
+    if (this.addEventListener) {
+      this.removeEventListener(type, handler, false);
+    } else if (this.detachEvent) {
+      this.detachEvent('on' + type, handler);
+    } else {
+      element['on' + type] = null;
+    }
+  }
+
   extend(Node, {
-    on: function on(type, handler, scope) {
+    on: function on(type, handler, scope, params) {
       if (this._manager) {
         if (this._manager.get(type)) {
-          this._manager.get(type).ones(handler);
+          var methds = this._manager.get(type);
+          if (methds.get(handler)) {
+            methds.get(handler).ones(params);
+          } else {
+            methds.set(handler, [params]);
+          }
         } else {
-          var methds = [handler];
-          this._manager.set(type, methds);
-          listener.call(this, type, methds, scope);
+          var _methds = new Map().set(handler, [params]);
+          this._manager.set(type, _methds);
+          addListener.call(this, type, _methds, scope);
         }
       } else {
-        var _methds = [handler];
-        this._manager = new Map().set(type, _methds);
-        listener.call(this, type, _methds, scope);
+        var _methds2 = new Map().set(handler, [params]);
+        this._manager = new Map().set(type, _methds2);
+        addListener.call(this, type, _methds2, scope);
       }
       return this;
     },
     off: function off(type, handler) {
       if (this._manager) {
-        if (this._manager.get(type)) {
-          this._manager.get(type).remove(handler);
-        }
+        var methds = this._manager.get(type);
+        if (methds == undefined) return;
+        methds.delete(handler);
+        if (methds.size) return;
+        this._manager.delete(type);
+        removeListener.call(this, type, handler);
       }
       return this;
     },
@@ -476,8 +492,7 @@ var view = (function (exports) {
           if (array) {
             var name = node.nodeValue.toString().replace(array[0], "");
             var methd = code(name, we.action);
-            if (array[1] != "") fextend(methd, { $params: array[1] });
-            owner.on(key, methd, scope);
+            owner.on(key, methd, scope, array[1]);
           } else {
             var _methd = code(node.nodeValue, we.action);
             owner.on(key, _methd, scope);
@@ -1257,11 +1272,7 @@ var view = (function (exports) {
   function deepen(cache, object) {
     cache.forEach(function (nodes, we) {
       slice(nodes).forEach(function (node) {
-        if (clearNode([node])) {
-          resolver[node.resolver](node, we);
-        } else {
-          nodes.remove(node);
-        }
+        if (clearNode([node])) resolver[node.resolver](node, we);else nodes.remove(node);
       });
     });
   }

@@ -61,12 +61,10 @@ function clearNode(nodes, status) {
 function deepen(cache, object) {
   cache.forEach((nodes, we) => {
     slice(nodes).forEach(node => {
-      if (clearNode([node])) {
+      if (clearNode([node])) 
         resolver[node.resolver](node, we);
-      }
-      else {
+      else 
         nodes.remove(node);
-      }
     })
   });
 }
