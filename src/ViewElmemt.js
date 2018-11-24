@@ -82,14 +82,17 @@ extend(Node, {
         }
       }
       else {
-        let methds = new Map().set(handler, [params]);
+        let methds = new Map();
+        methds.set(handler, [params]);
         this._manager.set(type, methds);
         addListener.call(this, type, methds, scope);
       }
     }
     else {
-      let methds = new Map().set(handler, [params]);
-      this._manager = new Map().set(type, methds);
+      let methds = new Map();
+      methds.set(handler, [params]);
+      this._manager = new Map();
+      this._manager.set(type, methds);
       addListener.call(this, type, methds, scope);
     }
     return this;

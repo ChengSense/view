@@ -117,6 +117,18 @@ var view = (function (exports) {
     return value;
   }
 
+  if (!Object.values) {
+    extend(Object, {
+      values: function values(object) {
+        var values = [];
+        Object.keys(object).forEach(function (key) {
+          values.push(object[key]);
+        });
+        return values;
+      }
+    });
+  }
+
   extend(Array, {
     remove: function remove(n) {
       var index = this.indexOf(n);
@@ -283,13 +295,16 @@ var view = (function (exports) {
             methds.set(handler, [params]);
           }
         } else {
-          var _methds = new Map().set(handler, [params]);
+          var _methds = new Map();
+          _methds.set(handler, [params]);
           this._manager.set(type, _methds);
           addListener.call(this, type, _methds, scope);
         }
       } else {
-        var _methds2 = new Map().set(handler, [params]);
-        this._manager = new Map().set(type, _methds2);
+        var _methds2 = new Map();
+        _methds2.set(handler, [params]);
+        this._manager = new Map();
+        this._manager.set(type, _methds2);
         addListener.call(this, type, _methds2, scope);
       }
       return this;
@@ -476,6 +491,7 @@ var view = (function (exports) {
 
     function attrExpress(node, scope) {
       forEach(node.attributes, function (child) {
+        if (!child) return;
         var clas = attrNode(child, scope, child.cloneNode());
         if (new RegExp($expres).test(child.nodeValue)) {
           binding.attrExpress(child, scope, clas);
@@ -838,7 +854,6 @@ var view = (function (exports) {
           arrayEach[node.resolver](node, scope, add, we, nodes);
         });
       });
-      extend(scope, { $change: false });
     } catch (e) {
       console.error(e);
     }

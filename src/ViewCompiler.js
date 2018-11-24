@@ -127,6 +127,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function attrExpress(node, scope) {
     forEach(node.attributes, function (child) {
+      if(!child) return;
       let clas = attrNode(child, scope, child.cloneNode());
       if (new RegExp($expres).test(child.nodeValue)) {
         binding.attrExpress(child, scope, clas);

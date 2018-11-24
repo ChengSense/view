@@ -91,6 +91,18 @@ function clone(value) {
   return value;
 }
 
+if (!Object.values) {
+  extend(Object, {
+    values(object) {
+      let values = [];
+      Object.keys(object).forEach(key => {
+        values.push(object[key]);
+      });
+      return values;
+    }
+  });
+}
+
 extend(Array, {
   remove(n) {
     var index = this.indexOf(n);
@@ -278,14 +290,17 @@ extend(Node, {
         }
       }
       else {
-        let methds = new Map().set(handler, [params]);
+        let methds = new Map();
+        methds.set(handler, [params]);
         this._manager.set(type, methds);
         addListener.call(this, type, methds, scope);
       }
     }
     else {
-      let methds = new Map().set(handler, [params]);
-      this._manager = new Map().set(type, methds);
+      let methds = new Map();
+      methds.set(handler, [params]);
+      this._manager = new Map();
+      this._manager.set(type, methds);
       addListener.call(this, type, methds, scope);
     }
     return this;
@@ -487,6 +502,7 @@ function Compiler(node, scopes, childNodes, content, we) {
 
   function attrExpress(node, scope) {
     forEach(node.attributes, function (child) {
+      if(!child) return;
       let clas = attrNode(child, scope, child.cloneNode());
       if (new RegExp($expres).test(child.nodeValue)) {
         binding.attrExpress(child, scope, clas);
@@ -856,7 +872,6 @@ var cacher = function (cache, scope, add) {
         arrayEach[node.resolver](node, scope, add, we, nodes);
       });
     });
-    extend(scope, { $change: false });
   } catch (e) {
     console.error(e);
   }

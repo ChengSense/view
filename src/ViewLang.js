@@ -91,6 +91,18 @@ export function clone(value) {
   return value;
 }
 
+if (!Object.values) {
+  extend(Object, {
+    values(object) {
+      let values = [];
+      Object.keys(object).forEach(key => {
+        values.push(object[key]);
+      });
+      return values;
+    }
+  });
+}
+
 extend(Array, {
   remove(n) {
     var index = this.indexOf(n);

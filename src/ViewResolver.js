@@ -110,7 +110,6 @@ export var cacher = function (cache, scope, add) {
         arrayEach[node.resolver](node, scope, add, we, nodes);
       })
     });
-    extend(scope, { $change: false });
   } catch (e) {
     console.error(e);
   }
