@@ -1050,6 +1050,23 @@ function observe(target, callSet, callGet) {
             }
           });
           break;
+        case "unshift":
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i, l) {
+              if (0 < this.length) {
+                let length = this.length;
+                var data = method.apply(this, arguments);
+                var index = this.$index = length;
+                this.$length = this.length;
+                while (index < this.$length) walk(this, index++, root);
+                cacher(getCache(), this, arguments.length);
+                delete this.$index; delete this.$length;
+                return data;
+              }
+            }
+          });
+          break;
         case "push":
           Object.defineProperty(object, name, {
             writable: true,
@@ -1060,6 +1077,15 @@ function observe(target, callSet, callGet) {
               while (index < this.length) walk(this, index++, root);
               cacher(getCache(), this, 1);
               delete this.$index; delete this.$length;
+              return data;
+            }
+          });
+          break;
+        case "reverse":
+          Object.defineProperty(object, name, {
+            writable: true,
+            value: function (i) {
+              var data = method.apply(this, arguments);
               return data;
             }
           });

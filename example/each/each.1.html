@@ -9,10 +9,11 @@
 
 <body>
   <div each="item:id:list" data-row="{id}"> {item} </div>
-  <button @click="shift()">{shift}</button>
-  <button @click="pop()">{pop}</button>
-  <button @click="push()">{push}</button>
-  <button @click="splice()">{splice}</button>
+  <button @click="shift">{shift}</button>
+  <button @click="unshift">{unshift}</button>
+  <button @click="pop">{pop}</button>
+  <button @click="push">{push}</button>
+  <button @click="splice">{splice}</button>
 </body>
 
 </html>
@@ -23,23 +24,26 @@
       list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       pop: "pop！",
       shift: "shift！",
+      unshift: "unshift！",
       push: "push！",
       splice: "splice！"
     },
     action: {
-      pop(el) {
-        this.list.pop();
-      },
       shift() {
         this.list.shift();
+      },
+      unshift() {
+        this.list.unshift(1);
+      },
+      pop(el) {
+        this.list.pop();
       },
       push() {
         this.list.push(this.list.length + 1);
       },
       splice() {
-        this.list.splice(0, 1,this.list.length + 1);
+        this.list.splice(0, 1, this.list.length + 1);
       }
     }
   });
-
 </script>
