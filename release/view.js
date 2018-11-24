@@ -825,19 +825,19 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    express: function express(node, we) {
+    express: function express(node, we, cache) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
-        deeping(node, we, global$1.$cache);
+        deeping(node, we, cache);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
       } catch (e) {
         console.log(e);
       }
     },
-    attribute: function attribute(node, we) {
+    attribute: function attribute(node, we, cache) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
-        deeping(node, we, global$1.$cache);
+        deeping(node, we, cache);
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
@@ -848,15 +848,15 @@ var view = (function (exports) {
   };
 
   var cacher = function cacher(cache, scope, add) {
-    try {
-      cache.forEach(function (nodes, we) {
-        nodes.forEach(function (node) {
-          arrayEach[node.resolver](node, scope, add, we, nodes);
-        });
+    cache.forEach(function (nodes, we) {
+      nodes.forEach(function (node) {
+        try {
+          if (arrayEach[node.resolver]) arrayEach[node.resolver](node, scope, add, we, nodes);else resolver[node.resolver](node, we, cache);
+        } catch (e) {
+          console.error(e);
+        }
       });
-    } catch (e) {
-      console.error(e);
-    }
+    });
   };
 
   var arrayEach = {
@@ -954,10 +954,10 @@ var view = (function (exports) {
         watcher(value, path);
         define(object, prop, path);
       } else if (oldObject != undefined) {
-        define(object, prop, path);
+        var cache = define(object, prop, path);
         var oldValue = oldObject[prop];
         var oldCache = global$1.$cache;
-        mq.publish(target, "set", [oldValue, oldCache, object]);
+        mq.publish(target, "set", [oldCache, cache]);
       } else {
         define(object, prop, path);
       }
@@ -977,9 +977,10 @@ var view = (function (exports) {
           var oldCache = cache;
           cache = new Map();
           watcher(value = clone(val), path, oldValue);
-          mq.publish(target, "set", [oldValue, oldCache, object]);
+          mq.publish(target, "set", [oldCache, cache]);
         }
       });
+      return cache;
     }
 
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -1261,8 +1262,8 @@ var view = (function (exports) {
       this.model = app.model;
       this.action = app.action;
 
-      observe(app.model, function set$$1(oldValue, cache, object) {
-        deepen(cache, object);
+      observe(app.model, function set$$1(cache, newCache) {
+        deepen(cache, newCache);
       }, function get$$1(path) {
         global$1.$path = path;
       });
@@ -1311,10 +1312,10 @@ var view = (function (exports) {
     }
   }
 
-  function deepen(cache, object) {
+  function deepen(cache, newCache) {
     cache.forEach(function (nodes, we) {
       slice(nodes).forEach(function (node) {
-        if (clearNode([node])) resolver[node.resolver](node, we);else nodes.remove(node);
+        if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
       });
     });
   }

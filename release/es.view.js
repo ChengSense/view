@@ -842,20 +842,20 @@ var resolver = {
       console.log(e);
     }
   },
-  express: function (node, we) {
+  express: function (node, we, cache) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
-      deeping(node, we, global.$cache);
+      deeping(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node, we) {
+  attribute: function (node, we, cache) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
-      deeping(node, we, global.$cache);
+      deeping(node, we, cache);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -866,15 +866,18 @@ var resolver = {
 };
 
 var cacher = function (cache, scope, add) {
-  try {
-    cache.forEach((nodes, we) => {
-      nodes.forEach(node => {
-        arrayEach[node.resolver](node, scope, add, we, nodes);
-      });
+  cache.forEach((nodes, we) => {
+    nodes.forEach(node => {
+      try {
+        if (arrayEach[node.resolver])
+          arrayEach[node.resolver](node, scope, add, we, nodes);
+        else
+          resolver[node.resolver](node, we, cache);
+      } catch (e) {
+        console.error(e);
+      }
     });
-  } catch (e) {
-    console.error(e);
-  }
+  });
 };
 
 var arrayEach = {
@@ -978,10 +981,10 @@ function observe(target, callSet, callGet) {
       define(object, prop, path);
     }
     else if (oldObject != undefined) {
-      define(object, prop, path);
+      var cache = define(object, prop, path);
       var oldValue = oldObject[prop];
       var oldCache = global.$cache;
-      mq.publish(target, "set", [oldValue, oldCache, object]);
+      mq.publish(target, "set", [oldCache, cache]);
     }
     else {
       define(object, prop, path);
@@ -1001,9 +1004,10 @@ function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = clone(val), path, oldValue);
-        mq.publish(target, "set", [oldValue, oldCache, object]);
+        mq.publish(target, "set", [oldCache, cache]);
       }
     });
+    return cache;
   }
 
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -1272,8 +1276,8 @@ class View$1 {
     this.model = app.model;
     this.action = app.action;
 
-    observe(app.model, function set(oldValue, cache, object) {
-      deepen(cache, object);
+    observe(app.model, function set(cache, newCache) {
+      deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;
     });
@@ -1316,12 +1320,12 @@ function clearNode(nodes, status) {
   }
 }
 
-function deepen(cache, object) {
+function deepen(cache, newCache) {
   cache.forEach((nodes, we) => {
     slice(nodes).forEach(node => {
-      if (clearNode([node])) 
-        resolver[node.resolver](node, we);
-      else 
+      if (clearNode([node]))
+        resolver[node.resolver](node, we, newCache);
+      else
         nodes.remove(node);
     });
   });

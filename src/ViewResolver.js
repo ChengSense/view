@@ -80,20 +80,20 @@ export var resolver = {
       console.log(e);
     }
   },
-  express: function (node, we) {
+  express: function (node, we, cache) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
-      deeping(node, we, global.$cache);
+      deeping(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node, we) {
+  attribute: function (node, we, cache) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
-      deeping(node, we, global.$cache);
+      deeping(node, we, cache);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -104,15 +104,18 @@ export var resolver = {
 };
 
 export var cacher = function (cache, scope, add) {
-  try {
-    cache.forEach((nodes, we) => {
-      nodes.forEach(node => {
-        arrayEach[node.resolver](node, scope, add, we, nodes);
-      })
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  cache.forEach((nodes, we) => {
+    nodes.forEach(node => {
+      try {
+        if (arrayEach[node.resolver])
+          arrayEach[node.resolver](node, scope, add, we, nodes);
+        else
+          resolver[node.resolver](node, we, cache);
+      } catch (e) {
+        console.error(e);
+      }
+    })
+  });
 };
 
 var arrayEach = {

@@ -13,8 +13,8 @@ export class View {
     this.model = app.model;
     this.action = app.action;
 
-    observe(app.model, function set(oldValue, cache, object) {
-      deepen(cache, object);
+    observe(app.model, function set(cache, newCache) {
+      deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;
     });
@@ -58,12 +58,12 @@ function clearNode(nodes, status) {
   }
 }
 
-function deepen(cache, object) {
+function deepen(cache, newCache) {
   cache.forEach((nodes, we) => {
     slice(nodes).forEach(node => {
-      if (clearNode([node])) 
-        resolver[node.resolver](node, we);
-      else 
+      if (clearNode([node]))
+        resolver[node.resolver](node, we, newCache);
+      else
         nodes.remove(node);
     })
   });

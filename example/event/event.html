@@ -32,9 +32,7 @@
     <input type="checkbox" model="{texts}" value="B">
     B
     <br />
-    @each(item:texts){
-      {item}
-    }
+    [{texts.join(',')}]
   </form>
 
 </body>

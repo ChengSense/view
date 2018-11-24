@@ -30,10 +30,10 @@ export function observe(target, callSet, callGet) {
       define(object, prop, path);
     }
     else if (oldObject != undefined) {
-      define(object, prop, path);
+      var cache = define(object, prop, path);
       var oldValue = oldObject[prop];
       var oldCache = global.$cache;
-      mq.publish(target, "set", [oldValue, oldCache, object]);
+      mq.publish(target, "set", [oldCache, cache]);
     }
     else {
       define(object, prop, path);
@@ -53,9 +53,10 @@ export function observe(target, callSet, callGet) {
         var oldCache = cache;
         cache = new Map();
         watcher(value = clone(val), path, oldValue);
-        mq.publish(target, "set", [oldValue, oldCache, object]);
+        mq.publish(target, "set", [oldCache, cache]);
       }
     });
+    return cache;
   }
 
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
