@@ -67,18 +67,10 @@ var view = (function (exports) {
 
   function inject(methds, parent) {
     if (methds) Object.values(methds).forEach(function (methd) {
-      var root = assign(parent);
+      var root = Object.assign({}, parent);
       root.__proto__ = Function.__proto__;
       methd.__proto__ = root;
     });
-  }
-
-  function assign(object) {
-    var obj = {};
-    Object.keys(object).forEach(function (key) {
-      obj[key] = object[key];
-    });
-    return obj;
   }
 
   function extention(object, parent) {

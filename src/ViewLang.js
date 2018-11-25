@@ -37,18 +37,10 @@ export function slice(obj) {
 export function inject(methds, parent) {
   if (methds) 
   Object.values(methds).forEach(methd => {
-    let root = assign(parent);
+    let root = Object.assign({}, parent);
     root.__proto__ = Function.__proto__;
     methd.__proto__ = root;
   });
-}
-
-function assign(object) {
-  let obj = {};
-  Object.keys(object).forEach(key => {
-    obj[key] = object[key];
-  });
-  return obj;
 }
 
 export function extention(object, parent) {
