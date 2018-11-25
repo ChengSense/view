@@ -1,3 +1,4 @@
+import { View } from "./ViewIndex";
 export function whiles(obj, methd, me) {
   while (obj.length) {
     var data = obj[0];

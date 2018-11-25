@@ -787,7 +787,7 @@ var resolver = {
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View$1({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
       deeping(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
@@ -957,7 +957,7 @@ function clearNodes(nodes) {
 function observe(target, callSet, callGet) {
 
   function watcher(object, root, oldObject) {
-    if (object instanceof View$1) return;
+    if (object instanceof View) return;
     if (typeof object == "object") {
       if (Array.isArray(object)) array(object, root);
       Object.keys(object).forEach(prop => {
@@ -969,7 +969,7 @@ function observe(target, callSet, callGet) {
   function walk(object, prop, root, oldObject) {
     var path = root ? `${root}.${prop}` : prop;
     var value = object[prop];
-    if (value instanceof View$1) {
+    if (value instanceof View) {
       define(object, prop, path);
     }
     else if (typeof value == "object" && oldObject != undefined) {
@@ -1270,7 +1270,7 @@ function Router(app, params) {
 
 let global = { $path: undefined };
 
-class View$1 {
+class View {
   constructor(app) {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
@@ -1331,8 +1331,8 @@ function deepen(cache, newCache) {
   });
 }
 
-window.View = View$1;
+window.View = View;
 window.Router = Router;
 window.query = query;
 
-export { global, View$1 as View };
+export { global, View };

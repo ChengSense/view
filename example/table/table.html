@@ -134,8 +134,7 @@
       },
 
       startResize: function (event) {
-        let target = event.target;
-        header = target;
+        let target = header = event.target;
         this.pageX = event.pageX, this.width = $(target).width();
         resizer = $(this.$view).find("[data-field=" + $(target).attr("data-field") + "]");
         target.off("mousemove", this.$action.resize).off("mousedown", this.$action.startResize);

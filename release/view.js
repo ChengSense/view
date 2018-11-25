@@ -773,7 +773,7 @@ var view = (function (exports) {
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        var component = new View$1({ view: app.component, model: app.model, action: app.action });
+        var component = new View({ view: app.component, model: app.model, action: app.action });
         var clasNodes = compoNode(insert, node, component);
         deeping(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
@@ -933,7 +933,7 @@ var view = (function (exports) {
   function observe(target, callSet, callGet) {
 
     function watcher(object, root, oldObject) {
-      if (object instanceof View$1) return;
+      if (object instanceof View) return;
       if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
         if (Array.isArray(object)) array(object, root);
         Object.keys(object).forEach(function (prop) {
@@ -945,7 +945,7 @@ var view = (function (exports) {
     function walk(object, prop, root, oldObject) {
       var path = root ? root + "." + prop : prop;
       var value = object[prop];
-      if (value instanceof View$1) {
+      if (value instanceof View) {
         define(object, prop, path);
       } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object" && oldObject != undefined) {
         watcher(value, path, oldObject[prop]);
@@ -1254,7 +1254,7 @@ var view = (function (exports) {
 
   var global$1 = { $path: undefined };
 
-  var View$1 = function () {
+  var View = function () {
     function View(app) {
       classCallCheck(this, View);
 
@@ -1320,12 +1320,12 @@ var view = (function (exports) {
     });
   }
 
-  window.View = View$1;
+  window.View = View;
   window.Router = Router;
   window.query = query;
 
   exports.global = global$1;
-  exports.View = View$1;
+  exports.View = View;
 
   return exports;
 
