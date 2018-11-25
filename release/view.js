@@ -1,35 +1,41 @@
 var view = (function (exports) {
   'use strict';
 
-  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  };
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
 
-  var classCallCheck = function (instance, Constructor) {
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
     }
-  };
+  }
 
-  var createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
     }
+  }
 
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
 
   function whiles(obj, methd, me) {
     while (obj.length) {
@@ -37,7 +43,6 @@ var view = (function (exports) {
       if (methd.call(me, data, obj)) break;
     }
   }
-
   function each(obj, methd, arg) {
     if (!obj) return;
     arg = arg || obj;
@@ -47,9 +52,9 @@ var view = (function (exports) {
     });
     return arg;
   }
-
   function forEach(obj, methd, me) {
     if (!obj) return;
+
     if (obj.hasOwnProperty("$index")) {
       for (var i = obj.$index; i < obj.$length; i++) {
         methd.call(me, obj[i], i);
@@ -60,11 +65,9 @@ var view = (function (exports) {
       });
     }
   }
-
   function slice(obj) {
     return [].slice.call(obj);
   }
-
   function inject(methds, parent) {
     if (methds) Object.values(methds).forEach(function (methd) {
       var root = Object.assign({}, parent);
@@ -72,12 +75,10 @@ var view = (function (exports) {
       methd.__proto__ = root;
     });
   }
-
   function extention(object, parent) {
     object.__proto__ = parent;
     return object;
   }
-
   function extend(object, src) {
     var prototype = object.prototype || object.__proto__;
     Object.keys(src).forEach(function (key) {
@@ -85,11 +86,9 @@ var view = (function (exports) {
     });
     return object;
   }
-
   function blank(str) {
     return str == null || str == undefined || str == "";
   }
-
   function clone(value) {
     if (value instanceof Boolean || value instanceof String || value instanceof Number || value instanceof Date || value instanceof View) {
       return value;
@@ -99,13 +98,14 @@ var view = (function (exports) {
         obj[key] = clone(value[key]);
       });
       return obj;
-    } else if (value && (typeof value === "undefined" ? "undefined" : _typeof(value)) === 'object') {
+    } else if (value && _typeof(value) === 'object') {
       var _obj = {};
       Object.keys(value).forEach(function (key) {
         _obj[key] = clone(value[key]);
       });
       return _obj;
     }
+
     return value;
   }
 
@@ -160,38 +160,34 @@ var view = (function (exports) {
 
   function codec(_express, _scope) {
     try {
-      global$1.$path = undefined;
-      global$1.$cache = undefined;
+      global.$path = undefined;
+      global.$cache = undefined;
       _express = _express.replace($express, "$1");
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
     }
   }
-
   function code(_express, _scope) {
     try {
-      global$1.$path = undefined;
-      global$1.$cache = undefined;
+      global.$path = undefined;
+      global.$cache = undefined;
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
     }
   }
-
   function codex(_express, _scope) {
     try {
-      _express = "'" + _express.replace($expres, "'+($1)+'") + "'";
+      _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
       return Code(_express)(_scope);
     } catch (e) {
       return undefined;
     }
   }
-
   function Code(_express) {
-    return new Function('_scope', "with (_scope) {\n       return " + _express + ";\n    }");
+    return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
   }
-
   function Path(path) {
     try {
       return path.replace(/(\w+)\.?/g, "['$1']");
@@ -199,15 +195,14 @@ var view = (function (exports) {
       return undefined;
     }
   }
-
   function setVariable(scope, variable, path) {
-    path = "" + Path(path);
+    path = "".concat(Path(path));
     Object.defineProperty(scope, variable, {
       get: function get() {
-        return new Function('scope', "\n        return scope" + path + ";\n        ")(scope);
+        return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
       },
       set: function set(val) {
-        new Function('scope', 'val', "\n        scope" + path + "=val;\n        ")(scope, val);
+        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
       }
     });
   }
@@ -228,7 +223,7 @@ var view = (function (exports) {
       this.addEventListener(type, function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
-            var args = param ? code("[" + param + "]", scope) : [];
+            var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
               $view: method.$view,
@@ -241,7 +236,7 @@ var view = (function (exports) {
       this.attachEvent('on' + type, function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
-            var args = param ? code("[" + param + "]", scope) : [];
+            var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
               $view: method.$view,
@@ -254,7 +249,7 @@ var view = (function (exports) {
       element['on' + type] = function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
-            var args = param ? code("[" + param + "]", scope) : [];
+            var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
               $view: method.$view,
@@ -281,6 +276,7 @@ var view = (function (exports) {
       if (this._manager) {
         if (this._manager.get(type)) {
           var methods = this._manager.get(type);
+
           if (methods.get(handler)) {
             methods.get(handler).ones(params);
           } else {
@@ -288,28 +284,40 @@ var view = (function (exports) {
           }
         } else {
           var _methods = new Map();
+
           _methods.set(handler, [params]);
+
           this._manager.set(type, _methods);
+
           addListener.call(this, type, _methods, scope);
         }
       } else {
         var _methods2 = new Map();
+
         _methods2.set(handler, [params]);
+
         this._manager = new Map();
+
         this._manager.set(type, _methods2);
+
         addListener.call(this, type, _methods2, scope);
       }
+
       return this;
     },
     off: function off(type, handler) {
       if (this._manager) {
         var methods = this._manager.get(type);
+
         if (methods == undefined) return;
         methods.delete(handler);
         if (methods.size) return;
+
         this._manager.delete(type);
+
         removeListener.call(this, type, handler);
       }
+
       return this;
     },
     reappend: function reappend(node) {
@@ -353,24 +361,27 @@ var view = (function (exports) {
     });
     return dom;
   }
-
   function initCompiler(node, children) {
     var list = children || [];
     whiles(node, function (child) {
       node.shift();
       if (new RegExp($close).test(child.nodeValue)) return true;
-      var item = { clas: child.cloneNode(true), children: [] };
+      var item = {
+        clas: child.cloneNode(true),
+        children: []
+      };
       if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+
       if (child.nodeType == 1) {
         initCompiler(slice(child.childNodes), item.children);
       } else if (new RegExp($chen).test(child.nodeValue)) {
         initCompiler(node, item.children);
-      }  });
+      }
+    });
     return list;
   }
 
   function Compiler(node, scopes, childNodes, content, we) {
-
     function compiler(node, scopes, childNodes, content) {
       whiles(childNodes, function (child, childNodes) {
         if (child.clas.nodeType == 1) {
@@ -385,7 +396,7 @@ var view = (function (exports) {
             binding.attrEach(null, scopes, clas, content, dataSource);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
-              setVariable(scope, variable, global$1.$path);
+              setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("each");
@@ -423,7 +434,7 @@ var view = (function (exports) {
             var children = slice(child.children);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
-              setVariable(scope, variable, global$1.$path);
+              setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
@@ -433,6 +444,7 @@ var view = (function (exports) {
             var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
             var clas = whenNode(null, node, child, content, scopes);
             clas.children.push(childNodes.shift());
+
             if (when) {
               binding.when(null, scopes, clas, content);
               whiles(childNodes, function (child, childNodes) {
@@ -449,6 +461,7 @@ var view = (function (exports) {
                   clas.childNodes.push(clasNodes);
                   commom(newNode, scopes, clasNodes, clas);
                 }
+
                 childNodes.shift();
               });
             } else if (when == undefined) {
@@ -463,11 +476,13 @@ var view = (function (exports) {
                   clas.childNodes.push(clasNodes);
                   commom(newNode, scopes, clasNodes, clas);
                 }
+
                 childNodes.shift();
               });
             } else if (whem(childNodes[0])) {
               compiler(node, scopes, childNodes, clas);
             }
+
             return whem(child);
           } else {
             var newNode = child.clas.cloneNode();
@@ -477,6 +492,7 @@ var view = (function (exports) {
             commom(newNode, scopes, clasNodes, content);
           }
         }
+
         childNodes.shift();
       });
     }
@@ -485,10 +501,12 @@ var view = (function (exports) {
       forEach(node.attributes, function (child) {
         if (!child) return;
         var clas = attrNode(child, scope, child.cloneNode());
+
         if (new RegExp($expres).test(child.nodeValue)) {
           binding.attrExpress(child, scope, clas);
           child.nodeValue = codex(child.nodeValue, scope);
         }
+
         bind(child, scope);
       });
 
@@ -497,12 +515,14 @@ var view = (function (exports) {
           key = key.replace($event, "$1");
           var owner = node.ownerElement;
           var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+
           if (array) {
             var name = node.nodeValue.toString().replace(array[0], "");
             var methd = code(name, we.action);
             owner.on(key, methd, scope, array[1]);
           } else {
             var _methd = code(node.nodeValue, we.action);
+
             owner.on(key, _methd, scope);
           }
         });
@@ -510,8 +530,9 @@ var view = (function (exports) {
     }
 
     function commom(node, scope, clas, content) {
-      var express = void 0;
+      var express;
       attrExpress(node, scope);
+
       if (new RegExp($component).test(node.nodeValue)) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
@@ -527,20 +548,20 @@ var view = (function (exports) {
 
     var binding = {
       attrEach: function attrEach(node, scope, clas, content) {
-        if (global$1.$cache == undefined) return;
+        if (global.$cache == undefined) return;
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        deeping(clas, we, global$1.$cache);
+        deeping(clas, we, global.$cache);
       },
       each: function each$$1(node, scope, clas, content) {
-        if (global$1.$cache == undefined) return;
+        if (global.$cache == undefined) return;
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        deeping(clas, we, global$1.$cache);
+        deeping(clas, we, global.$cache);
       },
       when: function when(node, scope, clas) {
         var nodeValue = clas.clas.nodeValue;
@@ -574,15 +595,17 @@ var view = (function (exports) {
     function dep(key, scope, clas) {
       key.replace($word, function (key) {
         code(key, scope);
-        if (global$1.$cache == undefined) return;
-        deeping(clas, we, global$1.$cache);
+        if (global.$cache == undefined) return;
+        deeping(clas, we, global.$cache);
       });
     }
 
     function model(node, scope) {
       var owner = node.ownerElement;
       owner._express = node.nodeValue.replace($express, "$1");
-      var _express = "scope" + Path(owner._express);
+
+      var _express = "scope".concat(Path(owner._express));
+
       var methd = input[owner.type] || input[owner.localName] || input.other;
       methd(node, scope, _express);
     }
@@ -593,7 +616,8 @@ var view = (function (exports) {
           var owner = node.ownerElement;
           owner.on("change", function () {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-            var express = _express + "." + (owner.checked ? "ones" : "remove") + "('" + _value + "');";
+
+            var express = "".concat(_express, ".").concat(owner.checked ? "ones" : "remove", "('").concat(_value, "');");
             new Function('scope', express)(scope);
           });
           var value = code(owner._express, scope);
@@ -607,12 +631,13 @@ var view = (function (exports) {
           var owner = node.ownerElement;
           owner.on("change", function () {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-            var express = _express + "='" + _value + "';";
+
+            var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
           });
           var value = code(owner._express, scope);
           if (value == owner.value) owner.checked = true;
-          owner.name = global$1.$path;
+          owner.name = global.$path;
         } catch (error) {
           console.log(e);
         }
@@ -623,7 +648,8 @@ var view = (function (exports) {
               handle;
           owner.on("change", handle = function handle() {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-            var express = _express + "='" + _value + "';";
+
+            var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
           });
           var value = code(owner._express, scope);
@@ -637,7 +663,8 @@ var view = (function (exports) {
           var owner = node.ownerElement;
           owner.on("change", function () {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-            var express = _express + "='" + _value + "';";
+
+            var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
           });
         } catch (error) {
@@ -657,7 +684,7 @@ var view = (function (exports) {
     }
 
     function eachNode(newNode, node, child) {
-      var comment = document.createComment("each:" + global$1.$path);
+      var comment = document.createComment("each:" + global.$path);
       node.appendChild(comment);
       return {
         node: newNode,
@@ -676,7 +703,7 @@ var view = (function (exports) {
 
     function whenNode(newNode, node, child, content, scopes) {
       if (new RegExp($whea).test(child.clas.nodeValue)) {
-        var comment = document.createComment("when:" + global$1.$path);
+        var comment = document.createComment("when:" + global.$path);
         node.appendChild(comment);
         content.childNodes.push(content = {
           node: newNode,
@@ -694,6 +721,7 @@ var view = (function (exports) {
         });
         binding.when(null, scopes, content);
       }
+
       return content;
     }
 
@@ -723,7 +751,6 @@ var view = (function (exports) {
 
     compiler(node, scopes, childNodes, content);
   }
-
   function compoNode(node, child, component) {
     var comment = document.createComment("component:" + child.path);
     node.before(comment);
@@ -750,6 +777,7 @@ var view = (function (exports) {
         new Compiler(doc, scope, slice(node.children), content, we);
         content.children = node.children;
         content.clas = node.clas;
+
         _view.reappend(doc);
       } catch (e) {
         console.log(e);
@@ -758,14 +786,18 @@ var view = (function (exports) {
     component: function component(node, we) {
       try {
         var app = codec(node.clas.nodeValue, node.scope);
-        var $cache = global$1.$cache;
-        node.path = [global$1.$path];
+        var $cache = global.$cache;
+        node.path = [global.$path];
         if (blank(app)) return;
         extention(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        var component = new View({ view: app.component, model: app.model, action: app.action });
+        var component = new View({
+          view: app.component,
+          model: app.model,
+          action: app.action
+        });
         var clasNodes = compoNode(insert, node, component);
         deeping(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
@@ -804,8 +836,15 @@ var view = (function (exports) {
       try {
         var insert = insertNode([node.childNodes[m]]);
         var doc = document.createDocumentFragment();
-        var child = { clas: node.clas, children: node.children, scope: node.scope };
-        var content = { childNodes: [], children: [] };
+        var child = {
+          clas: node.clas,
+          children: node.children,
+          scope: node.scope
+        };
+        var content = {
+          childNodes: [],
+          children: []
+        };
         new Compiler(doc, node.scope, [child], content, we);
         doc.removeChild(doc.childNodes[0]);
         var childNodes = slice(content.childNodes[0].childNodes);
@@ -838,7 +877,6 @@ var view = (function (exports) {
       }
     }
   };
-
   var cacher = function cacher(cache, scope, add) {
     cache.forEach(function (nodes, we) {
       nodes.forEach(function (node) {
@@ -850,11 +888,11 @@ var view = (function (exports) {
       });
     });
   };
-
   var arrayEach = {
     each: function each$$1(node, scope, add, we, children) {
       try {
         var l = scope.length;
+
         if (add > 0) {
           var nodes = node.childNodes.splice(l + 1);
           clearNodes(nodes);
@@ -868,9 +906,9 @@ var view = (function (exports) {
       }
     }
   };
-
   function deeping(clas, we, $cache) {
     var cache = $cache.get(we);
+
     if (cache) {
       cache.ones(clas);
     } else {
@@ -885,7 +923,8 @@ var view = (function (exports) {
           node = child.node;
           child.node = null;
           return node;
-        }      node = insertion(child.childNodes);
+        }
+        node = insertion(child.childNodes);
       });
       return node;
     } catch (e) {
@@ -900,12 +939,15 @@ var view = (function (exports) {
           node = child.node;
           return node;
         }
+
         if (child.childNodes.length) {
           var children = child.childNodes[child.childNodes.length - 1];
+
           if (children.node && children.node.parentNode) {
             node = children.node;
             return node;
           }
+
           node = insertNode([children]);
         }
       });
@@ -923,10 +965,10 @@ var view = (function (exports) {
   }
 
   function observe(target, callSet, callGet) {
-
     function watcher(object, root, oldObject) {
       if (object instanceof View) return;
-      if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
+
+      if (_typeof(object) == "object") {
         if (Array.isArray(object)) array(object, root);
         Object.keys(object).forEach(function (prop) {
           walk(object, prop, root, oldObject);
@@ -935,20 +977,21 @@ var view = (function (exports) {
     }
 
     function walk(object, prop, root, oldObject) {
-      var path = root ? root + "." + prop : prop;
+      var path = root ? "".concat(root, ".").concat(prop) : prop;
       var value = object[prop];
+
       if (value instanceof View) {
         define(object, prop, path);
-      } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object" && oldObject != undefined) {
+      } else if (_typeof(value) == "object" && oldObject != undefined) {
         watcher(value, path, oldObject[prop]);
         define(object, prop, path);
-      } else if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
+      } else if (_typeof(value) == "object") {
         watcher(value, path);
         define(object, prop, path);
       } else if (oldObject != undefined) {
         var cache = define(object, prop, path);
         var oldValue = oldObject[prop];
-        var oldCache = global$1.$cache;
+        var oldCache = global.$cache;
         mq.publish(target, "set", [oldCache, cache]);
       } else {
         define(object, prop, path);
@@ -959,12 +1002,12 @@ var view = (function (exports) {
       var value = object[prop],
           cache = new Map();
       Object.defineProperty(object, prop, {
-        get: function get$$1() {
+        get: function get() {
           mq.publish(target, "get", [path]);
-          global$1.$cache = cache;
+          global.$cache = cache;
           return value;
         },
-        set: function set$$1(val) {
+        set: function set(val) {
           var oldValue = value;
           var oldCache = cache;
           cache = new Map();
@@ -976,9 +1019,11 @@ var view = (function (exports) {
     }
 
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
+
     function array(object, root) {
       meths.forEach(function (name) {
         var method = Array.prototype[name];
+
         switch (name) {
           case "shift":
             Object.defineProperty(object, name, {
@@ -990,6 +1035,7 @@ var view = (function (exports) {
               }
             });
             break;
+
           case "pop":
             Object.defineProperty(object, name, {
               writable: true,
@@ -1000,6 +1046,7 @@ var view = (function (exports) {
               }
             });
             break;
+
           case "splice":
             Object.defineProperty(object, name, {
               writable: true,
@@ -1007,20 +1054,25 @@ var view = (function (exports) {
                 if (0 < this.length) {
                   var length = this.length;
                   var data = method.apply(this, arguments);
+
                   if (arguments.length > 2) {
                     var index = this.$index = length;
                     this.$length = this.length;
+
                     while (index < this.$length) {
                       walk(this, index++, root);
                     }
                   }
+
                   cacher(getCache(), this, arguments.length - 2);
-                  delete this.$index;delete this.$length;
+                  delete this.$index;
+                  delete this.$length;
                   return data;
                 }
               }
             });
             break;
+
           case "unshift":
             Object.defineProperty(object, name, {
               writable: true,
@@ -1030,15 +1082,20 @@ var view = (function (exports) {
                   var data = method.apply(this, arguments);
                   var index = this.$index = length;
                   this.$length = this.length;
+
                   while (index < this.$length) {
                     walk(this, index++, root);
-                  }cacher(getCache(), this, arguments.length);
-                  delete this.$index;delete this.$length;
+                  }
+
+                  cacher(getCache(), this, arguments.length);
+                  delete this.$index;
+                  delete this.$length;
                   return data;
                 }
               }
             });
             break;
+
           case "push":
             Object.defineProperty(object, name, {
               writable: true,
@@ -1046,14 +1103,19 @@ var view = (function (exports) {
                 var index = this.length;
                 var data = method.call(this, i);
                 this.$index = index, this.$length = this.length;
+
                 while (index < this.length) {
                   walk(this, index++, root);
-                }cacher(getCache(), this, 1);
-                delete this.$index;delete this.$length;
+                }
+
+                cacher(getCache(), this, 1);
+                delete this.$index;
+                delete this.$length;
                 return data;
               }
             });
             break;
+
           case "reverse":
             Object.defineProperty(object, name, {
               writable: true,
@@ -1063,6 +1125,7 @@ var view = (function (exports) {
               }
             });
             break;
+
           default:
             Object.defineProperty(object, name, {
               writable: true,
@@ -1075,44 +1138,58 @@ var view = (function (exports) {
             break;
         }
       });
+
       function notify(parm) {
-        new Function('scope', 'val', "\n        scope" + Path(root) + "=val;\n        ")(target, object);
+        new Function('scope', 'val', "\n        scope".concat(Path(root), "=val;\n        "))(target, object);
       }
+
       function getCache() {
-        new Function('scope', "\n        return scope" + Path(root) + ";\n        ")(target);
-        return global$1.$cache;
+        new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
+        return global.$cache;
       }
     }
 
     mq.subscribe(target, "set", callSet);
     mq.subscribe(target, "get", callGet);
-
     watcher(target);
   }
 
-  var Mess = function () {
+  var Mess =
+  /*#__PURE__*/
+  function () {
     function Mess() {
-      classCallCheck(this, Mess);
+      _classCallCheck(this, Mess);
 
       this.map = new Map();
     }
 
-    createClass(Mess, [{
+    _createClass(Mess, [{
       key: "publish",
       value: function publish(scope, event, data) {
         var cache = this.map.get(scope);
+
         if (cache) {
           var action = cache.get(event);
+
           if (action) {
             action.data.push(data);
           } else {
-            cache.set(event, { data: [data], queue: [] });
+            cache.set(event, {
+              data: [data],
+              queue: []
+            });
           }
         } else {
           var _data = new Map();
-          _data.set(event, { data: [_data], queue: [] });
+
+          _data.set(event, {
+            data: [_data],
+            queue: []
+          });
+
           this.map.set(scope, _data);
         }
+
         this.notify(cache.get(event));
       }
     }, {
@@ -1150,20 +1227,29 @@ var view = (function (exports) {
       key: "subscribe",
       value: function subscribe(scope, event, call) {
         var cache = this.map.get(scope);
+
         if (cache) {
           var action = cache.get(event);
+
           if (action) {
             action.queue.push(call);
           } else {
-            cache.set(event, { data: [], queue: [call] });
+            cache.set(event, {
+              data: [],
+              queue: [call]
+            });
           }
         } else {
-          var _data2 = new Map();
-          _data2.set(event, { data: [], queue: [call] });
-          this.map.set(scope, _data2);
+          var data = new Map();
+          data.set(event, {
+            data: [],
+            queue: [call]
+          });
+          this.map.set(scope, data);
         }
       }
     }]);
+
     return Mess;
   }();
 
@@ -1172,27 +1258,27 @@ var view = (function (exports) {
   function Router(app, params) {
     var $param = /^:/,
         $root = /^\/(.+)/;
-    var router = void 0,
-        para = void 0,
-        routes = void 0;
+    var router, para, routes;
     this.redreact = redreact;
 
     var supportsPushState = function () {
       var userAgent = window.navigator.userAgent;
+
       if (userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1 || userAgent.indexOf("Trident") > -1 || userAgent.indexOf("Edge") > -1) {
         return false;
       }
+
       return window.history && 'pushState' in window.history;
     }();
 
     function resolver(hash) {
       routes = Object.keys(params);
+
       while (routes.length) {
         router = routes.shift(), para = {};
         var routs = router.replace($root, "$1");
         routs = routs.split("/");
         var haths = hash.split("/");
-
         if (match(routs, haths)) return {
           component: params[router].component,
           router: params[router].router,
@@ -1208,14 +1294,17 @@ var view = (function (exports) {
       while (hashs.length) {
         var name = routs.shift();
         var param = hashs.shift();
+
         if (param != name) {
           if (!$param.test(name)) {
             return false;
           }
+
           name = name.replace($param, "");
           para[name] = param;
         }
       }
+
       return true;
     }
 
@@ -1227,9 +1316,11 @@ var view = (function (exports) {
     function action(event) {
       var hash = window.location.hash.replace(/^#\/?/, "");
       var router = resolver(hash);
+
       if (router) {
         router.action(router.params);
         app.model[router.router] = router.component;
+
         if (router.after) {
           router.after();
         }
@@ -1244,26 +1335,30 @@ var view = (function (exports) {
     window.addEventListener(supportsPushState ? "popstate" : "hashchange", action, false);
   }
 
-  var global$1 = { $path: undefined };
-
-  var View = function () {
+  var global = {
+    $path: undefined
+  };
+  var View =
+  /*#__PURE__*/
+  function () {
     function View(app) {
-      classCallCheck(this, View);
+      _classCallCheck(this, View);
 
-      this.content = { childNodes: [], children: [] };
+      this.content = {
+        childNodes: [],
+        children: []
+      };
       this.model = app.model;
       this.action = app.action;
-
-      observe(app.model, function set$$1(cache, newCache) {
+      observe(app.model, function set(cache, newCache) {
         deepen(cache, newCache);
-      }, function get$$1(path) {
-        global$1.$path = path;
+      }, function get(path) {
+        global.$path = path;
       });
-
       app.view ? this.view(app) : this.component(app);
     }
 
-    createClass(View, [{
+    _createClass(View, [{
       key: "view",
       value: function view(app) {
         var view = query(app.view);
@@ -1286,6 +1381,7 @@ var view = (function (exports) {
         this.component = this.view.outerHTML;
       }
     }]);
+
     return View;
   }();
 
@@ -1296,7 +1392,8 @@ var view = (function (exports) {
           var node = child.node.ownerElement || child.node;
           status = document.body.contains(node);
           return false;
-        }      status = clearNode(child.childNodes);
+        }
+        status = clearNode(child.childNodes);
       });
       return status;
     } catch (e) {
@@ -1316,7 +1413,7 @@ var view = (function (exports) {
   window.Router = Router;
   window.query = query;
 
-  exports.global = global$1;
+  exports.global = global;
   exports.View = View;
 
   return exports;
