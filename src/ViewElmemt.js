@@ -12,45 +12,45 @@ export function query(express) {
   }
 }
 
-function addListener(type, methds, scope) {
+function addListener(type, methods, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
-      methds.forEach((params, methd) => {
+      methods.forEach((params, method) => {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+          method.apply(extention({
+            $view: method.$view,
+            $action: method.$action
+          }, method.$model), args);
         })
       });
     }, false);
   }
   else if (this.attachEvent) {
     this.attachEvent('on' + type, function (event) {
-      methds.forEach((params, methd) => {
+      methods.forEach((params, method) => {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+          method.apply(extention({
+            $view: method.$view,
+            $action: method.$action
+          }, method.$model), args);
         })
       });
     });
   }
   else {
     element['on' + type] = function (event) {
-      methds.forEach((params, methd) => {
+      methods.forEach((params, method) => {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          methd.apply(extention({
-            $view: methd.$view,
-            $action: methd.$action
-          }, methd.$model), args);
+          method.apply(extention({
+            $view: method.$view,
+            $action: method.$action
+          }, method.$model), args);
         })
       });
     };
@@ -73,36 +73,36 @@ extend(Node, {
   on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
-        let methds = this._manager.get(type);
-        if (methds.get(handler)) {
-          methds.get(handler).ones(params);
+        let methods = this._manager.get(type);
+        if (methods.get(handler)) {
+          methods.get(handler).ones(params);
         }
         else {
-          methds.set(handler, [params]);
+          methods.set(handler, [params]);
         }
       }
       else {
-        let methds = new Map();
-        methds.set(handler, [params]);
-        this._manager.set(type, methds);
-        addListener.call(this, type, methds, scope);
+        let methods = new Map();
+        methods.set(handler, [params]);
+        this._manager.set(type, methods);
+        addListener.call(this, type, methods, scope);
       }
     }
     else {
-      let methds = new Map();
-      methds.set(handler, [params]);
+      let methods = new Map();
+      methods.set(handler, [params]);
       this._manager = new Map();
-      this._manager.set(type, methds);
-      addListener.call(this, type, methds, scope);
+      this._manager.set(type, methods);
+      addListener.call(this, type, methods, scope);
     }
     return this;
   },
   off: function (type, handler) {
     if (this._manager) {
-      let methds = this._manager.get(type);
-      if (methds == undefined) return;
-      methds.delete(handler);
-      if (methds.size) return;
+      let methods = this._manager.get(type);
+      if (methods == undefined) return;
+      methods.delete(handler);
+      if (methods.size) return;
       this._manager.delete(type);
       removeListener.call(this, type, handler);
     }
