@@ -1,12 +1,45 @@
-import { $express, $expres } from "./ViewExpress";
+import { $expres, $express } from "./ViewExpress";
 import { global } from "./ViewIndex";
+import { extention } from "./ViewLang";
+import { watcher } from "./ViewWatcher";
 
-export function codec(_express, _scope) {
+export function codec(_express, _scope, we) {
   try {
     global.$path = undefined;
     global.$cache = undefined;
     _express = _express.replace($express, "$1");
+    let value = codecc(_express, _scope, we);
+    if (value) return value;
     return Code(_express)(_scope);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+function codecc(_express, _scope, we) {
+  try {
+    let express = _express.split(":"), value;
+    if (express.length < 2) return;
+    value = Codex(express[0], extention({ flux: we.flux }, _scope));
+    if (value) return value;
+    let props = express[0].replace("flux", "");
+    let comp = express[1];
+    return codeccc(props, comp, _scope, we)
+  } catch (e) {
+    return undefined;
+  }
+}
+
+
+function codeccc(props, comp, scope, we) {
+  try {
+    let value = we.flux;
+    let expres = props.match(/(\w+)/g);
+    let prop = scope[expres.pop()];
+    expres.forEach(prop => value = value[scope[prop]] || (value[scope[prop]] = {}));
+    value[prop] = we.components[comp];
+    watcher(we.model, value, prop);
+    return value[prop];
   } catch (e) {
     return undefined;
   }
@@ -37,6 +70,14 @@ export function Code(_express) {
        return ${_express};
     }`
   );
+}
+
+function Codex(_express, _scope) {
+  try {
+    return Code(_express)(_scope);
+  } catch (error) {
+    return undefined;
+  }
 }
 
 export function codev(_express, _scope, _event) {

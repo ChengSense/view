@@ -238,4 +238,4 @@ class Mess {
   }
 }
 
-var mq = new Mess();
+export var mq = new Mess();

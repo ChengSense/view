@@ -1,6 +1,6 @@
-import { View, global } from "./ViewIndex";
-import { each, slice, extention, extend, blank } from "./ViewLang";
 import { Compiler, compoNode } from "./ViewCompiler";
+import { blank, each, extention, slice } from "./ViewLang";
+import { global, View } from "./ViewIndex";
 import { codec, codex } from "./ViewScope";
 
 export var resolver = {
@@ -17,9 +17,8 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codec(node.clas.nodeValue, node.scope);
+      let app = codec(node.clas.nodeValue, node.scope, we);
       let $cache = global.$cache;
-      node.path = [global.$path];
       if (blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);

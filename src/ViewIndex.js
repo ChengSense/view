@@ -1,9 +1,9 @@
-import { query } from "./ViewElmemt";
 import { init, initCompiler } from "./ViewInit";
 import { inject, slice } from "./ViewLang";
-import { observe } from "./ViewObserve";
 import { resolver } from "./ViewResolver";
+import { observe } from "./ViewObserve";
 import { Router } from "./ViewRouter";
+import { query } from "./ViewElmemt";
 
 export let global = { $path: undefined };
 
@@ -27,6 +27,8 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
+    this.flux = app.flux,
+    this.components = app.components,
     inject(app.action, {
       $view: this.view,
       $model: app.model,

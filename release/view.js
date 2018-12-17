@@ -158,197 +158,6 @@ var view = (function (exports) {
   var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
   var $event = /^@(.*)/;
 
-  function codec(_express, _scope) {
-    try {
-      global.$path = undefined;
-      global.$cache = undefined;
-      _express = _express.replace($express, "$1");
-      return Code(_express)(_scope);
-    } catch (e) {
-      return undefined;
-    }
-  }
-  function code(_express, _scope) {
-    try {
-      global.$path = undefined;
-      global.$cache = undefined;
-      return Code(_express)(_scope);
-    } catch (e) {
-      return undefined;
-    }
-  }
-  function codex(_express, _scope) {
-    try {
-      _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
-      return Code(_express)(_scope);
-    } catch (e) {
-      return undefined;
-    }
-  }
-  function Code(_express) {
-    return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
-  }
-  function Path(path) {
-    try {
-      return path.replace(/(\w+)\.?/g, "['$1']");
-    } catch (e) {
-      return undefined;
-    }
-  }
-  function setVariable(scope, variable, path) {
-    path = "".concat(Path(path));
-    Object.defineProperty(scope, variable, {
-      get: function get() {
-        return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
-      },
-      set: function set(val) {
-        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
-      }
-    });
-  }
-
-  function query(express) {
-    try {
-      var doc = document.querySelectorAll(express);
-      return doc;
-    } catch (e) {
-      var newNode = document.createElement("div");
-      newNode.innerHTML = express.trim();
-      return newNode.childNodes;
-    }
-  }
-
-  function addListener(type, methods, scope) {
-    if (this.addEventListener) {
-      this.addEventListener(type, function (event) {
-        methods.forEach(function (params, method) {
-          params.forEach(function (param) {
-            var args = param ? code("[".concat(param, "]"), scope) : [];
-            args.push(event);
-            method.apply(extention({
-              $view: method.$view,
-              $action: method.$action
-            }, method.$model), args);
-          });
-        });
-      }, false);
-    } else if (this.attachEvent) {
-      this.attachEvent('on' + type, function (event) {
-        methods.forEach(function (params, method) {
-          params.forEach(function (param) {
-            var args = param ? code("[".concat(param, "]"), scope) : [];
-            args.push(event);
-            method.apply(extention({
-              $view: method.$view,
-              $action: method.$action
-            }, method.$model), args);
-          });
-        });
-      });
-    } else {
-      element['on' + type] = function (event) {
-        methods.forEach(function (params, method) {
-          params.forEach(function (param) {
-            var args = param ? code("[".concat(param, "]"), scope) : [];
-            args.push(event);
-            method.apply(extention({
-              $view: method.$view,
-              $action: method.$action
-            }, method.$model), args);
-          });
-        });
-      };
-    }
-  }
-
-  function removeListener(type, handler) {
-    if (this.addEventListener) {
-      this.removeEventListener(type, handler, false);
-    } else if (this.detachEvent) {
-      this.detachEvent('on' + type, handler);
-    } else {
-      element['on' + type] = null;
-    }
-  }
-
-  extend(Node, {
-    on: function on(type, handler, scope, params) {
-      if (this._manager) {
-        if (this._manager.get(type)) {
-          var methods = this._manager.get(type);
-
-          if (methods.get(handler)) {
-            methods.get(handler).ones(params);
-          } else {
-            methods.set(handler, [params]);
-          }
-        } else {
-          var _methods = new Map();
-
-          _methods.set(handler, [params]);
-
-          this._manager.set(type, _methods);
-
-          addListener.call(this, type, _methods, scope);
-        }
-      } else {
-        var _methods2 = new Map();
-
-        _methods2.set(handler, [params]);
-
-        this._manager = new Map();
-
-        this._manager.set(type, _methods2);
-
-        addListener.call(this, type, _methods2, scope);
-      }
-
-      return this;
-    },
-    off: function off(type, handler) {
-      if (this._manager) {
-        var methods = this._manager.get(type);
-
-        if (methods == undefined) return;
-        methods.delete(handler);
-        if (methods.size) return;
-
-        this._manager.delete(type);
-
-        removeListener.call(this, type, handler);
-      }
-
-      return this;
-    },
-    reappend: function reappend(node) {
-      each(slice(this.childNodes), function (child) {
-        child.parentNode.removeChild(child);
-      });
-      this.appendChild(node);
-      return this;
-    },
-    before: function before(node) {
-      this.parentNode.insertBefore(node, this);
-    },
-    after: function after(node) {
-      if (this.nextSibling) this.parentNode.insertBefore(node, this.nextSibling);else this.parentNode.appendChild(node);
-    }
-  });
-  extend(NodeList, {
-    on: function on(type, call) {
-      each(this, function (node) {
-        node.on(type, call);
-      });
-      return this;
-    },
-    off: function off(type, call) {
-      each(this, function (node) {
-        node.off(type, call);
-      });
-      return this;
-    }
-  });
-
   function init(dom) {
     each(dom, function (node) {
       if (node.childNodes[0] && !/(CODE|SCRIPT)/.test(node.nodeName)) init(slice(node.childNodes));
@@ -379,6 +188,409 @@ var view = (function (exports) {
       }
     });
     return list;
+  }
+
+  function observe(target, callSet, callGet) {
+    function watcher(object, root, oldObject) {
+      if (object instanceof View) return;
+
+      if (_typeof(object) == "object") {
+        if (Array.isArray(object)) array(object, root);
+        Object.keys(object).forEach(function (prop) {
+          walk(object, prop, root, oldObject);
+        });
+      }
+    }
+
+    function walk(object, prop, root, oldObject) {
+      var path = root ? "".concat(root, ".").concat(prop) : prop;
+      var value = object[prop];
+
+      if (value instanceof View) {
+        define(object, prop, path);
+      } else if (_typeof(value) == "object" && oldObject != undefined) {
+        watcher(value, path, oldObject[prop]);
+        define(object, prop, path);
+      } else if (_typeof(value) == "object") {
+        watcher(value, path);
+        define(object, prop, path);
+      } else if (oldObject != undefined) {
+        var cache = define(object, prop, path);
+        var oldValue = oldObject[prop];
+        var oldCache = global.$cache;
+        mq.publish(target, "set", [oldCache, cache]);
+      } else {
+        define(object, prop, path);
+      }
+    }
+
+    function define(object, prop, path) {
+      var value = object[prop],
+          cache = new Map();
+      Object.defineProperty(object, prop, {
+        get: function get() {
+          mq.publish(target, "get", [path]);
+          global.$cache = cache;
+          return value;
+        },
+        set: function set(val) {
+          var oldValue = value;
+          var oldCache = cache;
+          cache = new Map();
+          watcher(value = clone(val), path, oldValue);
+          mq.publish(target, "set", [oldCache, cache]);
+        }
+      });
+      return cache;
+    }
+
+    var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
+
+    function array(object, root) {
+      meths.forEach(function (name) {
+        var method = Array.prototype[name];
+
+        switch (name) {
+          case "shift":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value() {
+                var data = method.apply(this, arguments);
+                cacher(getCache(), this);
+                return data;
+              }
+            });
+            break;
+
+          case "pop":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value() {
+                var data = method.apply(this, arguments);
+                cacher(getCache(), this);
+                return data;
+              }
+            });
+            break;
+
+          case "splice":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value(i, l) {
+                if (0 < this.length) {
+                  var length = this.length;
+                  var data = method.apply(this, arguments);
+
+                  if (arguments.length > 2) {
+                    var index = this.$index = length;
+                    this.$length = this.length;
+
+                    while (index < this.$length) {
+                      walk(this, index++, root);
+                    }
+                  }
+
+                  cacher(getCache(), this, arguments.length - 2);
+                  delete this.$index;
+                  delete this.$length;
+                  return data;
+                }
+              }
+            });
+            break;
+
+          case "unshift":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value(i, l) {
+                if (0 < this.length) {
+                  var length = this.length;
+                  var data = method.apply(this, arguments);
+                  var index = this.$index = length;
+                  this.$length = this.length;
+
+                  while (index < this.$length) {
+                    walk(this, index++, root);
+                  }
+
+                  cacher(getCache(), this, arguments.length);
+                  delete this.$index;
+                  delete this.$length;
+                  return data;
+                }
+              }
+            });
+            break;
+
+          case "push":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value(i) {
+                var index = this.length;
+                var data = method.call(this, i);
+                this.$index = index, this.$length = this.length;
+
+                while (index < this.length) {
+                  walk(this, index++, root);
+                }
+
+                cacher(getCache(), this, 1);
+                delete this.$index;
+                delete this.$length;
+                return data;
+              }
+            });
+            break;
+
+          case "reverse":
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value(i) {
+                var data = method.apply(this, arguments);
+                return data;
+              }
+            });
+            break;
+
+          default:
+            Object.defineProperty(object, name, {
+              writable: true,
+              value: function value() {
+                var data = method.apply(this, arguments);
+                notify([]);
+                return data;
+              }
+            });
+            break;
+        }
+      });
+
+      function notify(parm) {
+        new Function('scope', 'val', "\n        scope".concat(Path(root), "=val;\n        "))(target, object);
+      }
+
+      function getCache() {
+        new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
+        return global.$cache;
+      }
+    }
+
+    mq.subscribe(target, "set", callSet);
+    mq.subscribe(target, "get", callGet);
+    watcher(target);
+  }
+
+  var Mess =
+  /*#__PURE__*/
+  function () {
+    function Mess() {
+      _classCallCheck(this, Mess);
+
+      this.map = new Map();
+    }
+
+    _createClass(Mess, [{
+      key: "publish",
+      value: function publish(scope, event, data) {
+        var cache = this.map.get(scope);
+
+        if (cache) {
+          var action = cache.get(event);
+
+          if (action) {
+            action.data.push(data);
+          } else {
+            cache.set(event, {
+              data: [data],
+              queue: []
+            });
+          }
+        } else {
+          var _data = new Map();
+
+          _data.set(event, {
+            data: [_data],
+            queue: []
+          });
+
+          this.map.set(scope, _data);
+        }
+
+        this.notify(cache.get(event));
+      }
+    }, {
+      key: "notify",
+      value: function notify(action) {
+        if (action) {
+          var _loop = function _loop() {
+            var data = action.data.shift();
+            action.queue.forEach(function (call) {
+              call(data[0], data[1], data[2]);
+            });
+          };
+
+          while (action.data.length) {
+            _loop();
+          }
+        } else {
+          this.map.forEach(function (cache) {
+            cache.forEach(function (action) {
+              var _loop2 = function _loop2() {
+                var data = action.data.shift();
+                action.queue.forEach(function (call) {
+                  call(data[0], data[1], data[2]);
+                });
+              };
+
+              while (action.data.length) {
+                _loop2();
+              }
+            });
+          });
+        }
+      }
+    }, {
+      key: "subscribe",
+      value: function subscribe(scope, event, call) {
+        var cache = this.map.get(scope);
+
+        if (cache) {
+          var action = cache.get(event);
+
+          if (action) {
+            action.queue.push(call);
+          } else {
+            cache.set(event, {
+              data: [],
+              queue: [call]
+            });
+          }
+        } else {
+          var data = new Map();
+          data.set(event, {
+            data: [],
+            queue: [call]
+          });
+          this.map.set(scope, data);
+        }
+      }
+    }]);
+
+    return Mess;
+  }();
+
+  var mq = new Mess();
+
+  function watcher(target, object, prop, path) {
+    var value = object[prop],
+        cache = new Map();
+    Object.defineProperty(object, prop, {
+      get: function get() {
+        mq.publish(target, "get", [path]);
+        global.$cache = cache;
+        return value;
+      },
+      set: function set(val) {
+        var oldCache = cache;
+        cache = new Map();
+        value = val;
+        mq.publish(target, "set", [oldCache, cache]);
+      }
+    });
+  }
+
+  function codec(_express, _scope, we) {
+    try {
+      global.$path = undefined;
+      global.$cache = undefined;
+      _express = _express.replace($express, "$1");
+      var value = codecc(_express, _scope, we);
+      if (value) return value;
+      return Code(_express)(_scope);
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function codecc(_express, _scope, we) {
+    try {
+      var express = _express.split(":"),
+          value;
+
+      if (express.length < 2) return;
+      value = Codex(express[0], extention({
+        flux: we.flux
+      }, _scope));
+      if (value) return value;
+      var props = express[0].replace("flux", "");
+      var comp = express[1];
+      return codeccc(props, comp, _scope, we);
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function codeccc(props, comp, scope, we) {
+    try {
+      var value = we.flux;
+      var expres = props.match(/(\w+)/g);
+      var prop = scope[expres.pop()];
+      expres.forEach(function (prop) {
+        return value = value[scope[prop]] || (value[scope[prop]] = {});
+      });
+      value[prop] = we.components[comp];
+      watcher(we.model, value, prop);
+      return value[prop];
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function code(_express, _scope) {
+    try {
+      global.$path = undefined;
+      global.$cache = undefined;
+      return Code(_express)(_scope);
+    } catch (e) {
+      return undefined;
+    }
+  }
+  function codex(_express, _scope) {
+    try {
+      _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
+      return Code(_express)(_scope);
+    } catch (e) {
+      return undefined;
+    }
+  }
+  function Code(_express) {
+    return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
+  }
+
+  function Codex(_express, _scope) {
+    try {
+      return Code(_express)(_scope);
+    } catch (error) {
+      return undefined;
+    }
+  }
+  function Path(path) {
+    try {
+      return path.replace(/(\w+)\.?/g, "['$1']");
+    } catch (e) {
+      return undefined;
+    }
+  }
+  function setVariable(scope, variable, path) {
+    path = "".concat(Path(path));
+    Object.defineProperty(scope, variable, {
+      get: function get() {
+        return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
+      },
+      set: function set(val) {
+        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
+      }
+    });
   }
 
   function Compiler(node, scopes, childNodes, content, we) {
@@ -785,9 +997,8 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
-        var app = codec(node.clas.nodeValue, node.scope);
+        var app = codec(node.clas.nodeValue, node.scope, we);
         var $cache = global.$cache;
-        node.path = [global.$path];
         if (blank(app)) return;
         extention(app.model, node.scope);
         var insert = insertion(node.childNodes);
@@ -964,297 +1175,6 @@ var view = (function (exports) {
     });
   }
 
-  function observe(target, callSet, callGet) {
-    function watcher(object, root, oldObject) {
-      if (object instanceof View) return;
-
-      if (_typeof(object) == "object") {
-        if (Array.isArray(object)) array(object, root);
-        Object.keys(object).forEach(function (prop) {
-          walk(object, prop, root, oldObject);
-        });
-      }
-    }
-
-    function walk(object, prop, root, oldObject) {
-      var path = root ? "".concat(root, ".").concat(prop) : prop;
-      var value = object[prop];
-
-      if (value instanceof View) {
-        define(object, prop, path);
-      } else if (_typeof(value) == "object" && oldObject != undefined) {
-        watcher(value, path, oldObject[prop]);
-        define(object, prop, path);
-      } else if (_typeof(value) == "object") {
-        watcher(value, path);
-        define(object, prop, path);
-      } else if (oldObject != undefined) {
-        var cache = define(object, prop, path);
-        var oldValue = oldObject[prop];
-        var oldCache = global.$cache;
-        mq.publish(target, "set", [oldCache, cache]);
-      } else {
-        define(object, prop, path);
-      }
-    }
-
-    function define(object, prop, path) {
-      var value = object[prop],
-          cache = new Map();
-      Object.defineProperty(object, prop, {
-        get: function get() {
-          mq.publish(target, "get", [path]);
-          global.$cache = cache;
-          return value;
-        },
-        set: function set(val) {
-          var oldValue = value;
-          var oldCache = cache;
-          cache = new Map();
-          watcher(value = clone(val), path, oldValue);
-          mq.publish(target, "set", [oldCache, cache]);
-        }
-      });
-      return cache;
-    }
-
-    var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
-
-    function array(object, root) {
-      meths.forEach(function (name) {
-        var method = Array.prototype[name];
-
-        switch (name) {
-          case "shift":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                cacher(getCache(), this);
-                return data;
-              }
-            });
-            break;
-
-          case "pop":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                cacher(getCache(), this);
-                return data;
-              }
-            });
-            break;
-
-          case "splice":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value(i, l) {
-                if (0 < this.length) {
-                  var length = this.length;
-                  var data = method.apply(this, arguments);
-
-                  if (arguments.length > 2) {
-                    var index = this.$index = length;
-                    this.$length = this.length;
-
-                    while (index < this.$length) {
-                      walk(this, index++, root);
-                    }
-                  }
-
-                  cacher(getCache(), this, arguments.length - 2);
-                  delete this.$index;
-                  delete this.$length;
-                  return data;
-                }
-              }
-            });
-            break;
-
-          case "unshift":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value(i, l) {
-                if (0 < this.length) {
-                  var length = this.length;
-                  var data = method.apply(this, arguments);
-                  var index = this.$index = length;
-                  this.$length = this.length;
-
-                  while (index < this.$length) {
-                    walk(this, index++, root);
-                  }
-
-                  cacher(getCache(), this, arguments.length);
-                  delete this.$index;
-                  delete this.$length;
-                  return data;
-                }
-              }
-            });
-            break;
-
-          case "push":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value(i) {
-                var index = this.length;
-                var data = method.call(this, i);
-                this.$index = index, this.$length = this.length;
-
-                while (index < this.length) {
-                  walk(this, index++, root);
-                }
-
-                cacher(getCache(), this, 1);
-                delete this.$index;
-                delete this.$length;
-                return data;
-              }
-            });
-            break;
-
-          case "reverse":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value(i) {
-                var data = method.apply(this, arguments);
-                return data;
-              }
-            });
-            break;
-
-          default:
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                notify([]);
-                return data;
-              }
-            });
-            break;
-        }
-      });
-
-      function notify(parm) {
-        new Function('scope', 'val', "\n        scope".concat(Path(root), "=val;\n        "))(target, object);
-      }
-
-      function getCache() {
-        new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
-        return global.$cache;
-      }
-    }
-
-    mq.subscribe(target, "set", callSet);
-    mq.subscribe(target, "get", callGet);
-    watcher(target);
-  }
-
-  var Mess =
-  /*#__PURE__*/
-  function () {
-    function Mess() {
-      _classCallCheck(this, Mess);
-
-      this.map = new Map();
-    }
-
-    _createClass(Mess, [{
-      key: "publish",
-      value: function publish(scope, event, data) {
-        var cache = this.map.get(scope);
-
-        if (cache) {
-          var action = cache.get(event);
-
-          if (action) {
-            action.data.push(data);
-          } else {
-            cache.set(event, {
-              data: [data],
-              queue: []
-            });
-          }
-        } else {
-          var _data = new Map();
-
-          _data.set(event, {
-            data: [_data],
-            queue: []
-          });
-
-          this.map.set(scope, _data);
-        }
-
-        this.notify(cache.get(event));
-      }
-    }, {
-      key: "notify",
-      value: function notify(action) {
-        if (action) {
-          var _loop = function _loop() {
-            var data = action.data.shift();
-            action.queue.forEach(function (call) {
-              call(data[0], data[1], data[2]);
-            });
-          };
-
-          while (action.data.length) {
-            _loop();
-          }
-        } else {
-          this.map.forEach(function (cache) {
-            cache.forEach(function (action) {
-              var _loop2 = function _loop2() {
-                var data = action.data.shift();
-                action.queue.forEach(function (call) {
-                  call(data[0], data[1], data[2]);
-                });
-              };
-
-              while (action.data.length) {
-                _loop2();
-              }
-            });
-          });
-        }
-      }
-    }, {
-      key: "subscribe",
-      value: function subscribe(scope, event, call) {
-        var cache = this.map.get(scope);
-
-        if (cache) {
-          var action = cache.get(event);
-
-          if (action) {
-            action.queue.push(call);
-          } else {
-            cache.set(event, {
-              data: [],
-              queue: [call]
-            });
-          }
-        } else {
-          var data = new Map();
-          data.set(event, {
-            data: [],
-            queue: [call]
-          });
-          this.map.set(scope, data);
-        }
-      }
-    }]);
-
-    return Mess;
-  }();
-
-  var mq = new Mess();
-
   function Router(app, params) {
     var $param = /^:/,
         $root = /^\/(.+)/;
@@ -1335,6 +1255,148 @@ var view = (function (exports) {
     window.addEventListener(supportsPushState ? "popstate" : "hashchange", action, false);
   }
 
+  function query(express) {
+    try {
+      var doc = document.querySelectorAll(express);
+      return doc;
+    } catch (e) {
+      var newNode = document.createElement("div");
+      newNode.innerHTML = express.trim();
+      return newNode.childNodes;
+    }
+  }
+
+  function addListener(type, methods, scope) {
+    if (this.addEventListener) {
+      this.addEventListener(type, function (event) {
+        methods.forEach(function (params, method) {
+          params.forEach(function (param) {
+            var args = param ? code("[".concat(param, "]"), scope) : [];
+            args.push(event);
+            method.apply(extention({
+              $view: method.$view,
+              $action: method.$action
+            }, method.$model), args);
+          });
+        });
+      }, false);
+    } else if (this.attachEvent) {
+      this.attachEvent('on' + type, function (event) {
+        methods.forEach(function (params, method) {
+          params.forEach(function (param) {
+            var args = param ? code("[".concat(param, "]"), scope) : [];
+            args.push(event);
+            method.apply(extention({
+              $view: method.$view,
+              $action: method.$action
+            }, method.$model), args);
+          });
+        });
+      });
+    } else {
+      element['on' + type] = function (event) {
+        methods.forEach(function (params, method) {
+          params.forEach(function (param) {
+            var args = param ? code("[".concat(param, "]"), scope) : [];
+            args.push(event);
+            method.apply(extention({
+              $view: method.$view,
+              $action: method.$action
+            }, method.$model), args);
+          });
+        });
+      };
+    }
+  }
+
+  function removeListener(type, handler) {
+    if (this.addEventListener) {
+      this.removeEventListener(type, handler, false);
+    } else if (this.detachEvent) {
+      this.detachEvent('on' + type, handler);
+    } else {
+      element['on' + type] = null;
+    }
+  }
+
+  extend(Node, {
+    on: function on(type, handler, scope, params) {
+      if (this._manager) {
+        if (this._manager.get(type)) {
+          var methods = this._manager.get(type);
+
+          if (methods.get(handler)) {
+            methods.get(handler).ones(params);
+          } else {
+            methods.set(handler, [params]);
+          }
+        } else {
+          var _methods = new Map();
+
+          _methods.set(handler, [params]);
+
+          this._manager.set(type, _methods);
+
+          addListener.call(this, type, _methods, scope);
+        }
+      } else {
+        var _methods2 = new Map();
+
+        _methods2.set(handler, [params]);
+
+        this._manager = new Map();
+
+        this._manager.set(type, _methods2);
+
+        addListener.call(this, type, _methods2, scope);
+      }
+
+      return this;
+    },
+    off: function off(type, handler) {
+      if (this._manager) {
+        var methods = this._manager.get(type);
+
+        if (methods == undefined) return;
+        methods.delete(handler);
+        if (methods.size) return;
+
+        this._manager.delete(type);
+
+        removeListener.call(this, type, handler);
+      }
+
+      return this;
+    },
+    reappend: function reappend(node) {
+      each(slice(this.childNodes), function (child) {
+        child.parentNode.removeChild(child);
+      });
+      this.appendChild(node);
+      return this;
+    },
+    before: function before(node) {
+      this.parentNode.insertBefore(node, this);
+    },
+    after: function after(node) {
+      if (this.nextSibling) this.parentNode.insertBefore(node, this.nextSibling);else this.parentNode.appendChild(node);
+    }
+  });
+  extend(NodeList, {
+    on: function on(type, call) {
+      each(this, function (node) {
+        node.on(type, call);
+      });
+      return this;
+    },
+    off: function off(type, call) {
+      each(this, function (node) {
+        node.off(type, call);
+      });
+      return this;
+    }
+  });
+
   var global = {
     $path: undefined
   };
@@ -1365,7 +1427,7 @@ var view = (function (exports) {
         var node = initCompiler(init(slice(view)))[0];
         this.node = node;
         this.view = view[0];
-        inject(app.action, {
+        this.flux = app.flux, this.components = app.components, inject(app.action, {
           $view: this.view,
           $model: app.model,
           $action: app.action
