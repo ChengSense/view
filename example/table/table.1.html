@@ -112,7 +112,7 @@
         this.list = data();
       },
       edit: function (id) {
-        var node = grid.flux[id];
+        var node = this.$flux[id];
         Object.keys(node).forEach(i => {
           node[i] = node[i] == input ? text : input;
         });

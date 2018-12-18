@@ -1276,6 +1276,7 @@ var view = (function (exports) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
+              $flux: method.$flux,
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1289,6 +1290,7 @@ var view = (function (exports) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
+              $flux: method.$flux,
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1302,6 +1304,7 @@ var view = (function (exports) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
             method.apply(extention({
+              $flux: method.$flux,
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1434,7 +1437,10 @@ var view = (function (exports) {
         var node = initCompiler(init(slice(view)))[0];
         this.node = node;
         this.view = view[0];
-        this.flux = app.flux, this.components = app.components, inject(app.action, {
+        this.flux = app.flux;
+        this.components = app.components;
+        inject(app.action, {
+          $flux: app.flux,
           $view: this.view,
           $model: app.model,
           $action: app.action

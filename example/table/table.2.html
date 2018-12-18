@@ -114,7 +114,7 @@
         this.list = data();
       },
       edit: function (id) {
-        grid.flux.field = grid.flux.field == input ? text : input;
+        this.$flux.field = this.$flux.field == input ? text : input;
       },
       del: function (id) {
         this.list.splice(id, 1);

@@ -33,13 +33,14 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    this.flux = app.flux,
-      this.components = app.components,
-      inject(app.action, {
-        $view: this.view,
-        $model: app.model,
-        $action: app.action
-      });
+    this.flux = app.flux;
+    this.components = app.components;
+    inject(app.action, {
+      $flux: app.flux,
+      $view: this.view,
+      $model: app.model,
+      $action: app.action
+    });
     resolver["view"](this.view, node, app.model, this.content, this);
   }
   component(app) {
