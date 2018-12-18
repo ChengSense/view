@@ -24,7 +24,7 @@ export var resolver = {
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.component, model: app.model, action: app.action, flux: app.flux });
       let clasNodes = compoNode(insert, node, component);
       deeping(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);

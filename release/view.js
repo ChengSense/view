@@ -1008,7 +1008,8 @@ var view = (function (exports) {
         var component = new View({
           view: app.component,
           model: app.model,
-          action: app.action
+          action: app.action,
+          flux: app.flux
         });
         var clasNodes = compoNode(insert, node, component);
         deeping(clasNodes, we, $cache);
@@ -1241,7 +1242,7 @@ var view = (function (exports) {
 
       if (router) {
         router.action(router.params);
-        app.model[router.router] = router.component;
+        app.flux[router.router] = router.component;
 
         if (router.after) {
           router.after();
@@ -1415,6 +1416,7 @@ var view = (function (exports) {
         childNodes: [],
         children: []
       };
+      this.flux = app.flux;
       this.model = app.model;
       this.action = app.action;
       observe(app.model, function set(cache, newCache) {

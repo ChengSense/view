@@ -937,7 +937,7 @@ var resolver = {
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.component, model: app.model, action: app.action, flux: app.flux });
       let clasNodes = compoNode(insert, node, component);
       deeping(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
@@ -1166,7 +1166,7 @@ function Router(app, params) {
     let router = resolver(hash);
     if (router) {
       router.action(router.params);
-      app.model[router.router] = router.component;
+      app.flux[router.router] = router.component;
       if (router.after) {
         router.after();
       }
@@ -1329,6 +1329,7 @@ let global = { $path: undefined };
 class View {
   constructor(app) {
     this.content = { childNodes: [], children: [] };
+    this.flux = app.flux;
     this.model = app.model;
     this.action = app.action;
 

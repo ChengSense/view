@@ -10,6 +10,7 @@ export let global = { $path: undefined };
 export class View {
   constructor(app) {
     this.content = { childNodes: [], children: [] };
+    this.flux = app.flux;
     this.model = app.model;
     this.action = app.action;
 

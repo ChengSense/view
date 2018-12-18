@@ -67,8 +67,10 @@
 
   var app = new View({
     view: "body",
+    flux:{
+      router: detail
+    },
     model: {
-      router: detail,
       param1: "",
       param2: ""
     }
