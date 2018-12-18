@@ -10,7 +10,9 @@ export function codec(_express, _scope, we) {
     _express = _express.replace($express, "$1");
     let value = codecc(_express, _scope, we);
     if (value) return value;
-    return Code(_express)(_scope);
+    value = Code(_express)(we.flux);
+    if (value) return value;
+    return Code(_express)(we.components);
   } catch (e) {
     return undefined;
   }
@@ -30,7 +32,6 @@ function codecc(_express, _scope, we) {
   }
 }
 
-
 function codeccc(props, comp, scope, we) {
   try {
     let value = we.flux;
@@ -38,7 +39,7 @@ function codeccc(props, comp, scope, we) {
     let prop = scope[expres.pop()];
     expres.forEach(prop => value = value[scope[prop]] || (value[scope[prop]] = {}));
     value[prop] = we.components[comp];
-    watcher(we.model, value, prop);
+    watcher(we.flux, value, prop);
     return value[prop];
   } catch (e) {
     return undefined;

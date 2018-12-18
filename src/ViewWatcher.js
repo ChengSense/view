@@ -10,7 +10,6 @@ export function watcher(target, object, prop, path) {
       return value;
     },
     set(val) {
-      var oldValue = value;
       var oldCache = cache;
       cache = new Map();
       value = val

@@ -19,6 +19,12 @@ export class View {
       global.$path = path;
     });
 
+    observe(app.flux, function set(cache, newCache) {
+      deepen(cache, newCache);
+    }, function get(path) {
+      global.$path = path;
+    });
+
     app.view ? this.view(app) : this.component(app)
 
   }
@@ -28,12 +34,12 @@ export class View {
     this.node = node;
     this.view = view[0];
     this.flux = app.flux,
-    this.components = app.components,
-    inject(app.action, {
-      $view: this.view,
-      $model: app.model,
-      $action: app.action
-    });
+      this.components = app.components,
+      inject(app.action, {
+        $view: this.view,
+        $model: app.model,
+        $action: app.action
+      });
     resolver["view"](this.view, node, app.model, this.content, this);
   }
   component(app) {

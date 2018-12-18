@@ -191,11 +191,11 @@ var view = (function (exports) {
   }
 
   function observe(target, callSet, callGet) {
-    function watcher(object, root, oldObject) {
+    function observer(object, root, oldObject) {
       if (object instanceof View) return;
+      if (Array.isArray(object)) array(object, root);
 
       if (_typeof(object) == "object") {
-        if (Array.isArray(object)) array(object, root);
         Object.keys(object).forEach(function (prop) {
           walk(object, prop, root, oldObject);
         });
@@ -207,24 +207,24 @@ var view = (function (exports) {
       var value = object[prop];
 
       if (value instanceof View) {
-        define(object, prop, path);
+        watcher(object, prop, path);
       } else if (_typeof(value) == "object" && oldObject != undefined) {
-        watcher(value, path, oldObject[prop]);
-        define(object, prop, path);
+        observer(value, path, oldObject[prop]);
+        watcher(object, prop, path);
       } else if (_typeof(value) == "object") {
-        watcher(value, path);
-        define(object, prop, path);
+        observer(value, path);
+        watcher(object, prop, path);
       } else if (oldObject != undefined) {
-        var cache = define(object, prop, path);
+        var cache = watcher(object, prop, path);
         var oldValue = oldObject[prop];
         var oldCache = global.$cache;
         mq.publish(target, "set", [oldCache, cache]);
       } else {
-        define(object, prop, path);
+        watcher(object, prop, path);
       }
     }
 
-    function define(object, prop, path) {
+    function watcher(object, prop, path) {
       var value = object[prop],
           cache = new Map();
       Object.defineProperty(object, prop, {
@@ -237,11 +237,10 @@ var view = (function (exports) {
           var oldValue = value;
           var oldCache = cache;
           cache = new Map();
-          watcher(value = clone(val), path, oldValue);
+          observer(value = clone(val), path, oldValue);
           mq.publish(target, "set", [oldCache, cache]);
         }
       });
-      return cache;
     }
 
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -377,7 +376,7 @@ var view = (function (exports) {
 
     mq.subscribe(target, "set", callSet);
     mq.subscribe(target, "get", callGet);
-    watcher(target);
+    observer(target);
   }
 
   var Mess =
@@ -506,7 +505,9 @@ var view = (function (exports) {
       _express = _express.replace($express, "$1");
       var value = codecc(_express, _scope, we);
       if (value) return value;
-      return Code(_express)(_scope);
+      value = Code(_express)(we.flux);
+      if (value) return value;
+      return Code(_express)(we.components);
     } catch (e) {
       return undefined;
     }
@@ -539,7 +540,7 @@ var view = (function (exports) {
         return value = value[scope[prop]] || (value[scope[prop]] = {});
       });
       value[prop] = we.components[comp];
-      watcher(we.model, value, prop);
+      watcher(we.flux, value, prop);
       return value[prop];
     } catch (e) {
       return undefined;
@@ -1118,6 +1119,7 @@ var view = (function (exports) {
     }
   };
   function deeping(clas, we, $cache) {
+    if (!$cache) return;
     var cache = $cache.get(we);
 
     if (cache) {
@@ -1413,6 +1415,11 @@ var view = (function (exports) {
       this.model = app.model;
       this.action = app.action;
       observe(app.model, function set(cache, newCache) {
+        deepen(cache, newCache);
+      }, function get(path) {
+        global.$path = path;
+      });
+      observe(app.flux, function set(cache, newCache) {
         deepen(cache, newCache);
       }, function get(path) {
         global.$path = path;

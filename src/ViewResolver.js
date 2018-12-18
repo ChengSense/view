@@ -137,6 +137,7 @@ var arrayEach = {
 };
 
 export function deeping(clas, we, $cache) {
+  if (!$cache) return;
   let cache = $cache.get(we);
   if (cache) {
     cache.ones(clas)

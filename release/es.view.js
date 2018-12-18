@@ -168,10 +168,10 @@ function initCompiler(node, children) {
 
 function observe(target, callSet, callGet) {
 
-  function watcher(object, root, oldObject) {
+  function observer(object, root, oldObject) {
     if (object instanceof View) return;
+    if (Array.isArray(object)) array(object, root);
     if (typeof object == "object") {
-      if (Array.isArray(object)) array(object, root);
       Object.keys(object).forEach(prop => {
         walk(object, prop, root, oldObject);
       });
@@ -182,28 +182,28 @@ function observe(target, callSet, callGet) {
     var path = root ? `${root}.${prop}` : prop;
     var value = object[prop];
     if (value instanceof View) {
-      define(object, prop, path);
+      watcher(object, prop, path);
     }
     else if (typeof value == "object" && oldObject != undefined) {
-      watcher(value, path, oldObject[prop]);
-      define(object, prop, path);
+      observer(value, path, oldObject[prop]);
+      watcher(object, prop, path);
     }
     else if (typeof value == "object") {
-      watcher(value, path);
-      define(object, prop, path);
+      observer(value, path);
+      watcher(object, prop, path);
     }
     else if (oldObject != undefined) {
-      var cache = define(object, prop, path);
+      var cache = watcher(object, prop, path);
       var oldValue = oldObject[prop];
       var oldCache = global.$cache;
       mq.publish(target, "set", [oldCache, cache]);
     }
     else {
-      define(object, prop, path);
+      watcher(object, prop, path);
     }
   }
 
-  function define(object, prop, path) {
+  function watcher(object, prop, path) {
     var value = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
@@ -215,11 +215,10 @@ function observe(target, callSet, callGet) {
         var oldValue = value;
         var oldCache = cache;
         cache = new Map();
-        watcher(value = clone(val), path, oldValue);
+        observer(value = clone(val), path, oldValue);
         mq.publish(target, "set", [oldCache, cache]);
       }
     });
-    return cache;
   }
 
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -338,7 +337,7 @@ function observe(target, callSet, callGet) {
   mq.subscribe(target, "set", callSet);
   mq.subscribe(target, "get", callGet);
 
-  watcher(target);
+  observer(target);
 }
 
 class Mess {
@@ -351,10 +350,12 @@ class Mess {
       let action = cache.get(event);
       if (action) {
         action.data.push(data);
-      } else {
+      }
+      else {
         cache.set(event, { data: [data], queue: [] });
       }
-    } else {
+    }
+    else {
       let data = new Map();
       data.set(event, { data: [data], queue: [] });
       this.map.set(scope, data);
@@ -370,7 +371,8 @@ class Mess {
           call(data[0], data[1], data[2]);
         });
       }
-    } else {
+    }
+    else {
       this.map.forEach(function (cache) {
         cache.forEach(function (action) {
           while (action.data.length) {
@@ -390,10 +392,12 @@ class Mess {
       const action = cache.get(event);
       if (action) {
         action.queue.push(call);
-      } else {
+      }
+      else {
         cache.set(event, { data: [], queue: [call] });
       }
-    } else {
+    }
+    else {
       let data = new Map();
       data.set(event, { data: [], queue: [call] });
       this.map.set(scope, data);
@@ -427,7 +431,9 @@ function codec(_express, _scope, we) {
     _express = _express.replace($express, "$1");
     let value = codecc(_express, _scope, we);
     if (value) return value;
-    return Code(_express)(_scope);
+    value = Code(_express)(we.flux);
+    if (value) return value;
+    return Code(_express)(we.components);
   } catch (e) {
     return undefined;
   }
@@ -447,7 +453,6 @@ function codecc(_express, _scope, we) {
   }
 }
 
-
 function codeccc(props, comp, scope, we) {
   try {
     let value = we.flux;
@@ -455,7 +460,7 @@ function codeccc(props, comp, scope, we) {
     let prop = scope[expres.pop()];
     expres.forEach(prop => value = value[scope[prop]] || (value[scope[prop]] = {}));
     value[prop] = we.components[comp];
-    watcher(we.model, value, prop);
+    watcher(we.flux, value, prop);
     return value[prop];
   } catch (e) {
     return undefined;
@@ -1045,6 +1050,7 @@ var arrayEach = {
 };
 
 function deeping(clas, we, $cache) {
+  if (!$cache) return;
   let cache = $cache.get(we);
   if (cache) {
     cache.ones(clas);
@@ -1329,6 +1335,12 @@ class View {
       global.$path = path;
     });
 
+    observe(app.flux, function set(cache, newCache) {
+      deepen(cache, newCache);
+    }, function get(path) {
+      global.$path = path;
+    });
+
     app.view ? this.view(app) : this.component(app);
 
   }
@@ -1337,13 +1349,11 @@ class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    this.flux = app.flux,
-    this.components = app.components,
-    inject(app.action, {
-      $view: this.view,
-      $model: app.model,
-      $action: app.action
-    });
+    this.flux = app.flux, this.components = app.components, inject(app.action, {
+        $view: this.view,
+        $model: app.model,
+        $action: app.action
+      });
     resolver["view"](this.view, node, app.model, this.content, this);
   }
   component(app) {
