@@ -1,6 +1,6 @@
 import { View, global } from "./ViewIndex";
 import { each, slice, extention, blank } from "./ViewLang";
-import { Compiler, compoNode } from "./ViewCompiler";
+import { Compiler, compoNode, setAttres } from "./ViewCompiler";
 import { code, codex } from "./ViewScope";
 
 export var resolver = {
@@ -15,10 +15,10 @@ export var resolver = {
       console.log(e);
     }
   },
-  component: function (node) {
+  component: function (node, we) {
     try {
       let app = code(node.clas.nodeValue, node.scope);
-      node.path = [global.$path];
+      let $attres = global.$attres;
       if (blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);
@@ -26,6 +26,7 @@ export var resolver = {
       clearNodes(node.childNodes);
       let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
+      setAttres(clasNodes, we, $attres);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -61,18 +62,20 @@ export var resolver = {
       console.log(e);
     }
   },
-  express: function (node) {
+  express: function (node, we, $attres) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+      setAttres(node, we, $attres);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node) {
+  attribute: function (node, we, $attres) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
+      setAttres(node, we, $attres);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);

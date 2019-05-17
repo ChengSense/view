@@ -75,52 +75,37 @@ function setVariable(scope, variable, path) {
 
 function observe(target, callSet, callGet) {
   var setable = true;
-  function watcher(object, root, oldObject) {
-    if (Array.isArray(object)) {
-      array(object, root);
-      object.forEach((a, prop) => {
-        walk(object, prop, root, oldObject);
-      });
-    } else if (typeof object == "object") {
-      Object.keys(object).forEach(prop => {
-        walk(object, prop, root, oldObject);
-      });
-    }
+  function watcher(object, root) {
+    Object.keys(object).forEach(prop => {
+      define(object, prop, object[prop], root);
+    });
   }
 
-  function walk(object, prop, root, oldObject) {
-    var value = object[prop], oldValue = (oldObject || {})[prop];
+  function define(object, prop, val, root) {
+    var value, attres = new Map();
     var path = root ? root + "." + prop : prop;
-    if (!(value instanceof View) && typeof value == "object") {
-      watcher(value, path, oldValue);
-    }
-    define(object, prop, path, oldValue);
-  }
-
-  function define(object, prop, path, oldValue) {
-    var value = object[prop], attres = new Map();
     Object.defineProperty(object, prop, {
       get() {
-        mq.publish(target, "get", [path]);
+        if (value == undefined) {
+          value = val;
+          if (Array.isArray(value)) array(value, path);
+          if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+        }
         global.$attres = attres;
+        mq.publish(target, "get", [path]);
         return value;
       },
       set(val) {
-        var oldValue = value;
-        watcher(value = val, path, oldValue);
-        global.$attres = attres;
-        if (setable) mq.publish(target, "set", [path]);
+        value = val;
+        if (Array.isArray(value)) array(value, path);
+        if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+        let attre = attres;
+        attres = new Map();
+        if (setable) mq.publish(target, "set", [path, attre, attres]);
       }
     });
   }
-
-  function def(obj, key, val) {
-    Object.defineProperty(obj, key, {
-      writable: true,
-      value: val
-    });
-  }
-
+  
   function array(object, root) {
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     var prototype = Array.prototype;
@@ -171,6 +156,14 @@ function observe(target, callSet, callGet) {
           break;
       }
     });
+
+    function def(obj, key, val) {
+      Object.defineProperty(obj, key, {
+        writable: true,
+        value: val
+      });
+    }
+  
     function notify(parm) {
       new Function('scope', 'val',
         `
@@ -469,7 +462,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
-            binding.when(null, scopes, clas, content);
+            //binding.when(null, scopes, clas, content);
             whiles(childNodes, function (child, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
@@ -489,7 +482,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             });
           }
           else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
+            //binding.when(null, scopes, clas, content);
             whiles(slice(child.children), function (child, childNodes) {
               if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 compiler(node, scopes, childNodes, clas);
@@ -547,7 +540,7 @@ function Compiler(node, scopes, childNodes, content, we) {
     attrExpress(node, scope);
     if (new RegExp($component).test(node.nodeValue)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas);
+      resolver["component"](clas, we);
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
@@ -567,6 +560,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      setAttres(clas, we);
     },
     each(node, scope, clas, content, value) {
       if (value == undefined || global.$path == undefined) return;
@@ -575,6 +569,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      setAttres(clas, we);
     },
     when(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -611,16 +606,19 @@ function Compiler(node, scopes, childNodes, content, we) {
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
       if (code(key, scope) == undefined || global.$path == undefined) return;
-      if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(we);
-        if (attres) {
-          attres.push(clas);
-        } else {
-          global.$attres.set(we, [clas]);
-        }
-      }
+      setAttres(clas, we);
       clas.path.push(global.$path);
     });
+  }
+
+  function setAttres(clas, we) {
+    let attres = global.$attres.get(we);
+    if (attres) {
+      attres.push(clas);
+    }
+    else {
+      global.$attres.set(we, [clas]);
+    }
   }
 
   function model(node, scope) {
@@ -718,6 +716,7 @@ function Compiler(node, scopes, childNodes, content, we) {
 
 }
 
+
 function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
   node.before(comment);
@@ -751,10 +750,10 @@ var resolver = {
       console.log(e);
     }
   },
-  component: function (node) {
+  component: function (node, we) {
     try {
       let app = code(node.clas.nodeValue, node.scope);
-      node.path = [global.$path];
+      let $attres = global.$attres;
       if (blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);
@@ -762,6 +761,7 @@ var resolver = {
       clearNodes(node.childNodes);
       let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
+      setAttres(clasNodes, we, $attres);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -797,18 +797,20 @@ var resolver = {
       console.log(e);
     }
   },
-  express: function (node) {
+  express: function (node, we, $attres) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+      setAttres(node, we, $attres);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
       console.log(e);
     }
   },
-  attribute: function (node) {
+  attribute: function (node, we, $attres) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
+      setAttres(node, we, $attres);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -840,6 +842,16 @@ function clearNodes(nodes) {
     if (child.childNodes)
       clearNodes(child.childNodes);
   });
+}
+
+function setAttres(clas, we, $attres) {
+  let attres = $attres.get(we);
+  if (attres) {
+    attres.push(clas);
+  }
+  else {
+    $attres.set(we, [clas]);
+  }
 }
 
 function Router(app, params) {
@@ -926,11 +938,9 @@ class View {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
-    var we = this;
 
-    observe(app.model, function set(path, value, oldValue) {
-      deepen(we.content, path, we);
-      attrDeepen(global.$attres);
+    observe(app.model, function set(path, attres, $attres) {
+      deepen(attres, $attres);
     }, function get(path) {
       global.$path = path;
     });
@@ -953,22 +963,10 @@ class View {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
-      return resolver[node.resolver](node, we);
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
-}
-
-function attrDeepen(attres) {
-  attres.forEach(attre => {
-    each(slice(attre), function (node) {
-      if (node.node && !node.node.ownerElement.parentNode)
-        attre.remove(node);
-      resolver[node.resolver](node);
+function deepen(attres, $attres) {
+  attres.forEach((attre, we) => {
+    each(attre, function (node) {
+      resolver[node.resolver](node, we, $attres);
     });
   });
 }
@@ -977,4 +975,4 @@ window.View = View;
 window.Router = Router;
 window.clone = clone;
 
-export { global, View };
+export { View, global };

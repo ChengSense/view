@@ -16,7 +16,7 @@ var view = (function (exports) {
 
   function code(_express, _scope) {
     try {
-      global$1.$path = undefined;
+      global.$path = undefined;
       _express = _express.replace($express, "$1");
       return Code(_express)(_scope);
     } catch (e) {
@@ -96,51 +96,35 @@ var view = (function (exports) {
 
   function observe(target, callSet, callGet) {
     var setable = true;
-    function watcher(object, root, oldObject) {
-      if (Array.isArray(object)) {
-        array(object, root);
-        object.forEach(function (a, prop) {
-          walk(object, prop, root, oldObject);
-        });
-      } else if ((typeof object === "undefined" ? "undefined" : _typeof(object)) == "object") {
-        Object.keys(object).forEach(function (prop) {
-          walk(object, prop, root, oldObject);
-        });
-      }
-    }
-
-    function walk(object, prop, root, oldObject) {
-      var value = object[prop],
-          oldValue = (oldObject || {})[prop];
-      var path = root ? root + "." + prop : prop;
-      if (!(value instanceof View) && (typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
-        watcher(value, path, oldValue);
-      }
-      define(object, prop, path, oldValue);
-    }
-
-    function define(object, prop, path, oldValue) {
-      var value = object[prop],
-          attres = new Map();
-      Object.defineProperty(object, prop, {
-        get: function get$$1() {
-          mq.publish(target, "get", [path]);
-          global$1.$attres = attres;
-          return value;
-        },
-        set: function set$$1(val) {
-          var oldValue = value;
-          watcher(value = val, path, oldValue);
-          global$1.$attres = attres;
-          if (setable) mq.publish(target, "set", [path]);
-        }
+    function watcher(object, root) {
+      Object.keys(object).forEach(function (prop) {
+        define(object, prop, object[prop], root);
       });
     }
 
-    function def(obj, key, val) {
-      Object.defineProperty(obj, key, {
-        writable: true,
-        value: val
+    function define(object, prop, val, root) {
+      var value,
+          attres = new Map();
+      var path = root ? root + "." + prop : prop;
+      Object.defineProperty(object, prop, {
+        get: function get() {
+          if (value == undefined) {
+            value = val;
+            if (Array.isArray(value)) array(value, path);
+            if (!(value instanceof View) && (typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") watcher(value, path);
+          }
+          global.$attres = attres;
+          mq.publish(target, "get", [path]);
+          return value;
+        },
+        set: function set(val) {
+          value = val;
+          if (Array.isArray(value)) array(value, path);
+          if (!(value instanceof View) && (typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") watcher(value, path);
+          var attre = attres;
+          attres = new Map();
+          if (setable) mq.publish(target, "set", [path, attre, attres]);
+        }
       });
     }
 
@@ -196,6 +180,14 @@ var view = (function (exports) {
             break;
         }
       });
+
+      function def(obj, key, val) {
+        Object.defineProperty(obj, key, {
+          writable: true,
+          value: val
+        });
+      }
+
       function notify(parm) {
         new Function('scope', 'val', "\n        scope" + Path(root) + "=val;\n        ")(target, object);
       }
@@ -447,7 +439,7 @@ var view = (function (exports) {
             binding.attrEach(null, scopes, clas, content, dataSource);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
-              setVariable(scope, variable, global$1.$path);
+              setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("each");
@@ -485,7 +477,7 @@ var view = (function (exports) {
             var children = slice(child.children);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes || {});
-              setVariable(scope, variable, global$1.$path);
+              setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
@@ -496,7 +488,7 @@ var view = (function (exports) {
             var clas = whenNode(null, node, child, content, scopes);
             clas.children.push(childNodes.shift());
             if (when) {
-              binding.when(null, scopes, clas, content);
+              //binding.when(null, scopes, clas, content);
               whiles(childNodes, function (child, childNodes) {
                 if (!whem(child)) return true;
                 clas.children.push(childNodes.shift());
@@ -514,7 +506,7 @@ var view = (function (exports) {
                 childNodes.shift();
               });
             } else if (when == undefined) {
-              binding.when(null, scopes, clas, content);
+              //binding.when(null, scopes, clas, content);
               whiles(slice(child.children), function (child, childNodes) {
                 if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                   compiler(node, scopes, childNodes, clas);
@@ -569,7 +561,7 @@ var view = (function (exports) {
       attrExpress(node, scope);
       if (new RegExp($component).test(node.nodeValue)) {
         comNode(node, scope, clas, content);
-        resolver["component"](clas);
+        resolver["component"](clas, we);
       } else if (express = new RegExp($express).exec(node.nodeValue)) {
         binding.express(node, scope, clas, express[0]);
         node.nodeValue = code(express[1], scope);
@@ -582,20 +574,22 @@ var view = (function (exports) {
 
     var binding = {
       attrEach: function attrEach(node, scope, clas, content, value) {
-        if (value == undefined || global$1.$path == undefined) return;
+        if (value == undefined || global.$path == undefined) return;
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
-        clas.path = [global$1.$path];
+        clas.path = [global.$path];
         clas.node = node;
+        setAttres(clas, we);
       },
-      each: function each$$1(node, scope, clas, content, value) {
-        if (value == undefined || global$1.$path == undefined) return;
+      each: function each(node, scope, clas, content, value) {
+        if (value == undefined || global.$path == undefined) return;
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
-        clas.path = [global$1.$path];
+        clas.path = [global.$path];
         clas.node = node;
+        setAttres(clas, we);
       },
       when: function when(node, scope, clas) {
         var nodeValue = clas.clas.nodeValue;
@@ -630,17 +624,19 @@ var view = (function (exports) {
 
     function dep(key, scope, clas) {
       key.replace($word, function (key) {
-        if (code(key, scope) == undefined || global$1.$path == undefined) return;
-        if (clas.clas.nodeType == 2) {
-          var attres = global$1.$attres.get(we);
-          if (attres) {
-            attres.push(clas);
-          } else {
-            global$1.$attres.set(we, [clas]);
-          }
-        }
-        clas.path.push(global$1.$path);
+        if (code(key, scope) == undefined || global.$path == undefined) return;
+        setAttres(clas, we);
+        clas.path.push(global.$path);
       });
+    }
+
+    function setAttres(clas, we) {
+      var attres = global.$attres.get(we);
+      if (attres) {
+        attres.push(clas);
+      } else {
+        global.$attres.set(we, [clas]);
+      }
     }
 
     function model(node, scope) {
@@ -667,7 +663,7 @@ var view = (function (exports) {
     }
 
     function eachNode(newNode, node, child) {
-      var comment = document.createComment("each:" + global$1.$path);
+      var comment = document.createComment("each:" + global.$path);
       node.appendChild(comment);
       return {
         node: newNode,
@@ -686,7 +682,7 @@ var view = (function (exports) {
 
     function whenNode(newNode, node, child, content, scopes) {
       if (new RegExp($whea).test(child.clas.nodeValue)) {
-        var comment = document.createComment("when:" + global$1.$path);
+        var comment = document.createComment("when:" + global.$path);
         node.appendChild(comment);
         content.childNodes.push(content = {
           node: newNode,
@@ -767,10 +763,10 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    component: function component(node) {
+    component: function component(node, we) {
       try {
         var app = code(node.clas.nodeValue, node.scope);
-        node.path = [global$1.$path];
+        var $attres = global.$attres;
         if (blank(app)) return;
         extention(app.model, node.scope);
         var insert = insertion(node.childNodes);
@@ -778,6 +774,7 @@ var view = (function (exports) {
         clearNodes(node.childNodes);
         var component = new View({ view: app.component, model: app.model, action: app.action });
         var clasNodes = compoNode(insert, node, component);
+        setAttres(clasNodes, we, $attres);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
       } catch (e) {
@@ -797,7 +794,7 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    each: function each$$1(node, we) {
+    each: function each(node, we) {
       try {
         var insert = insertion(node.childNodes);
         var doc = document.createDocumentFragment();
@@ -810,17 +807,19 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    express: function express(node) {
+    express: function express(node, we, $attres) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+        setAttres(node, we, $attres);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
       } catch (e) {
         console.log(e);
       }
     },
-    attribute: function attribute(node) {
+    attribute: function attribute(node, we, $attres) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
+        setAttres(node, we, $attres);
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
@@ -850,6 +849,15 @@ var view = (function (exports) {
       if (child.node && child.node.parentNode) return child.node.parentNode.removeChild(child.node);
       if (child.childNodes) clearNodes(child.childNodes);
     });
+  }
+
+  function setAttres(clas, we, $attres) {
+    var attres = $attres.get(we);
+    if (attres) {
+      attres.push(clas);
+    } else {
+      $attres.set(we, [clas]);
+    }
   }
 
   function Router(app, params) {
@@ -927,7 +935,7 @@ var view = (function (exports) {
     window.addEventListener(supportsPushState ? "popstate" : "hashchange", action, false);
   }
 
-  var global$1 = { $path: undefined };
+  var global = { $path: undefined };
 
   var View = function () {
     function View(app) {
@@ -936,13 +944,11 @@ var view = (function (exports) {
       this.content = { childNodes: [], children: [] };
       this.model = app.model;
       this.action = app.action;
-      var we = this;
 
-      observe(app.model, function set$$1(path, value, oldValue) {
-        deepen(we.content, path, we);
-        attrDeepen(global$1.$attres);
-      }, function get$$1(path) {
-        global$1.$path = path;
+      observe(app.model, function set(path, attres, $attres) {
+        deepen(attres, $attres);
+      }, function get(path) {
+        global.$path = path;
       });
 
       app.view ? this.view(app) : this.component(app);
@@ -970,20 +976,10 @@ var view = (function (exports) {
     return View;
   }();
 
-  function deepen(content, path, we) {
-    each(content.childNodes, function (node) {
-      if (node.path && node.path.has(path)) {
-        return resolver[node.resolver](node, we);
-      }
-      if (node.childNodes[0]) deepen(node, path, we);
-    });
-  }
-
-  function attrDeepen(attres) {
-    attres.forEach(function (attre) {
-      each(slice(attre), function (node) {
-        if (node.node && !node.node.ownerElement.parentNode) attre.remove(node);
-        resolver[node.resolver](node);
+  function deepen(attres, $attres) {
+    attres.forEach(function (attre, we) {
+      each(attre, function (node) {
+        resolver[node.resolver](node, we, $attres);
       });
     });
   }
@@ -992,8 +988,8 @@ var view = (function (exports) {
   window.Router = Router;
   window.clone = clone;
 
-  exports.global = global$1;
   exports.View = View;
+  exports.global = global;
 
   return exports;
 

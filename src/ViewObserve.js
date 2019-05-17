@@ -3,52 +3,37 @@ import { View, global } from "./ViewIndex";
 
 export function observe(target, callSet, callGet) {
   var setable = true;
-  function watcher(object, root, oldObject) {
-    if (Array.isArray(object)) {
-      array(object, root);
-      object.forEach((a, prop) => {
-        walk(object, prop, root, oldObject);
-      })
-    } else if (typeof object == "object") {
-      Object.keys(object).forEach(prop => {
-        walk(object, prop, root, oldObject);
-      })
-    }
+  function watcher(object, root) {
+    Object.keys(object).forEach(prop => {
+      define(object, prop, object[prop], root);
+    })
   }
 
-  function walk(object, prop, root, oldObject) {
-    var value = object[prop], oldValue = (oldObject || {})[prop];
+  function define(object, prop, val, root) {
+    var value, attres = new Map();
     var path = root ? root + "." + prop : prop;
-    if (!(value instanceof View) && typeof value == "object") {
-      watcher(value, path, oldValue);
-    }
-    define(object, prop, path, oldValue);
-  }
-
-  function define(object, prop, path, oldValue) {
-    var value = object[prop], attres = new Map();
     Object.defineProperty(object, prop, {
       get() {
-        mq.publish(target, "get", [path]);
+        if (value == undefined) {
+          value = val;
+          if (Array.isArray(value)) array(value, path);
+          if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+        }
         global.$attres = attres;
+        mq.publish(target, "get", [path]);
         return value;
       },
       set(val) {
-        var oldValue = value;
-        watcher(value = val, path, oldValue);
-        global.$attres = attres;
-        if (setable) mq.publish(target, "set", [path]);
+        value = val;
+        if (Array.isArray(value)) array(value, path);
+        if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+        let attre = attres;
+        attres = new Map();
+        if (setable) mq.publish(target, "set", [path, attre, attres]);
       }
     });
   }
-
-  function def(obj, key, val) {
-    Object.defineProperty(obj, key, {
-      writable: true,
-      value: val
-    });
-  }
-
+  
   function array(object, root) {
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     var prototype = Array.prototype;
@@ -99,6 +84,14 @@ export function observe(target, callSet, callGet) {
           break;
       }
     });
+
+    function def(obj, key, val) {
+      Object.defineProperty(obj, key, {
+        writable: true,
+        value: val
+      });
+    }
+  
     function notify(parm) {
       new Function('scope', 'val',
         `

@@ -12,11 +12,9 @@ export class View {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
-    var we = this;
 
-    observe(app.model, function set(path, value, oldValue) {
-      deepen(we.content, path, we);
-      attrDeepen(global.$attres);
+    observe(app.model, function set(path, attres, $attres) {
+      deepen(attres, $attres);
     }, function get(path) {
       global.$path = path;
     });
@@ -39,22 +37,10 @@ export class View {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
-      return resolver[node.resolver](node, we);
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
-}
-
-function attrDeepen(attres) {
-  attres.forEach(attre => {
-    each(slice(attre), function (node) {
-      if (node.node && !node.node.ownerElement.parentNode)
-        attre.remove(node);
-      resolver[node.resolver](node);
+function deepen(attres, $attres) {
+  attres.forEach((attre, we) => {
+    each(attre, function (node) {
+      resolver[node.resolver](node, we, $attres);
     });
   })
 }

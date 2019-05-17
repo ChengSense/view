@@ -73,7 +73,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
-            binding.when(null, scopes, clas, content);
+            //binding.when(null, scopes, clas, content);
             whiles(childNodes, function (child, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
@@ -93,7 +93,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
             });
           }
           else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
+            //binding.when(null, scopes, clas, content);
             whiles(slice(child.children), function (child, childNodes) {
               if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 compiler(node, scopes, childNodes, clas);
@@ -151,7 +151,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     attrExpress(node, scope);
     if (new RegExp($component).test(node.nodeValue)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas);
+      resolver["component"](clas, we);
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
@@ -171,6 +171,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      setAttres(clas, we);
     },
     each(node, scope, clas, content, value) {
       if (value == undefined || global.$path == undefined) return;
@@ -179,6 +180,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.scope = scope;
       clas.path = [global.$path];
       clas.node = node;
+      setAttres(clas, we);
     },
     when(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -215,14 +217,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   function dep(key, scope, clas) {
     key.replace($word, function (key) {
       if (code(key, scope) == undefined || global.$path == undefined) return;
-      if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(we);
-        if (attres) {
-          attres.push(clas)
-        } else {
-          global.$attres.set(we, [clas]);
-        }
-      }
+      setAttres(clas, we);
       clas.path.push(global.$path);
     });
   }
@@ -320,6 +315,17 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   compiler(node, scopes, childNodes, content);
 
+}
+
+export function setAttres(clas, we, $attres) {
+  let $attres = ($attres || global.$attres);
+  let attres = $attres.get(we);
+  if (attres) {
+    attres.push(clas);
+  }
+  else {
+    $attres.set(we, [clas]);
+  }
 }
 
 export function compoNode(node, child, component) {
