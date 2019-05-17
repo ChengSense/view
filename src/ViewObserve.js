@@ -9,13 +9,13 @@ export function observe(target, callSet, callGet) {
     })
   }
 
-  function define(object, prop, val, root) {
+  function define(object, prop, valu, root) {
     var value, attres = new Map();
     var path = root ? root + "." + prop : prop;
     Object.defineProperty(object, prop, {
       get() {
         if (value == undefined) {
-          value = val;
+          value = valu;
           if (Array.isArray(value)) array(value, path);
           if (!(value instanceof View) && typeof value == "object")
             watcher(value, path);
@@ -25,17 +25,15 @@ export function observe(target, callSet, callGet) {
         return value;
       },
       set(val) {
-        value = val;
-        if (Array.isArray(value)) array(value, path);
-        if (!(value instanceof View) && typeof value == "object")
-          watcher(value, path);
+        valu = val;
+        value = undefined;
         let attre = attres;
         attres = new Map();
         if (setable) mq.publish(target, "set", [path, attre, attres]);
       }
     });
   }
-  
+
   function array(object, root) {
     const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
     var prototype = Array.prototype;
@@ -93,7 +91,7 @@ export function observe(target, callSet, callGet) {
         value: val
       });
     }
-  
+
     function notify(parm) {
       new Function('scope', 'val',
         `
