@@ -578,7 +578,6 @@ var view = (function (exports) {
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
-        clas.path = [global.$path];
         clas.node = node;
         setAttres(clas, we);
       },
@@ -587,7 +586,6 @@ var view = (function (exports) {
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
-        clas.path = [global.$path];
         clas.node = node;
         setAttres(clas, we);
       },
@@ -598,14 +596,12 @@ var view = (function (exports) {
         var key = whens.pop();
         clas.resolver = "when";
         clas.scope = scope;
-        clas.path = [];
         clas.node = node;
         dep(key, scope, clas);
       },
       express: function express(node, scope, clas, key) {
         clas.resolver = "express";
         clas.scope = scope;
-        clas.path = [];
         clas.node = node;
         dep(key, scope, clas);
       },
@@ -614,7 +610,6 @@ var view = (function (exports) {
         nodeValue.replace($expres, function (key) {
           clas.resolver = "express";
           clas.scope = scope;
-          clas.path = [];
           clas.node = node;
           dep(key, scope, clas);
         });
@@ -626,7 +621,6 @@ var view = (function (exports) {
       key.replace($word, function (key) {
         if (code(key, scope) == undefined || global.$path == undefined) return;
         setAttres(clas, we);
-        clas.path.push(global.$path);
       });
     }
 
@@ -742,7 +736,6 @@ var view = (function (exports) {
       scope: child.scope,
       resolver: child.resolver,
       content: child.content,
-      path: child.path,
       childNodes: [{
         node: comment,
         children: [],
