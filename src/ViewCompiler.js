@@ -318,7 +318,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 }
 
 export function setAttres(clas, we, $attres) {
-  let $attres = ($attres || global.$attres);
+  $attres = ($attres || global.$attres);
   let attres = $attres.get(we);
   if (attres) {
     attres.push(clas);

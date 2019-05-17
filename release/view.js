@@ -630,15 +630,6 @@ var view = (function (exports) {
       });
     }
 
-    function setAttres(clas, we) {
-      var attres = global.$attres.get(we);
-      if (attres) {
-        attres.push(clas);
-      } else {
-        global.$attres.set(we, [clas]);
-      }
-    }
-
     function model(node, scope) {
       var owner = node.ownerElement,
           handle;
@@ -728,6 +719,16 @@ var view = (function (exports) {
     }
 
     compiler(node, scopes, childNodes, content);
+  }
+
+  function setAttres(clas, we, $attres) {
+    $attres = $attres || global.$attres;
+    var attres = $attres.get(we);
+    if (attres) {
+      attres.push(clas);
+    } else {
+      $attres.set(we, [clas]);
+    }
   }
 
   function compoNode(node, child, component) {
@@ -849,15 +850,6 @@ var view = (function (exports) {
       if (child.node && child.node.parentNode) return child.node.parentNode.removeChild(child.node);
       if (child.childNodes) clearNodes(child.childNodes);
     });
-  }
-
-  function setAttres(clas, we, $attres) {
-    var attres = $attres.get(we);
-    if (attres) {
-      attres.push(clas);
-    } else {
-      $attres.set(we, [clas]);
-    }
   }
 
   function Router(app, params) {

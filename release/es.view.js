@@ -611,16 +611,6 @@ function Compiler(node, scopes, childNodes, content, we) {
     });
   }
 
-  function setAttres(clas, we) {
-    let attres = global.$attres.get(we);
-    if (attres) {
-      attres.push(clas);
-    }
-    else {
-      global.$attres.set(we, [clas]);
-    }
-  }
-
   function model(node, scope) {
     var owner = node.ownerElement, handle;
     owner._express = node.nodeValue.replace($express, "$1");
@@ -716,6 +706,16 @@ function Compiler(node, scopes, childNodes, content, we) {
 
 }
 
+function setAttres(clas, we, $attres) {
+  $attres = ($attres || global.$attres);
+  let attres = $attres.get(we);
+  if (attres) {
+    attres.push(clas);
+  }
+  else {
+    $attres.set(we, [clas]);
+  }
+}
 
 function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
@@ -842,16 +842,6 @@ function clearNodes(nodes) {
     if (child.childNodes)
       clearNodes(child.childNodes);
   });
-}
-
-function setAttres(clas, we, $attres) {
-  let attres = $attres.get(we);
-  if (attres) {
-    attres.push(clas);
-  }
-  else {
-    $attres.set(we, [clas]);
-  }
 }
 
 function Router(app, params) {
