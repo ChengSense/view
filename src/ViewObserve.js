@@ -17,7 +17,8 @@ export function observe(target, callSet, callGet) {
         if (value == undefined) {
           value = val;
           if (Array.isArray(value)) array(value, path);
-          if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+          if (!(value instanceof View) && typeof value == "object")
+            watcher(value, path);
         }
         global.$attres = attres;
         mq.publish(target, "get", [path]);
@@ -26,7 +27,8 @@ export function observe(target, callSet, callGet) {
       set(val) {
         value = val;
         if (Array.isArray(value)) array(value, path);
-        if (!(value instanceof View) && typeof value == "object") watcher(value, path);
+        if (!(value instanceof View) && typeof value == "object")
+          watcher(value, path);
         let attre = attres;
         attres = new Map();
         if (setable) mq.publish(target, "set", [path, attre, attres]);
