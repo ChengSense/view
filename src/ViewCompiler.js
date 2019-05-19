@@ -1,6 +1,6 @@
 import { global } from "./ViewIndex";
 import { blank, forEach, slice, whiles } from "./ViewLang";
-import { deeping, resolver } from "./ViewResolver";
+import { setCache, resolver } from "./ViewResolver";
 import { code, codex, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
 
@@ -178,7 +178,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      deeping(clas, we, global.$cache);
+      setCache(clas, we, global.$cache);
     },
     each(node, scope, clas, content) {
       if (global.$cache == undefined) return;
@@ -186,7 +186,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      deeping(clas, we, global.$cache);
+      setCache(clas, we, global.$cache);
     },
     when(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -222,7 +222,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     key.replace($word, function (key) {
       code(key, scope);
       if (global.$cache == undefined) return;
-      deeping(clas, we, global.$cache);
+      setCache(clas, we, global.$cache);
     });
   }
 

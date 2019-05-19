@@ -766,15 +766,15 @@ var view = (function (exports) {
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        deeping(clas, we, global.$cache);
+        setCache(clas, we, global.$cache);
       },
-      each: function each$$1(node, scope, clas, content) {
+      each: function each(node, scope, clas, content) {
         if (global.$cache == undefined) return;
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        deeping(clas, we, global.$cache);
+        setCache(clas, we, global.$cache);
       },
       when: function when(node, scope, clas) {
         var nodeValue = clas.clas.nodeValue;
@@ -809,7 +809,7 @@ var view = (function (exports) {
       key.replace($word, function (key) {
         code(key, scope);
         if (global.$cache == undefined) return;
-        deeping(clas, we, global.$cache);
+        setCache(clas, we, global.$cache);
       });
     }
 
@@ -1012,7 +1012,7 @@ var view = (function (exports) {
           flux: app.flux
         });
         var clasNodes = compoNode(insert, node, component);
-        deeping(clasNodes, we, $cache);
+        setCache(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
       } catch (e) {
@@ -1032,7 +1032,7 @@ var view = (function (exports) {
         console.log(e);
       }
     },
-    each: function each$$1(node, we) {
+    each: function each(node, we) {
       try {
         var insert = insertion(node.childNodes);
         var doc = document.createDocumentFragment();
@@ -1072,7 +1072,7 @@ var view = (function (exports) {
     express: function express(node, we, cache) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
-        deeping(node, we, cache);
+        setCache(node, we, cache);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
       } catch (e) {
         console.log(e);
@@ -1081,7 +1081,7 @@ var view = (function (exports) {
     attribute: function attribute(node, we, cache) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
-        deeping(node, we, cache);
+        setCache(node, we, cache);
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
@@ -1102,7 +1102,7 @@ var view = (function (exports) {
     });
   };
   var arrayEach = {
-    each: function each$$1(node, scope, add, we, children) {
+    each: function each(node, scope, add, we, children) {
       try {
         var l = scope.length;
 
@@ -1119,7 +1119,7 @@ var view = (function (exports) {
       }
     }
   };
-  function deeping(clas, we, $cache) {
+  function setCache(clas, we, $cache) {
     if (!$cache) return;
     var cache = $cache.get(we);
 
@@ -1364,10 +1364,10 @@ var view = (function (exports) {
         var methods = this._manager.get(type);
 
         if (methods == undefined) return;
-        methods.delete(handler);
+        methods["delete"](handler);
         if (methods.size) return;
 
-        this._manager.delete(type);
+        this._manager["delete"](type);
 
         removeListener.call(this, type, handler);
       }
@@ -1490,8 +1490,8 @@ var view = (function (exports) {
   window.Router = Router;
   window.query = query;
 
-  exports.global = global;
   exports.View = View;
+  exports.global = global;
 
   return exports;
 

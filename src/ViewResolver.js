@@ -26,7 +26,7 @@ export var resolver = {
       clearNodes(node.childNodes);
       let component = new View({ view: app.component, model: app.model, action: app.action, flux: app.flux });
       let clasNodes = compoNode(insert, node, component);
-      deeping(clasNodes, we, $cache);
+      setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -82,7 +82,7 @@ export var resolver = {
   express: function (node, we, cache) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
-      deeping(node, we, cache);
+      setCache(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (e) {
@@ -92,7 +92,7 @@ export var resolver = {
   attribute: function (node, we, cache) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
-      deeping(node, we, cache);
+      setCache(node, we, cache);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -136,7 +136,7 @@ var arrayEach = {
   }
 };
 
-export function deeping(clas, we, $cache) {
+export function setCache(clas, we, $cache) {
   if (!$cache) return;
   let cache = $cache.get(we);
   if (cache) {
