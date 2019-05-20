@@ -89,25 +89,6 @@ var view = (function (exports) {
   function blank(str) {
     return str == null || str == undefined || str == "";
   }
-  function clone(value) {
-    if (value instanceof Boolean || value instanceof String || value instanceof Number || value instanceof Date || value instanceof View) {
-      return value;
-    } else if (Array.isArray(value)) {
-      var obj = [];
-      Object.keys(value).forEach(function (key) {
-        obj[key] = clone(value[key]);
-      });
-      return obj;
-    } else if (value && _typeof(value) === 'object') {
-      var _obj = {};
-      Object.keys(value).forEach(function (key) {
-        _obj[key] = clone(value[key]);
-      });
-      return _obj;
-    }
-
-    return value;
-  }
 
   if (!Object.values) {
     extend(Object, {
@@ -190,57 +171,45 @@ var view = (function (exports) {
     return list;
   }
 
-  function observe(target, callSet, callGet) {
-    function observer(object, root, oldObject) {
-      if (object instanceof View) return;
-      if (Array.isArray(object)) array(object, root);
-
+  function observer(target, callSet, callGet) {
+    function watcher(object, root) {
       if (_typeof(object) == "object") {
         Object.keys(object).forEach(function (prop) {
-          walk(object, prop, root, oldObject);
+          define(object, prop, root);
         });
       }
     }
 
-    function walk(object, prop, root, oldObject) {
+    function define(object, prop, root) {
       var path = root ? "".concat(root, ".").concat(prop) : prop;
-      var value = object[prop];
-
-      if (value instanceof View) {
-        watcher(object, prop, path);
-      } else if (_typeof(value) == "object" && oldObject != undefined) {
-        observer(value, path, oldObject[prop]);
-        watcher(object, prop, path);
-      } else if (_typeof(value) == "object") {
-        observer(value, path);
-        watcher(object, prop, path);
-      } else if (oldObject != undefined) {
-        var cache = watcher(object, prop, path);
-        var oldValue = oldObject[prop];
-        var oldCache = global.$cache;
-        mq.publish(target, "set", [oldCache, cache]);
-      } else {
-        watcher(object, prop, path);
-      }
-    }
-
-    function watcher(object, prop, path) {
-      var value = object[prop],
+      var value,
+          values = object[prop],
           cache = new Map();
       Object.defineProperty(object, prop, {
         get: function get() {
-          mq.publish(target, "get", [path]);
+          value = getValue(value, values, path);
           global.$cache = cache;
+          mq.publish(target, "get", [path]);
           return value;
         },
         set: function set(val) {
-          var oldValue = value;
+          values = val;
+          value = undefined;
           var oldCache = cache;
           cache = new Map();
-          observer(value = clone(val), path, oldValue);
           mq.publish(target, "set", [oldCache, cache]);
         }
       });
+    }
+
+    function getValue(value, values, path) {
+      if (value == undefined) {
+        value = values;
+        if (Array.isArray(value)) array(value, path);
+        watcher(value, path);
+      }
+
+      return value;
     }
 
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -285,7 +254,7 @@ var view = (function (exports) {
                     this.$length = this.length;
 
                     while (index < this.$length) {
-                      walk(this, index++, root);
+                      define(this, index++, root);
                     }
                   }
 
@@ -309,7 +278,7 @@ var view = (function (exports) {
                   this.$length = this.length;
 
                   while (index < this.$length) {
-                    walk(this, index++, root);
+                    define(this, index++, root);
                   }
 
                   cacher(getCache(), this, arguments.length);
@@ -330,7 +299,7 @@ var view = (function (exports) {
                 this.$index = index, this.$length = this.length;
 
                 while (index < this.length) {
-                  walk(this, index++, root);
+                  define(this, index++, root);
                 }
 
                 cacher(getCache(), this, 1);
@@ -376,7 +345,7 @@ var view = (function (exports) {
 
     mq.subscribe(target, "set", callSet);
     mq.subscribe(target, "get", callGet);
-    observer(target);
+    watcher(target);
   }
 
   var Mess =
@@ -1419,12 +1388,12 @@ var view = (function (exports) {
       this.flux = app.flux;
       this.model = app.model;
       this.action = app.action;
-      observe(app.model, function set(cache, newCache) {
+      observer(app.model, function set(cache, newCache) {
         deepen(cache, newCache);
       }, function get(path) {
         global.$path = path;
       });
-      observe(app.flux, function set(cache, newCache) {
+      observer(app.flux, function set(cache, newCache) {
         deepen(cache, newCache);
       }, function get(path) {
         global.$path = path;

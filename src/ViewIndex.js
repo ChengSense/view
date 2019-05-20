@@ -1,7 +1,7 @@
 import { init, initCompiler } from "./ViewInit";
 import { inject, slice } from "./ViewLang";
 import { resolver } from "./ViewResolver";
-import { observe } from "./ViewObserve";
+import { observer } from "./ViewObserve";
 import { Router } from "./ViewRouter";
 import { query } from "./ViewElmemt";
 
@@ -14,13 +14,13 @@ export class View {
     this.model = app.model;
     this.action = app.action;
 
-    observe(app.model, function set(cache, newCache) {
+    observer(app.model, function set(cache, newCache) {
       deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;
     });
 
-    observe(app.flux, function set(cache, newCache) {
+    observer(app.flux, function set(cache, newCache) {
       deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;

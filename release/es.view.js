@@ -59,30 +59,6 @@ function blank(str) {
   return str == null || str == undefined || str == "";
 }
 
-function clone(value) {
-  if (value instanceof Boolean ||
-    value instanceof String ||
-    value instanceof Number ||
-    value instanceof Date ||
-    value instanceof View) {
-    return value;
-  } else if (Array.isArray(value)) {
-    const obj = [];
-    Object.keys(value).forEach(key => {
-      obj[key] = clone(value[key]);
-    });
-    return obj;
-  }
-  else if (value && typeof value === 'object') {
-    const obj = {};
-    Object.keys(value).forEach(key => {
-      obj[key] = clone(value[key]);
-    });
-    return obj;
-  }
-  return value;
-}
-
 if (!Object.values) {
   extend(Object, {
     values(object) {
@@ -166,59 +142,43 @@ function initCompiler(node, children) {
   return list;
 }
 
-function observe(target, callSet, callGet) {
+function observer(target, callSet, callGet) {
 
-  function observer(object, root, oldObject) {
-    if (object instanceof View) return;
-    if (Array.isArray(object)) array(object, root);
+  function watcher(object, root) {
     if (typeof object == "object") {
       Object.keys(object).forEach(prop => {
-        walk(object, prop, root, oldObject);
+        define(object, prop, root);
       });
     }
   }
 
-  function walk(object, prop, root, oldObject) {
+  function define(object, prop, root) {
     var path = root ? `${root}.${prop}` : prop;
-    var value = object[prop];
-    if (value instanceof View) {
-      watcher(object, prop, path);
-    }
-    else if (typeof value == "object" && oldObject != undefined) {
-      observer(value, path, oldObject[prop]);
-      watcher(object, prop, path);
-    }
-    else if (typeof value == "object") {
-      observer(value, path);
-      watcher(object, prop, path);
-    }
-    else if (oldObject != undefined) {
-      var cache = watcher(object, prop, path);
-      var oldValue = oldObject[prop];
-      var oldCache = global.$cache;
-      mq.publish(target, "set", [oldCache, cache]);
-    }
-    else {
-      watcher(object, prop, path);
-    }
-  }
-
-  function watcher(object, prop, path) {
-    var value = object[prop], cache = new Map();
+    var value, values = object[prop], cache = new Map();
     Object.defineProperty(object, prop, {
       get() {
-        mq.publish(target, "get", [path]);
+        value = getValue(value, values, path);
         global.$cache = cache;
+        mq.publish(target, "get", [path]);
         return value;
       },
       set(val) {
-        var oldValue = value;
+        values = val;
+        value = undefined;
         var oldCache = cache;
         cache = new Map();
-        observer(value = clone(val), path, oldValue);
         mq.publish(target, "set", [oldCache, cache]);
       }
     });
+  }
+
+  function getValue(value, values, path) {
+    if (value == undefined) {
+      value = values;
+      if (Array.isArray(value)) array(value, path);
+      watcher(value, path);
+    }
+    return value;
   }
 
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -256,7 +216,7 @@ function observe(target, callSet, callGet) {
                 if (arguments.length > 2) {
                   var index = this.$index = length;
                   this.$length = this.length;
-                  while (index < this.$length) walk(this, index++, root);
+                  while (index < this.$length) define(this, index++, root);
                 }
                 cacher(getCache(), this, arguments.length - 2);
                 delete this.$index; delete this.$length;
@@ -274,7 +234,7 @@ function observe(target, callSet, callGet) {
                 var data = method.apply(this, arguments);
                 var index = this.$index = length;
                 this.$length = this.length;
-                while (index < this.$length) walk(this, index++, root);
+                while (index < this.$length) define(this, index++, root);
                 cacher(getCache(), this, arguments.length);
                 delete this.$index; delete this.$length;
                 return data;
@@ -289,7 +249,7 @@ function observe(target, callSet, callGet) {
               let index = this.length;
               var data = method.call(this, i);
               this.$index = index, this.$length = this.length;
-              while (index < this.length) walk(this, index++, root);
+              while (index < this.length) define(this, index++, root);
               cacher(getCache(), this, 1);
               delete this.$index; delete this.$length;
               return data;
@@ -337,7 +297,7 @@ function observe(target, callSet, callGet) {
   mq.subscribe(target, "set", callSet);
   mq.subscribe(target, "get", callGet);
 
-  observer(target);
+  watcher(target);
 }
 
 class Mess {
@@ -1333,13 +1293,13 @@ class View {
     this.model = app.model;
     this.action = app.action;
 
-    observe(app.model, function set(cache, newCache) {
+    observer(app.model, function set(cache, newCache) {
       deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;
     });
 
-    observe(app.flux, function set(cache, newCache) {
+    observer(app.flux, function set(cache, newCache) {
       deepen(cache, newCache);
     }, function get(path) {
       global.$path = path;
