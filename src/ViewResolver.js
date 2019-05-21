@@ -184,7 +184,7 @@ function insertNode(nodes, node) {
   }
 }
 
-function clearNodes(nodes) {
+export function clearNodes(nodes) {
   nodes.forEach(function (child) {
     if (child.node && child.node.parentNode)
       return child.node.parentNode.removeChild(child.node);

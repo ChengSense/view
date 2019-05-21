@@ -59,6 +59,25 @@ function blank(str) {
   return str == null || str == undefined || str == "";
 }
 
+function clone(value) {
+  if (
+    value instanceof Boolean ||
+    value instanceof String ||
+    value instanceof Number ||
+    value instanceof Date ||
+    value instanceof View) {
+    return value;
+  } 
+  else if (value && typeof value === 'object') {
+    const obj =new value.__proto__.constructor();
+    Object.keys(value).forEach(key => {
+      obj[key] = clone(value[key]);
+    });
+    return obj;
+  }
+  return value;
+}
+
 if (!Object.values) {
   extend(Object, {
     values(object) {
@@ -163,10 +182,12 @@ function observer(target, callSet, callGet) {
         return value;
       },
       set(val) {
-        values = val;
+        values = clone(val);
+        let oldValue = value;
         value = undefined;
-        var oldCache = cache;
+        let oldCache = cache;
         cache = new Map();
+        setValue(values, oldValue);
         mq.publish(target, "set", [oldCache, cache]);
       }
     });
@@ -179,6 +200,21 @@ function observer(target, callSet, callGet) {
       watcher(value, path);
     }
     return value;
+  }
+
+  function setValue(object, oldObject) {
+    if (typeof oldObject == "object") {
+      Object.keys(oldObject).forEach(prop => {
+        var value = object[prop];
+        var cache = global.$cache;
+        var oldValue = oldObject[prop];
+        var oldCache = global.$cache;
+        if (typeof value != "object" && typeof oldValue != "object") {
+          mq.publish(target, "set", [oldCache, cache]);
+        }
+        setValue(value, oldValue);
+      });
+    }
   }
 
   const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -1347,14 +1383,20 @@ function clearNode(nodes, status) {
 }
 
 function deepen(cache, newCache) {
-  cache.forEach((nodes, we) => {
-    slice(nodes).forEach(node => {
-      if (clearNode([node]))
-        resolver[node.resolver](node, we, newCache);
-      else
-        nodes.remove(node);
+  if (cache && newCache) {
+    cache.forEach((nodes, we) => {
+      slice(nodes).forEach(node => {
+        if (clearNode([node]))
+          resolver[node.resolver](node, we, newCache);
+        else
+          nodes.remove(node);
+      });
     });
-  });
+  } else if (cache && !newCache) {
+    cache.forEach(nodes => {
+      clearNodes(nodes);
+    });
+  }
 }
 
 window.View = View;

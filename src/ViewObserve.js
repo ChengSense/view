@@ -1,6 +1,7 @@
 import { global, View } from "./ViewIndex";
 import { cacher } from "./ViewResolver";
 import { Path } from "./ViewScope";
+import { clone } from "./ViewLang";
 
 export function observer(target, callSet, callGet) {
 
@@ -23,10 +24,12 @@ export function observer(target, callSet, callGet) {
         return value;
       },
       set(val) {
-        values = val;
+        values = clone(val);
+        let oldValue = value;
         value = undefined;
-        var oldCache = cache;
+        let oldCache = cache;
         cache = new Map();
+        setValue(values, oldValue);
         mq.publish(target, "set", [oldCache, cache]);
       }
     });
@@ -42,14 +45,14 @@ export function observer(target, callSet, callGet) {
   }
 
   function setValue(object, oldObject) {
-    if (typeof object == "object") {
-      Object.keys(object).forEach(prop => {
+    if (typeof oldObject == "object") {
+      Object.keys(oldObject).forEach(prop => {
         var value = object[prop];
         var cache = global.$cache;
         var oldValue = oldObject[prop];
         var oldCache = global.$cache;
-        if (oldValue == undefined) {
-
+        if (typeof value != "object" && typeof oldValue != "object") {
+          mq.publish(target, "set", [oldCache, cache]);
         }
         setValue(value, oldValue);
       })

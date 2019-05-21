@@ -89,6 +89,19 @@ var view = (function (exports) {
   function blank(str) {
     return str == null || str == undefined || str == "";
   }
+  function clone(value) {
+    if (value instanceof Boolean || value instanceof String || value instanceof Number || value instanceof Date || value instanceof View) {
+      return value;
+    } else if (value && _typeof(value) === 'object') {
+      var obj = new value.__proto__.constructor();
+      Object.keys(value).forEach(function (key) {
+        obj[key] = clone(value[key]);
+      });
+      return obj;
+    }
+
+    return value;
+  }
 
   if (!Object.values) {
     extend(Object, {
@@ -193,10 +206,12 @@ var view = (function (exports) {
           return value;
         },
         set: function set(val) {
-          values = val;
+          values = clone(val);
+          var oldValue = value;
           value = undefined;
           var oldCache = cache;
           cache = new Map();
+          setValue(values, oldValue);
           mq.publish(target, "set", [oldCache, cache]);
         }
       });
@@ -210,6 +225,23 @@ var view = (function (exports) {
       }
 
       return value;
+    }
+
+    function setValue(object, oldObject) {
+      if (_typeof(oldObject) == "object") {
+        Object.keys(oldObject).forEach(function (prop) {
+          var value = object[prop];
+          var cache = global.$cache;
+          var oldValue = oldObject[prop];
+          var oldCache = global.$cache;
+
+          if (_typeof(value) != "object" && _typeof(oldValue) != "object") {
+            mq.publish(target, "set", [oldCache, cache]);
+          }
+
+          setValue(value, oldValue);
+        });
+      }
     }
 
     var meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
@@ -1448,11 +1480,17 @@ var view = (function (exports) {
   }
 
   function deepen(cache, newCache) {
-    cache.forEach(function (nodes, we) {
-      slice(nodes).forEach(function (node) {
-        if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
+    if (cache && newCache) {
+      cache.forEach(function (nodes, we) {
+        slice(nodes).forEach(function (node) {
+          if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
+        });
       });
-    });
+    } else if (cache && !newCache) {
+      cache.forEach(function (nodes) {
+        clearNodes(nodes);
+      });
+    }
   }
 
   window.View = View;

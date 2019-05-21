@@ -1,6 +1,6 @@
 import { init, initCompiler } from "./ViewInit";
 import { inject, slice } from "./ViewLang";
-import { resolver } from "./ViewResolver";
+import { resolver, clearNodes } from "./ViewResolver";
 import { observer } from "./ViewObserve";
 import { Router } from "./ViewRouter";
 import { query } from "./ViewElmemt";
@@ -69,14 +69,20 @@ function clearNode(nodes, status) {
 }
 
 function deepen(cache, newCache) {
-  cache.forEach((nodes, we) => {
-    slice(nodes).forEach(node => {
-      if (clearNode([node]))
-        resolver[node.resolver](node, we, newCache);
-      else
-        nodes.remove(node);
-    })
-  });
+  if (cache && newCache) {
+    cache.forEach((nodes, we) => {
+      slice(nodes).forEach(node => {
+        if (clearNode([node]))
+          resolver[node.resolver](node, we, newCache);
+        else
+          nodes.remove(node);
+      })
+    });
+  } else if (cache && !newCache) {
+    cache.forEach(nodes => {
+      clearNodes(nodes)
+    });
+  }
 }
 
 window.View = View;

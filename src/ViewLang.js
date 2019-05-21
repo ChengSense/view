@@ -61,21 +61,16 @@ export function blank(str) {
 }
 
 export function clone(value) {
-  if (value instanceof Boolean ||
+  if (
+    value instanceof Boolean ||
     value instanceof String ||
     value instanceof Number ||
     value instanceof Date ||
     value instanceof View) {
     return value;
-  } else if (Array.isArray(value)) {
-    const obj = [];
-    Object.keys(value).forEach(key => {
-      obj[key] = clone(value[key]);
-    })
-    return obj;
-  }
+  } 
   else if (value && typeof value === 'object') {
-    const obj = {};
+    const obj =new value.__proto__.constructor();
     Object.keys(value).forEach(key => {
       obj[key] = clone(value[key]);
     })
