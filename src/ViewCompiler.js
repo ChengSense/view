@@ -1,7 +1,7 @@
 import { global } from "./ViewIndex";
 import { blank, forEach, slice, whiles, extend } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
-import { code, codex, Path, setVariable } from "./ViewScope";
+import { code, codex, coda, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
@@ -165,7 +165,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = code(express[1], scope);
+      node.nodeValue = coda(express[1], scope);
     }
   }
 

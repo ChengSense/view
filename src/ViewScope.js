@@ -21,6 +21,15 @@ export function codex(_express, _scope) {
   }
 }
 
+export function coda(_express, _scope) {
+  try {
+    global.$target = true;
+    return Code(_express)(_scope);
+  } finally {
+    global.$target = false;
+  }
+}
+
 export function Code(_express) {
   return new Function('_scope',
     `with (_scope) {

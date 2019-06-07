@@ -183,6 +183,14 @@ var view = (function (exports) {
       return undefined;
     }
   }
+  function coda(_express, _scope) {
+    try {
+      global.$target = true;
+      return Code(_express)(_scope);
+    } finally {
+      global.$target = false;
+    }
+  }
   function Code(_express) {
     return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
   }
@@ -361,7 +369,7 @@ var view = (function (exports) {
         resolver["component"](clas, we);
       } else if (express = new RegExp($express).exec(node.nodeValue)) {
         binding.express(node, scope, clas, express[0]);
-        node.nodeValue = code(express[1], scope);
+        node.nodeValue = coda(express[1], scope);
       }
     }
 
@@ -794,6 +802,7 @@ var view = (function (exports) {
           cache = new Map();
       return {
         get: function get(parent, prop, proxy) {
+          if (global.$target) return Reflect.get(parent, prop);
           if (prop == "$target") return parent;
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           if (!cache.get(prop)) cache.set(prop, new Map());

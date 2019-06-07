@@ -155,6 +155,15 @@ function codex(_express, _scope) {
   }
 }
 
+function coda(_express, _scope) {
+  try {
+    global.$target = true;
+    return Code(_express)(_scope);
+  } finally {
+    global.$target = false;
+  }
+}
+
 function Code(_express) {
   return new Function('_scope',
     `with (_scope) {
@@ -345,7 +354,7 @@ function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = code(express[1], scope);
+      node.nodeValue = coda(express[1], scope);
     }
   }
 
@@ -768,6 +777,7 @@ function observer(target, callSet, callGet) {
     let values = new Map(), cache = new Map();
     return {
       get(parent, prop, proxy) {
+        if (global.$target) return Reflect.get(parent, prop);
         if (prop == "$target") return parent;
         if (!parent.hasOwnProperty(prop)) return parent[prop];
         if (!cache.get(prop)) cache.set(prop, new Map());

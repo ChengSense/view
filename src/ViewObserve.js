@@ -10,6 +10,7 @@ export function observer(target, callSet, callGet) {
     let values = new Map(), cache = new Map();
     return {
       get(parent, prop, proxy) {
+        if (global.$target) return Reflect.get(parent, prop);
         if (prop == "$target") return parent;
         if (!parent.hasOwnProperty(prop)) return parent[prop];
         if (!cache.get(prop)) cache.set(prop, new Map());
