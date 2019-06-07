@@ -20,7 +20,7 @@ export function each(obj, methd, arg) {
 export function forEach(obj, methd, me) {
   if (!obj) return;
   if (obj.hasOwnProperty("$index")) {
-    for (let i = obj.$index; i < obj.$length; i++) {
+    for (let i = obj.$index; i < obj.length; i++) {
       methd.call(me, obj[i], i);
     }
   } else {
@@ -35,15 +35,16 @@ export function slice(obj) {
 }
 
 export function inject(methds, parent) {
-  if (methds) 
-  Object.values(methds).forEach(methd => {
-    let root = Object.assign({}, parent);
-    root.__proto__ = Function.__proto__;
-    methd.__proto__ = root;
-  });
+  if (methds)
+    Object.values(methds).forEach(methd => {
+      let root = Object.assign({}, parent);
+      root.__proto__ = Function.__proto__;
+      methd.__proto__ = root;
+    });
 }
 
 export function extention(object, parent) {
+  Reflect.setPrototypeOf(object, Object.prototype);
   object.__proto__ = parent;
   return object;
 }
@@ -68,9 +69,9 @@ export function clone(value) {
     value instanceof Date ||
     value instanceof View) {
     return value;
-  } 
+  }
   else if (value && typeof value === 'object') {
-    const obj =new value.__proto__.constructor();
+    const obj = new value.__proto__.constructor();
     Object.keys(value).forEach(key => {
       obj[key] = clone(value[key]);
     })

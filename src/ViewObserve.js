@@ -1,65 +1,60 @@
-import { global, View } from "./ViewIndex";
-import { cacher } from "./ViewResolver";
+import { global } from "./ViewIndex";
 import { Path } from "./ViewScope";
-import { clone } from "./ViewLang";
+import { cacher } from "./ViewResolver";
 
 export function observer(target, callSet, callGet) {
+  if (typeof target != 'object') return target;
+  target = new Proxy(target, handler());
 
-  function watcher(object, root) {
-    if (typeof object == "object") {
-      Object.keys(object).forEach(prop => {
-        define(object, prop, root);
-      })
-    }
-  }
-
-  function define(object, prop, root) {
-    var path = root ? `${root}.${prop}` : prop;
-    var value, values = object[prop], cache = new Map();
-    Object.defineProperty(object, prop, {
-      get() {
-        value = getValue(value, values, path);
-        global.$cache = cache;
+  function handler(root) {
+    let values = new Map(), cache = new Map();
+    return {
+      get(parent, prop, proxy) {
+        if (prop == "$target") return parent;
+        if (!parent.hasOwnProperty(prop)) return parent[prop];
+        if (!cache.get(prop)) cache.set(prop, new Map());
+        let path = root ? `${root}.${prop}` : prop;
+        let value = getValue(values, parent, prop, path, root);
+        global.$cache = cache.get(prop);
         mq.publish(target, "get", [path]);
         return value;
       },
-      set(val) {
-        values = clone(val);
-        let oldValue = value;
-        value = undefined;
-        let oldCache = cache;
-        cache = new Map();
-        setValue(values, oldValue);
-        mq.publish(target, "set", [oldCache, cache]);
+      set(parent, prop, val, proxy) {
+        let oldValue = values.get(prop)
+        let oldCache = cache.get(prop);
+        values.set(prop, undefined);
+        cache.set(prop, new Map());
+        Reflect.set(parent, prop, val.$target || val);
+        setValue(proxy[prop], oldValue);
+        mq.publish(target, "set", [oldCache, cache.get(prop)]);
+        return true;
       }
-    });
+    }
   }
 
-  function getValue(value, values, path) {
-    if (value == undefined) {
-      value = values;
-      if (Array.isArray(value)) array(value, path);
-      watcher(value, path);
-    }
-    return value;
+  function getValue(values, parent, prop, path, root) {
+    let value = values.get(prop);
+    if (value != undefined) return value;
+    let val = Reflect.get(parent, prop);
+    if (typeof val == "object" && !(val instanceof View)) values.set(prop, val = new Proxy(val, handler(path)));
+    if (Array.isArray(parent)) array(parent, root);
+    return val;
   }
 
   function setValue(object, oldObject) {
-    if (typeof oldObject == "object") {
+    if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
-        var value = object[prop];
-        var cache = global.$cache;
-        var oldValue = oldObject[prop];
-        var oldCache = global.$cache;
-        if (typeof value != "object" && typeof oldValue != "object") {
-          mq.publish(target, "set", [oldCache, cache]);
-        }
+        let value = object[prop];
+        let cache = global.$cache;
+        let oldValue = oldObject[prop];
+        let oldCache = global.$cache;
+        if (typeof value != "object" && typeof oldValue != "object") mq.publish(target, "set", [oldCache, cache]);
         setValue(value, oldValue);
-      })
+      });
     }
   }
 
-  const meths = ["shift", "push", "pop", "splice", "unshift", "reverse"];
+  const meths = ["shift", "push", "pop", "splice", "unshift", "reverse", "sort"];
   function array(object, root) {
     meths.forEach(function (name) {
       var method = Array.prototype[name];
@@ -68,8 +63,9 @@ export function observer(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              var data = method.apply(this, arguments);
-              cacher(getCache(), this);
+              let data = method.apply(this, arguments);
+              let index = this.length;
+              cacher(getCache(), index);
               return data;
             }
           });
@@ -78,8 +74,9 @@ export function observer(target, callSet, callGet) {
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              var data = method.apply(this, arguments);
-              cacher(getCache(), this);
+              let data = method.apply(this, arguments);
+              let index = this.length;
+              cacher(getCache(), index);
               return data;
             }
           });
@@ -87,17 +84,13 @@ export function observer(target, callSet, callGet) {
         case "splice":
           Object.defineProperty(object, name, {
             writable: true,
-            value: function (i, l) {
-              if (0 < this.length) {
-                let length = this.length;
-                var data = method.apply(this, arguments);
-                if (arguments.length > 2) {
-                  var index = this.$index = length;
-                  this.$length = this.length;
-                  while (index < this.$length) define(this, index++, root);
-                }
-                cacher(getCache(), this, arguments.length - 2);
-                delete this.$index; delete this.$length;
+            value: function () {
+              if (this.length) {
+                let index = this.length;
+                let data = method.apply(this, arguments);
+                arguments.length > 2 ? this.$index = index : index = this.length;
+                cacher(getCache(), index, arguments.length - 2);
+                Reflect.deleteProperty(this, "$index");
                 return data;
               }
             }
@@ -106,15 +99,12 @@ export function observer(target, callSet, callGet) {
         case "unshift":
           Object.defineProperty(object, name, {
             writable: true,
-            value: function (i, l) {
-              if (0 < this.length) {
-                let length = this.length;
-                var data = method.apply(this, arguments);
-                var index = this.$index = length;
-                this.$length = this.length;
-                while (index < this.$length) define(this, index++, root);
-                cacher(getCache(), this, arguments.length);
-                delete this.$index; delete this.$length;
+            value: function () {
+              if (arguments.length) {
+                let index = this.$index = this.length;
+                let data = method.apply(this, arguments);
+                cacher(getCache(), index, arguments.length);
+                Reflect.deleteProperty(this, "$index");
                 return data;
               }
             }
@@ -123,45 +113,38 @@ export function observer(target, callSet, callGet) {
         case "push":
           Object.defineProperty(object, name, {
             writable: true,
-            value: function (i) {
-              let index = this.length;
-              var data = method.call(this, i);
-              this.$index = index, this.$length = this.length;
-              while (index < this.length) define(this, index++, root);
-              cacher(getCache(), this, 1);
-              delete this.$index; delete this.$length;
-              return data;
+            value: function () {
+              if (arguments.length) {
+                let index = this.$index = this.length;
+                let data = method.apply(this, arguments);
+                cacher(getCache(), index, arguments.length);
+                Reflect.deleteProperty(this, "$index");
+                return data;
+              }
             }
           });
           break;
         case "reverse":
           Object.defineProperty(object, name, {
             writable: true,
-            value: function (i) {
-              var data = method.apply(this, arguments);
+            value: function () {
+              let data = method.apply(this, arguments);
               return data;
             }
           });
           break;
-        default:
+        case "sort":
           Object.defineProperty(object, name, {
             writable: true,
             value: function () {
-              var data = method.apply(this, arguments);
-              notify([]);
+              let data = method.apply(this, arguments);
               return data;
             }
           });
           break;
       }
     });
-    function notify(parm) {
-      new Function('scope', 'val',
-        `
-        scope${Path(root)}=val;
-        `
-      )(target, object);
-    }
+
     function getCache() {
       new Function('scope',
         `
@@ -170,12 +153,13 @@ export function observer(target, callSet, callGet) {
       )(target)
       return global.$cache;
     }
+
   }
 
   mq.subscribe(target, "set", callSet);
   mq.subscribe(target, "get", callGet);
 
-  watcher(target);
+  return target;
 }
 
 class Mess {

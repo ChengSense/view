@@ -1,5 +1,5 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles } from "./ViewLang";
+import { blank, forEach, slice, whiles, extention } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
 import { code, codex, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
@@ -19,9 +19,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, dataSource);
           forEach(dataSource, function (item, index) {
-            var scope = Object.create(scopes || {});
+            var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
+            extention(scope, scopes);
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -60,9 +61,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
           binding.each(null, scopes, clas, content, dataSource);
           let children = slice(child.children);
           forEach(dataSource, function (item, index) {
-            var scope = Object.create(scopes || {});
+            var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
+            extention(scope, scopes);
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -127,7 +129,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function attrExpress(node, scope) {
     forEach(node.attributes, function (child) {
-      if(!child) return;
+      if (!child) return;
       let clas = attrNode(child, scope, child.cloneNode());
       if (new RegExp($expres).test(child.nodeValue)) {
         binding.attrExpress(child, scope, clas);
@@ -245,8 +247,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
         });
         let value = code(owner._express, scope);
         if (value.has(owner.value)) owner.checked = true;
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.log(error);
       }
     },
     radio(node, scope, _express) {
@@ -261,7 +263,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         if (value == owner.value) owner.checked = true;
         owner.name = global.$path;
       } catch (error) {
-        console.log(e);
+        console.log(error);
       }
     },
     select(node, scope, _express) {
@@ -275,7 +277,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         let value = code(owner._express, scope);
         blank(value) ? handle() : owner.value = value;
       } catch (error) {
-        console.log(e);
+        console.log(error);
       }
     },
     other(node, scope, _express) {
@@ -287,7 +289,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           new Function('scope', express)(scope);
         });
       } catch (error) {
-        console.log(e);
+        console.log(error);
       }
     }
   }
@@ -313,8 +315,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       childNodes: [{
         node: comment,
         clas: child.clas,
-        children: [],
         scope: child.scope,
+        children: [],
         childNodes: []
       }]
     };
@@ -333,8 +335,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
         childNodes: [{
           node: comment,
           clas: child.clas,
-          children: [],
           scope: child.scope,
+          children: [],
           childNodes: []
         }]
       });
@@ -351,8 +353,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
     clas.content = content;
     clas.childNodes.push({
       node: comment,
-      children: [],
       content: clas,
+      children: [],
       childNodes: []
     });
   }
@@ -361,8 +363,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
     return {
       node: newNode,
       clas: clas,
-      children: [],
       scope: scope,
+      children: [],
       childNodes: []
     };
   }
@@ -373,6 +375,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
 export function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
+  Reflect.deleteProperty(child, "path");
   node.before(comment);
   component.content.node = component.view;
   return {
@@ -383,8 +386,8 @@ export function compoNode(node, child, component) {
     content: child.content,
     childNodes: [{
       node: comment,
-      children: [],
       scope: child.scope,
+      children: [],
       childNodes: []
     }, component.content]
   };

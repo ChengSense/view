@@ -20,7 +20,6 @@ function addListener(type, methods, scope) {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
           method.apply(extention({
-            $flux: method.$flux,
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -35,7 +34,6 @@ function addListener(type, methods, scope) {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
           method.apply(extention({
-            $flux: method.$flux,
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -50,7 +48,6 @@ function addListener(type, methods, scope) {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
           method.apply(extention({
-            $flux: method.$flux,
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);

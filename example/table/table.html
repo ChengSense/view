@@ -81,11 +81,11 @@
 <script type="text/javascript">
   function data() {
     var data = [];
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 1000; i++) {
       data.push({
         "id": 10000 + data.length,
-        "age": "宁波店" + data.length,
-        "username": "小小的-" + data.length,
+        "age": "西湖店" + data.length,
+        "username": "西湖-" + data.length,
         "address": "西湖区-" + data.length
       })
     }
@@ -121,7 +121,6 @@
       scroll: function (event) {
         $(this.$view).find(".scrollable").scrollLeft($(event.target).scrollLeft());
       },
-
       resize: function (event) {
         let target = event.target;
         if (Math.abs(event.offsetX - $(target).outerWidth(true)) < 8) {
@@ -132,7 +131,6 @@
           $(this.$view).css("cursor", "default");
         }
       },
-
       startResize: function (event) {
         let target = header = event.target;
         this.pageX = event.pageX, this.width = $(target).width();
@@ -140,17 +138,14 @@
         target.off("mousemove", this.$action.resize).off("mousedown", this.$action.startResize);
         document.on("mousemove", this.$action.onResize).on("mouseup", this.$action.stopResize);
       },
-
       onResize: function (event) {
         var th = event.pageX - this.pageX;
         resizer.width(this.width + th);
       },
-
       stopResize: function (event) {
         header.on("mousemove", this.$action.resize);
         document.off("mousemove", this.$action.onResize).off("mouseup", this.$action.stopResize);
       }
-
     }
   });
 

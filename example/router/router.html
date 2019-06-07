@@ -4,7 +4,7 @@
 <head>
   <title>main.html</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <script type="text/javascript" src="../../release/view.js"></script>
+  <script type="text/javascript" src="../../release/mini.view.js"></script>
 </head>
 
 <body>
@@ -67,10 +67,8 @@
 
   var app = new View({
     view: "body",
-    flux:{
-      router: detail
-    },
     model: {
+      router: detail,
       param1: "",
       param2: ""
     }

@@ -1,7 +1,7 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, extention, slice } from "./ViewLang";
 import { global, View } from "./ViewIndex";
-import { codec, codex } from "./ViewScope";
+import { code, codex } from "./ViewScope";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -17,14 +17,15 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codec(node.clas.nodeValue, node.scope, we);
+      let app = code(node.clas.nodeValue, node.scope);
       let $cache = global.$cache;
+      node.path = global.$path;
       if (blank(app)) return;
       extention(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action, flux: app.flux });
+      let component = new View({ view: app.component, model: app.model, action: app.action });
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
@@ -62,16 +63,16 @@ export var resolver = {
       console.log(e);
     }
   },
-  arrayEach: function (node, we, m, nodes) {
+  arrayEach: function (node, we, index, nodes) {
     try {
-      var insert = insertNode([node.childNodes[m]]);
+      var insert = insertNode([node.childNodes[index]]);
       var doc = document.createDocumentFragment();
       var child = { clas: node.clas, children: node.children, scope: node.scope };
       var content = { childNodes: [], children: [] };
       new Compiler(doc, node.scope, [child], content, we);
       doc.removeChild(doc.childNodes[0]);
       var childNodes = slice(content.childNodes[0].childNodes);
-      childNodes.splice(0, 1, m + 1, 0);
+      childNodes.splice(0, 1, index + 1, 0);
       node.childNodes.splices(childNodes);
       nodes.remove(content.childNodes[0]);
       if (insert.parentNode) insert.after(doc);
@@ -102,12 +103,12 @@ export var resolver = {
   }
 };
 
-export var cacher = function (cache, scope, add) {
+export var cacher = function (cache, index, add) {
   cache.forEach((nodes, we) => {
     nodes.forEach(node => {
       try {
         if (arrayEach[node.resolver])
-          arrayEach[node.resolver](node, scope, add, we, nodes);
+          arrayEach[node.resolver](node, we, nodes, index, add);
         else
           resolver[node.resolver](node, we, cache);
       } catch (e) {
@@ -118,16 +119,13 @@ export var cacher = function (cache, scope, add) {
 };
 
 var arrayEach = {
-  each: function (node, scope, add, we, children) {
+  each: function (node, we, children, index, add) {
     try {
-      var l = scope.length;
       if (add > 0) {
-        var nodes = node.childNodes.splice(l + 1);
-        clearNodes(nodes);
-        resolver.arrayEach(node, we, node.childNodes.length - 1, children);
+        resolver.arrayEach(node, we, index, children);
       }
       else {
-        var nodes = node.childNodes.splice(l + 1);
+        var nodes = node.childNodes.splice(index + 1);
         clearNodes(nodes);
       }
     } catch (e) {

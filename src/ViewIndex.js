@@ -10,39 +10,23 @@ export let global = { $path: undefined };
 export class View {
   constructor(app) {
     this.content = { childNodes: [], children: [] };
-    this.flux = app.flux;
     this.model = app.model;
     this.action = app.action;
-
-    observer(app.model, function set(cache, newCache) {
-      deepen(cache, newCache);
-    }, function get(path) {
-      global.$path = path;
-    });
-
-    observer(app.flux, function set(cache, newCache) {
-      deepen(cache, newCache);
-    }, function get(path) {
-      global.$path = path;
-    });
-
     app.view ? this.view(app) : this.component(app)
-
   }
   view(app) {
+    app.model = observer(app.model, function set(cache, newCache) {
+      deepen(cache, newCache);
+    }, function get(path) {
+      global.$path = path;
+    });
+    this.model = app.model;
     var view = query(app.view);
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    this.flux = app.flux;
-    this.components = app.components;
-    inject(app.action, {
-      $flux: app.flux,
-      $view: this.view,
-      $model: app.model,
-      $action: app.action
-    });
-    resolver["view"](this.view, node, app.model, this.content, this);
+    inject(app.action, { $view: this.view, $model: app.model, $action: app.action });
+    resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {
     var view = query(app.component);
