@@ -1,5 +1,5 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles, extention } from "./ViewLang";
+import { blank, forEach, slice, whiles, extend } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
 import { code, codex, Path, setVariable } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
@@ -22,7 +22,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
             var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
-            extention(scope, scopes);
+            extend(scope, scopes);
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -64,7 +64,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
             var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
-            extention(scope, scopes);
+            extend(scope, scopes);
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);

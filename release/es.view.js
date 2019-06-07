@@ -42,17 +42,9 @@ function inject(methds, parent) {
     });
 }
 
-function extention(object, parent) {
+function extend(object, parent) {
   Reflect.setPrototypeOf(object, Object.prototype);
   object.__proto__ = parent;
-  return object;
-}
-
-function extend(object, src) {
-  var prototype = object.prototype || object.__proto__;
-  Object.keys(src).forEach(key => {
-    prototype[key] = src[key];
-  });
   return object;
 }
 
@@ -61,7 +53,7 @@ function blank(str) {
 }
 
 if (!Object.values) {
-  extend(Object, {
+  Object.assign(Object.prototype, {
     values(object) {
       let values = [];
       Object.keys(object).forEach(key => {
@@ -72,7 +64,7 @@ if (!Object.values) {
   });
 }
 
-extend(Array, {
+Object.assign(Array.prototype, {
   remove(n) {
     var index = this.indexOf(n);
     if (index > -1)
@@ -85,7 +77,7 @@ extend(Array, {
       this.splice(index, 1, n);
   },
   splices(items) {
-    this["splice"].apply(this, items);
+    this.splice.apply(this, items);
   },
   has(o) {
     var index = this.indexOf(o);
@@ -188,13 +180,6 @@ function setVariable(scope, variable, path) {
         return scope${path};
         `
       )(scope);
-    },
-    set(val) {
-      new Function('scope', 'val',
-        `
-        scope${path}=val;
-        `
-      )(scope, val);
     }
   });
 }
@@ -217,7 +202,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
-            extention(scope, scopes);
+            extend(scope, scopes);
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -259,7 +244,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             var scope = {};
             setVariable(scope, variable, global.$path);
             if (id) scope[id.trim()] = index.toString();
-            extention(scope, scopes);
+            extend(scope, scopes);
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -606,7 +591,7 @@ var resolver = {
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      extention(app.model, node.scope);
+      extend(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
@@ -793,6 +778,7 @@ function observer(target, callSet, callGet) {
         return value;
       },
       set(parent, prop, val, proxy) {
+        if (!parent.hasOwnProperty(prop)) ;
         let oldValue = values.get(prop);
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
@@ -1097,7 +1083,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -1111,7 +1097,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -1125,7 +1111,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -1147,7 +1133,7 @@ function removeListener(type, handler) {
   }
 }
 
-extend(Node, {
+Object.assign(Node.prototype, {
   on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
@@ -1203,7 +1189,8 @@ extend(Node, {
       this.parentNode.appendChild(node);
   }
 });
-extend(NodeList, {
+
+Object.assign(NodeList.prototype, {
   on(type, call) {
     each(this, function (node) {
       node.on(type, call);

@@ -1,4 +1,4 @@
-import { each, extend, extention, slice } from "./ViewLang";
+import { each, extend, slice } from "./ViewLang";
 import { code } from "./ViewScope";
 
 export function query(express) {
@@ -19,7 +19,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -33,7 +33,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -47,7 +47,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           var args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extention({
+          method.apply(extend({
             $view: method.$view,
             $action: method.$action
           }, method.$model), args);
@@ -69,7 +69,7 @@ function removeListener(type, handler) {
   }
 }
 
-extend(Node, {
+Object.assign(Node.prototype, {
   on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
@@ -125,7 +125,8 @@ extend(Node, {
       this.parentNode.appendChild(node);
   }
 });
-extend(NodeList, {
+
+Object.assign(NodeList.prototype, {
   on(type, call) {
     each(this, function (node) {
       node.on(type, call);

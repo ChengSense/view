@@ -20,6 +20,7 @@ export function observer(target, callSet, callGet) {
         return value;
       },
       set(parent, prop, val, proxy) {
+        if (!parent.hasOwnProperty(prop)) true;
         let oldValue = values.get(prop)
         let oldCache = cache.get(prop);
         values.set(prop, undefined);

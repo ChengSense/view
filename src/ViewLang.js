@@ -43,17 +43,9 @@ export function inject(methds, parent) {
     });
 }
 
-export function extention(object, parent) {
+export function extend(object, parent) {
   Reflect.setPrototypeOf(object, Object.prototype);
   object.__proto__ = parent;
-  return object;
-}
-
-export function extend(object, src) {
-  var prototype = object.prototype || object.__proto__;
-  Object.keys(src).forEach(key => {
-    prototype[key] = src[key];
-  });
   return object;
 }
 
@@ -61,27 +53,8 @@ export function blank(str) {
   return str == null || str == undefined || str == "";
 }
 
-export function clone(value) {
-  if (
-    value instanceof Boolean ||
-    value instanceof String ||
-    value instanceof Number ||
-    value instanceof Date ||
-    value instanceof View) {
-    return value;
-  }
-  else if (value && typeof value === 'object') {
-    const obj = new value.__proto__.constructor();
-    Object.keys(value).forEach(key => {
-      obj[key] = clone(value[key]);
-    })
-    return obj;
-  }
-  return value;
-}
-
 if (!Object.values) {
-  extend(Object, {
+  Object.assign(Object.prototype, {
     values(object) {
       let values = [];
       Object.keys(object).forEach(key => {
@@ -92,7 +65,7 @@ if (!Object.values) {
   });
 }
 
-extend(Array, {
+Object.assign(Array.prototype, {
   remove(n) {
     var index = this.indexOf(n);
     if (index > -1)
@@ -105,7 +78,7 @@ extend(Array, {
       this.splice(index, 1, n);
   },
   splices(items) {
-    this["splice"].apply(this, items);
+    this.splice.apply(this, items);
   },
   has(o) {
     var index = this.indexOf(o);
@@ -118,4 +91,3 @@ extend(Array, {
     this.push(o);
   }
 });
-

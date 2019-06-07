@@ -75,16 +75,9 @@ var view = (function (exports) {
       methd.__proto__ = root;
     });
   }
-  function extention(object, parent) {
+  function extend(object, parent) {
     Reflect.setPrototypeOf(object, Object.prototype);
     object.__proto__ = parent;
-    return object;
-  }
-  function extend(object, src) {
-    var prototype = object.prototype || object.__proto__;
-    Object.keys(src).forEach(function (key) {
-      prototype[key] = src[key];
-    });
     return object;
   }
   function blank(str) {
@@ -92,7 +85,7 @@ var view = (function (exports) {
   }
 
   if (!Object.values) {
-    extend(Object, {
+    Object.assign(Object.prototype, {
       values: function values(object) {
         var values = [];
         Object.keys(object).forEach(function (key) {
@@ -103,7 +96,7 @@ var view = (function (exports) {
     });
   }
 
-  extend(Array, {
+  Object.assign(Array.prototype, {
     remove: function remove(n) {
       var index = this.indexOf(n);
       if (index > -1) this.splice(index, 1);
@@ -114,7 +107,7 @@ var view = (function (exports) {
       if (index > -1) this.splice(index, 1, n);
     },
     splices: function splices(items) {
-      this["splice"].apply(this, items);
+      this.splice.apply(this, items);
     },
     has: function has(o) {
       var index = this.indexOf(o);
@@ -205,9 +198,6 @@ var view = (function (exports) {
     Object.defineProperty(scope, variable, {
       get: function get() {
         return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
-      },
-      set: function set(val) {
-        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
       }
     });
   }
@@ -229,7 +219,7 @@ var view = (function (exports) {
               var scope = {};
               setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
-              extention(scope, scopes);
+              extend(scope, scopes);
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("each");
               node.appendChild(newNode);
@@ -268,7 +258,7 @@ var view = (function (exports) {
               var scope = {};
               setVariable(scope, variable, global.$path);
               if (id) scope[id.trim()] = index.toString();
-              extention(scope, scopes);
+              extend(scope, scopes);
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
               compiler(node, scope, slice(children), clasNodes);
@@ -623,7 +613,7 @@ var view = (function (exports) {
         var $cache = global.$cache;
         node.path = global.$path;
         if (blank(app)) return;
-        extention(app.model, node.scope);
+        extend(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
@@ -814,6 +804,7 @@ var view = (function (exports) {
           return value;
         },
         set: function set(parent, prop, val, proxy) {
+          if (!parent.hasOwnProperty(prop)) ;
           var oldValue = values.get(prop);
           var oldCache = cache.get(prop);
           values.set(prop, undefined);
@@ -1157,7 +1148,7 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            method.apply(extention({
+            method.apply(extend({
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1170,7 +1161,7 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            method.apply(extention({
+            method.apply(extend({
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1183,7 +1174,7 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            method.apply(extention({
+            method.apply(extend({
               $view: method.$view,
               $action: method.$action
             }, method.$model), args);
@@ -1203,7 +1194,7 @@ var view = (function (exports) {
     }
   }
 
-  extend(Node, {
+  Object.assign(Node.prototype, {
     on: function on(type, handler, scope, params) {
       if (this._manager) {
         if (this._manager.get(type)) {
@@ -1266,7 +1257,7 @@ var view = (function (exports) {
       if (this.nextSibling) this.parentNode.insertBefore(node, this.nextSibling);else this.parentNode.appendChild(node);
     }
   });
-  extend(NodeList, {
+  Object.assign(NodeList.prototype, {
     on: function on(type, call) {
       each(this, function (node) {
         node.on(type, call);
