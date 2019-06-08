@@ -814,9 +814,13 @@ function observer(target, callSet, callGet) {
   function getValue(values, parent, prop, path, root) {
     let value = values.get(prop);
     if (value != undefined) return value;
-    let val = Reflect.get(parent, prop);
-    if (typeof val == "object" && !(val instanceof View)) values.set(prop, val = new Proxy(val, handler(path)));
     if (Array.isArray(parent)) array(parent, root);
+    let val = Reflect.get(parent, prop);
+    if (val instanceof View) {
+      values.set(prop, val);
+    } else if (typeof val == "object") {
+      values.set(prop, val = new Proxy(val, handler(path)));
+    }
     return val;
   }
 

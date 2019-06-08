@@ -835,9 +835,15 @@ var view = (function (exports) {
     function getValue(values, parent, prop, path, root) {
       var value = values.get(prop);
       if (value != undefined) return value;
-      var val = Reflect.get(parent, prop);
-      if (_typeof(val) == "object" && !(val instanceof View)) values.set(prop, val = new Proxy(val, handler(path)));
       if (Array.isArray(parent)) array(parent, root);
+      var val = Reflect.get(parent, prop);
+
+      if (val instanceof View) {
+        values.set(prop, val);
+      } else if (_typeof(val) == "object") {
+        values.set(prop, val = new Proxy(val, handler(path)));
+      }
+
       return val;
     }
 

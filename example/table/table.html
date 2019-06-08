@@ -12,17 +12,17 @@
   <link href="https://kendo.cdn.telerik.com/2018.3.1017/styles/kendo.silver.min.css" rel="stylesheet" />
   <script type="text/javascript" src="../../release/view.js"></script>
   <style>
-    body{
-      font-family: Roboto,"Helvetica Neue",sans-serif;
+    body {
+      font-family: Roboto, "Helvetica Neue", sans-serif;
     }
-    
+
     input {
       border-width: 0px;
       background-color: rgba(255, 255, 255, 0);
       width: 100%;
       height: 20px
     }
-  
+
     .k-unselect {
       -webkit-user-select: none;
       -ms-user-select: none;
@@ -38,12 +38,7 @@
         <table>
           <thead>
             <tr>
-              <th 
-                class="k-header k-unselect" 
-                data-field="{i}" 
-                @mousemove="resize"
-                each="item:i:columns">
-              {item}</th>
+              <th class="k-header k-unselect" each="item:i:columns" data-field="{i}" @mousemove="resize" >{item}</th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>
@@ -57,16 +52,16 @@
             <td each="col:i:item" data-field="{i}" data-row="{id}">
               @when(edit==id){
                 <input value="{col}">
-              }.when{ 
-                {col} 
+              }.when{
+                {col}
               }
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
               <span class="k-button k-button-icontext k-grid-edit" @click="edit(id)">
-                @when(edit==id){ 
+                @when(edit==id){
                   保存
-                }.when{ 
+                }.when{
                   编辑
                 }
               </span>
@@ -117,7 +112,6 @@
       del: function (id) {
         this.list.splice(id, 1);
       },
-
       scroll: function (event) {
         $(this.$view).find(".scrollable").scrollLeft($(event.target).scrollLeft());
       },
