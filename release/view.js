@@ -206,6 +206,9 @@ var view = (function (exports) {
     Object.defineProperty(scope, variable, {
       get: function get() {
         return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
+      },
+      set: function set(val) {
+        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
       }
     });
   }

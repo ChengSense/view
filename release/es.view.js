@@ -189,6 +189,13 @@ function setVariable(scope, variable, path) {
         return scope${path};
         `
       )(scope);
+    },
+    set(val) {
+      new Function('scope', 'val',
+        `
+        scope${path}=val;
+        `
+      )(scope, val);
     }
   });
 }
