@@ -183,14 +183,6 @@ var view = (function (exports) {
       return undefined;
     }
   }
-  function coda(_express, _scope) {
-    try {
-      global.$target = true;
-      return Code(_express)(_scope);
-    } finally {
-      global.$target = false;
-    }
-  }
   function Code(_express) {
     return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
   }
@@ -212,6 +204,18 @@ var view = (function (exports) {
       }
     });
   }
+  function handler(proto) {
+    return {
+      get: function get(parent, prop, proxy) {
+        if (prop == "$target") return parent;
+        if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
+        return Reflect.get(proto, prop);
+      },
+      set: function set(parent, prop, val, proxy) {
+        return Reflect.set(parent, prop, val);
+      }
+    };
+  }
 
   function Compiler(node, scopes, childNodes, content, we) {
     function compiler(node, scopes, childNodes, content) {
@@ -227,10 +231,10 @@ var view = (function (exports) {
             content.childNodes.push(clas);
             binding.attrEach(null, scopes, clas, content, dataSource);
             forEach(dataSource, function (item, index) {
-              var scope = {};
+              var scope = Object.create(scopes.$target);
+              scope = new Proxy(scope, handler(scopes));
               setVariable(scope, variable, global.$path);
-              if (id) scope[id.trim()] = index.toString();
-              extend(scope, scopes);
+              if (id) scope[id.trim()] = index;
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("each");
               node.appendChild(newNode);
@@ -266,10 +270,10 @@ var view = (function (exports) {
             binding.each(null, scopes, clas, content, dataSource);
             var children = slice(child.children);
             forEach(dataSource, function (item, index) {
-              var scope = {};
+              var scope = Object.create(scopes.$target);
+              scope = new Proxy(scope, handler(scopes));
               setVariable(scope, variable, global.$path);
-              if (id) scope[id.trim()] = index.toString();
-              extend(scope, scopes);
+              if (id) scope[id.trim()] = index;
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
               compiler(node, scope, slice(children), clasNodes);
@@ -372,7 +376,7 @@ var view = (function (exports) {
         resolver["component"](clas, we);
       } else if (express = new RegExp($express).exec(node.nodeValue)) {
         binding.express(node, scope, clas, express[0]);
-        node.nodeValue = coda(express[1], scope);
+        node.nodeValue = code(express[1], scope.$target);
       }
     }
 
@@ -805,7 +809,6 @@ var view = (function (exports) {
           cache = new Map();
       return {
         get: function get(parent, prop, proxy) {
-          if (global.$target) return Reflect.get(parent, prop);
           if (prop == "$target") return parent;
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           if (!cache.get(prop)) cache.set(prop, new Map());

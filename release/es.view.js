@@ -155,15 +155,6 @@ function codex(_express, _scope) {
   }
 }
 
-function coda(_express, _scope) {
-  try {
-    global.$target = true;
-    return Code(_express)(_scope);
-  } finally {
-    global.$target = false;
-  }
-}
-
 function Code(_express) {
   return new Function('_scope',
     `with (_scope) {
@@ -200,6 +191,19 @@ function setVariable(scope, variable, path) {
   });
 }
 
+function handler(proto) {
+  return {
+    get(parent, prop, proxy) {
+      if (prop == "$target") return parent;
+      if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
+      return Reflect.get(proto, prop);
+    },
+    set(parent, prop, val, proxy) {
+      return Reflect.set(parent, prop, val);
+    }
+  }
+}
+
 function Compiler(node, scopes, childNodes, content, we) {
 
   function compiler(node, scopes, childNodes, content) {
@@ -215,10 +219,10 @@ function Compiler(node, scopes, childNodes, content, we) {
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, dataSource);
           forEach(dataSource, function (item, index) {
-            var scope = {};
+            var scope = Object.create(scopes.$target);
+            scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
-            extend(scope, scopes);
+            if (id) scope[id.trim()] = index;
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -257,10 +261,10 @@ function Compiler(node, scopes, childNodes, content, we) {
           binding.each(null, scopes, clas, content, dataSource);
           let children = slice(child.children);
           forEach(dataSource, function (item, index) {
-            var scope = {};
+            var scope = Object.create(scopes.$target);
+            scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
-            extend(scope, scopes);
+            if (id) scope[id.trim()] = index;
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -361,7 +365,7 @@ function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = coda(express[1], scope);
+      node.nodeValue = code(express[1], scope.$target);
     }
   }
 
@@ -784,7 +788,6 @@ function observer(target, callSet, callGet) {
     let values = new Map(), cache = new Map();
     return {
       get(parent, prop, proxy) {
-        if (global.$target) return Reflect.get(parent, prop);
         if (prop == "$target") return parent;
         if (!parent.hasOwnProperty(prop)) return parent[prop];
         if (!cache.get(prop)) cache.set(prop, new Map());

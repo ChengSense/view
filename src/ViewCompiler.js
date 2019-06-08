@@ -1,7 +1,7 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles, extend } from "./ViewLang";
+import { blank, forEach, slice, whiles } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
-import { code, codex, coda, Path, setVariable } from "./ViewScope";
+import { code, codex, Path, setVariable, handler } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
@@ -19,10 +19,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, dataSource);
           forEach(dataSource, function (item, index) {
-            var scope = {};
+            var scope = Object.create(scopes.$target);
+            scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
-            extend(scope, scopes);
+            if (id) scope[id.trim()] = index;
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -61,10 +61,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
           binding.each(null, scopes, clas, content, dataSource);
           let children = slice(child.children);
           forEach(dataSource, function (item, index) {
-            var scope = {};
+            var scope = Object.create(scopes.$target);
+            scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
-            extend(scope, scopes);
+            if (id) scope[id.trim()] = index;
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -165,7 +165,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
       binding.express(node, scope, clas, express[0]);
-      node.nodeValue = coda(express[1], scope);
+      node.nodeValue = code(express[1], scope.$target);
     }
   }
 

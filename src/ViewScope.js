@@ -21,15 +21,6 @@ export function codex(_express, _scope) {
   }
 }
 
-export function coda(_express, _scope) {
-  try {
-    global.$target = true;
-    return Code(_express)(_scope);
-  } finally {
-    global.$target = false;
-  }
-}
-
 export function Code(_express) {
   return new Function('_scope',
     `with (_scope) {
@@ -64,4 +55,17 @@ export function setVariable(scope, variable, path) {
       )(scope, val);
     }
   });
+}
+
+export function handler(proto) {
+  return {
+    get(parent, prop, proxy) {
+      if (prop == "$target") return parent;
+      if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
+      return Reflect.get(proto, prop);
+    },
+    set(parent, prop, val, proxy) {
+      return Reflect.set(parent, prop, val);
+    }
+  }
 }
