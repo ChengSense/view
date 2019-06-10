@@ -811,15 +811,13 @@ var view = (function (exports) {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
           if (!parent.hasOwnProperty(prop)) return parent[prop];
-          if (!cache.get(prop)) cache.set(prop, new Map());
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          var value = getValue(values, parent, prop, path, root);
+          var value = getValue(values, cache, parent, prop, path, root);
           global.$cache = cache.get(prop);
           mq.publish(target, "get", [path]);
           return value;
         },
         set: function set(parent, prop, val, proxy) {
-          if (!parent.hasOwnProperty(prop)) ;
           var oldValue = values.get(prop);
           var oldCache = cache.get(prop);
           values.set(prop, undefined);
@@ -832,19 +830,23 @@ var view = (function (exports) {
       };
     }
 
-    function getValue(values, parent, prop, path, root) {
+    function getValue(values, cache, parent, prop, path, root) {
       var value = values.get(prop);
       if (value != undefined) return value;
-      if (Array.isArray(parent)) array(parent, root);
-      var val = Reflect.get(parent, prop);
+      cache.set(prop, new Map());
 
-      if (val instanceof View) {
-        values.set(prop, val);
-      } else if (_typeof(val) == "object") {
-        values.set(prop, val = new Proxy(val, handler(path)));
+      if (!values.length && Array.isArray(parent)) {
+        array(parent, root);
       }
 
-      return val;
+      value = Reflect.get(parent, prop);
+
+      if (!(value instanceof View) && _typeof(value) == "object") {
+        value = new Proxy(value, handler(path));
+      }
+
+      values.set(prop, value);
+      return value;
     }
 
     function setValue(object, oldObject) {
