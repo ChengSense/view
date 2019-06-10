@@ -812,7 +812,7 @@ var view = (function (exports) {
           if (prop == "$target") return parent;
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          var value = getValue(values, cache, parent, prop, path, root);
+          var value = getValue(values, cache, parent, prop, path);
           global.$cache = cache.get(prop);
           mq.publish(target, "get", [path]);
           return value;
@@ -830,16 +830,12 @@ var view = (function (exports) {
       };
     }
 
-    function getValue(values, cache, parent, prop, path, root) {
+    function getValue(values, cache, parent, prop, path) {
       var value = values.get(prop);
       if (value != undefined) return value;
       cache.set(prop, new Map());
-
-      if (!values.length && Array.isArray(parent)) {
-        array(parent, root);
-      }
-
       value = Reflect.get(parent, prop);
+      if (Array.isArray(value)) array(value, path);
 
       if (!(value instanceof View) && _typeof(value) == "object") {
         value = new Proxy(value, handler(path));
