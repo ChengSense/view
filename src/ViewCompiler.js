@@ -212,10 +212,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
         clas.resolver = "express";
         clas.scope = scope;
         clas.node = node;
-        if (clas.clas.name == "model") return;
+        if (clas.clas.name == ":model") return;
         dep(key, scope, clas);
       });
-      if (clas.clas.name == "value" || clas.clas.name == "model")
+      if (clas.clas.name == "value" || clas.clas.name == ":model")
         model(node, scope);
     }
   }

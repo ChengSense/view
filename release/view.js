@@ -423,10 +423,10 @@ var view = (function (exports) {
           clas.resolver = "express";
           clas.scope = scope;
           clas.node = node;
-          if (clas.clas.name == "model") return;
+          if (clas.clas.name == ":model") return;
           dep(key, scope, clas);
         });
-        if (clas.clas.name == "value" || clas.clas.name == "model") model(node, scope);
+        if (clas.clas.name == "value" || clas.clas.name == ":model") model(node, scope);
       }
     };
 

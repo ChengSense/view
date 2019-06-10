@@ -13,25 +13,25 @@
     {param1}
   </div>
   <input value="{param1}" />
-  <br />
+  <br/>
 
   <form>
-    <input type="radio" model="{sex}" value="male">
+    <input type="radio" :model="{sex}" value="male">
     Male
-    <br>
-    <input type="radio" model="{sex}" value="female">
+    <br/>
+    <input type="radio" :model="{sex}" value="female">
     Female
-    <br />
+    <br/>
     {sex}
   </form>
 
   <form>
-    <input type="checkbox" model="{texts}" value="A">
+    <input type="checkbox" :model="{texts}" value="A">
     A
-    <br>
-    <input type="checkbox" model="{texts}" value="B">
+    <br/>
+    <input type="checkbox" :model="{texts}" value="B">
     B
-    <br />
+    <br/>
     [{texts.join(',')}]
   </form>
 
