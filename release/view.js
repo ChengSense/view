@@ -810,6 +810,8 @@ var view = (function (exports) {
       return {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
+          var method = array(proxy, prop, root);
+          if (method) return method;
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
@@ -837,7 +839,6 @@ var view = (function (exports) {
       if (value != undefined) return value;
       cache.set(prop, new Map());
       value = Reflect.get(parent, prop);
-      if (Array.isArray(value)) array(value, path);
 
       if (!(value instanceof View) && _typeof(value) == "object") {
         value = new Proxy(value, handler(path));
@@ -860,109 +861,81 @@ var view = (function (exports) {
       }
     }
 
-    var meths = ["shift", "push", "pop", "splice", "unshift", "reverse", "sort"];
+    function array(object, name, root) {
+      if (!Array.isArray(object)) return;
+      var meths = {
+        shift: function shift() {
+          var method = Array.prototype.shift;
+          var data = method.apply(this, arguments);
+          if (!cacher) return data;
+          var index = this.length;
+          cacher(getCache(), index);
+          return data;
+        },
+        pop: function pop() {
+          var method = Array.prototype.pop;
+          var data = method.apply(this, arguments);
+          if (!cacher) return data;
+          var index = this.length;
+          cacher(getCache(), index);
+          return data;
+        },
+        splice: function splice() {
+          var method = Array.prototype.splice;
 
-    function array(object, root) {
-      meths.forEach(function (name) {
-        var method = Array.prototype[name];
+          if (this.length) {
+            var index = this.length;
+            var data = method.apply(this, arguments);
+            if (!cacher) return data;
+            arguments.length > 2 ? this.$index = index : index = this.length;
+            cacher(getCache(), index, arguments.length - 2);
+            Reflect.deleteProperty(this, "$index");
+            return data;
+          }
+        },
+        unshift: function unshift() {
+          var method = Array.prototype.unshift;
 
-        switch (name) {
-          case "shift":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                var index = this.length;
-                cacher(getCache(), index);
-                return data;
-              }
-            });
-            break;
+          if (arguments.length) {
+            var index = this.$index = this.length;
+            var data = method.apply(this, arguments);
+            if (!cacher) return data;
+            cacher(getCache(), index, arguments.length);
+            Reflect.deleteProperty(this, "$index");
+            return data;
+          }
+        },
+        push: function push() {
+          var method = Array.prototype.push;
 
-          case "pop":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                var index = this.length;
-                cacher(getCache(), index);
-                return data;
-              }
-            });
-            break;
-
-          case "splice":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                if (this.length) {
-                  var index = this.length;
-                  var data = method.apply(this, arguments);
-                  arguments.length > 2 ? this.$index = index : index = this.length;
-                  cacher(getCache(), index, arguments.length - 2);
-                  Reflect.deleteProperty(this, "$index");
-                  return data;
-                }
-              }
-            });
-            break;
-
-          case "unshift":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                if (arguments.length) {
-                  var index = this.$index = this.length;
-                  var data = method.apply(this, arguments);
-                  cacher(getCache(), index, arguments.length);
-                  Reflect.deleteProperty(this, "$index");
-                  return data;
-                }
-              }
-            });
-            break;
-
-          case "push":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                if (arguments.length) {
-                  var index = this.$index = this.length;
-                  var data = method.apply(this, arguments);
-                  cacher(getCache(), index, arguments.length);
-                  Reflect.deleteProperty(this, "$index");
-                  return data;
-                }
-              }
-            });
-            break;
-
-          case "reverse":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                return data;
-              }
-            });
-            break;
-
-          case "sort":
-            Object.defineProperty(object, name, {
-              writable: true,
-              value: function value() {
-                var data = method.apply(this, arguments);
-                return data;
-              }
-            });
-            break;
+          if (arguments.length) {
+            var index = this.$index = this.length;
+            var data = method.apply(this, arguments);
+            if (!cacher) return data;
+            cacher(getCache(), index, arguments.length);
+            Reflect.deleteProperty(this, "$index");
+            return data;
+          }
+        },
+        reverse: function reverse() {
+          var method = Array.prototype.reverse;
+          var data = method.apply(this, arguments);
+          return data;
+        },
+        sort: function sort() {
+          var method = Array.prototype.sort;
+          var data = method.apply(this, arguments);
+          return data;
         }
-      });
+      };
+      Reflect.setPrototypeOf(meths, object);
 
       function getCache() {
         new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
         return global.$cache;
       }
+
+      return meths[name];
     }
 
     Object.keys(call).forEach(function (key) {
