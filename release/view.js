@@ -867,7 +867,6 @@ var view = (function (exports) {
         shift: function shift() {
           var method = Array.prototype.shift;
           var data = method.apply(this, arguments);
-          if (!cacher) return data;
           var index = this.length;
           cacher(getCache(), index);
           return data;
@@ -875,7 +874,6 @@ var view = (function (exports) {
         pop: function pop() {
           var method = Array.prototype.pop;
           var data = method.apply(this, arguments);
-          if (!cacher) return data;
           var index = this.length;
           cacher(getCache(), index);
           return data;
@@ -886,7 +884,6 @@ var view = (function (exports) {
           if (this.length) {
             var index = this.length;
             var data = method.apply(this, arguments);
-            if (!cacher) return data;
             arguments.length > 2 ? this.$index = index : index = this.length;
             cacher(getCache(), index, arguments.length - 2);
             Reflect.deleteProperty(this, "$index");
@@ -899,7 +896,6 @@ var view = (function (exports) {
           if (arguments.length) {
             var index = this.$index = this.length;
             var data = method.apply(this, arguments);
-            if (!cacher) return data;
             cacher(getCache(), index, arguments.length);
             Reflect.deleteProperty(this, "$index");
             return data;
@@ -911,7 +907,6 @@ var view = (function (exports) {
           if (arguments.length) {
             var index = this.$index = this.length;
             var data = method.apply(this, arguments);
-            if (!cacher) return data;
             cacher(getCache(), index, arguments.length);
             Reflect.deleteProperty(this, "$index");
             return data;

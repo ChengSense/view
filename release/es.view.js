@@ -844,7 +844,6 @@ function observer(target, call) {
       shift() {
         var method = Array.prototype.shift;
         let data = method.apply(this, arguments);
-        if (!cacher) return data;
         let index = this.length;
         cacher(getCache(), index);
         return data;
@@ -852,7 +851,6 @@ function observer(target, call) {
       pop() {
         var method = Array.prototype.pop;
         let data = method.apply(this, arguments);
-        if (!cacher) return data;
         let index = this.length;
         cacher(getCache(), index);
         return data;
@@ -862,7 +860,6 @@ function observer(target, call) {
         if (this.length) {
           let index = this.length;
           let data = method.apply(this, arguments);
-          if (!cacher) return data;
           arguments.length > 2 ? this.$index = index : index = this.length;
           cacher(getCache(), index, arguments.length - 2);
           Reflect.deleteProperty(this, "$index");
@@ -874,7 +871,6 @@ function observer(target, call) {
         if (arguments.length) {
           let index = this.$index = this.length;
           let data = method.apply(this, arguments);
-          if (!cacher) return data;
           cacher(getCache(), index, arguments.length);
           Reflect.deleteProperty(this, "$index");
           return data;
@@ -885,7 +881,6 @@ function observer(target, call) {
         if (arguments.length) {
           let index = this.$index = this.length;
           let data = method.apply(this, arguments);
-          if (!cacher) return data;
           cacher(getCache(), index, arguments.length);
           Reflect.deleteProperty(this, "$index");
           return data;
