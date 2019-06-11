@@ -195,15 +195,13 @@ export function Compiler(node, scopes, childNodes, content, we) {
       setCache(clas, we, global.$cache);
     },
     when(node, scope, clas) {
+      if (global.$cache == undefined) return;
       var nodeValue = clas.clas.nodeValue;
       let whens = new RegExp($when).exec(nodeValue);
       if (!whens) return;
-      let key = whens.pop();
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
-      code(key, scope);
-      if (global.$cache == undefined) return;
       setCache(clas, we, global.$cache);
     },
     express(node, scope, clas) {

@@ -406,15 +406,13 @@ var view = (function (exports) {
         setCache(clas, we, global.$cache);
       },
       when: function when(node, scope, clas) {
+        if (global.$cache == undefined) return;
         var nodeValue = clas.clas.nodeValue;
         var whens = new RegExp($when).exec(nodeValue);
         if (!whens) return;
-        var key = whens.pop();
         clas.resolver = "when";
         clas.scope = scope;
         clas.node = node;
-        code(key, scope);
-        if (global.$cache == undefined) return;
         setCache(clas, we, global.$cache);
       },
       express: function express(node, scope, clas) {
