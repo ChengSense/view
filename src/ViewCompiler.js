@@ -131,9 +131,13 @@ export function Compiler(node, scopes, childNodes, content, we) {
     forEach(node.attributes, function (child) {
       if (!child) return;
       let clas = attrNode(child, scope, child.cloneNode());
-      if (new RegExp($expres).test(child.nodeValue)) {
+      if (clas.clas.name == ":model") {
+        model(child, scope);
+      }
+      else if (new RegExp($expres).test(child.nodeValue)) {
+        if (clas.clas.name == "value") model(child, scope);
+        child.nodeValue = codex(child.nodeValue, scope);
         binding.attrExpress(child, scope, clas);
-        child.nodeValue = codex(child.nodeValue, scope.$target);
       }
       bind(child, scope);
     });
@@ -198,7 +202,9 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
-      dep(key, scope, clas);
+      code(key, scope);
+      if (global.$cache == undefined) return;
+      setCache(clas, we, global.$cache);
     },
     express(node, scope, clas) {
       if (global.$cache == undefined) return;
@@ -208,24 +214,12 @@ export function Compiler(node, scopes, childNodes, content, we) {
       setCache(clas, we, global.$cache);
     },
     attrExpress(node, scope, clas) {
-      var nodeValue = clas.clas.nodeValue;
-      nodeValue.replace($expres, function (key) {
-        clas.resolver = "express";
-        clas.scope = scope;
-        clas.node = node;
-        if (clas.clas.name == ":model") return;
-        dep(key, scope, clas);
-      });
-      if (clas.clas.name == "value" || clas.clas.name == ":model")
-        model(node, scope);
+      if (global.$cache == undefined) return;
+      clas.resolver = "express";
+      clas.scope = scope;
+      clas.node = node;
+      setCache(clas, we, global.$cache);
     }
-  }
-
-  function dep(key, scope, clas) {
-    let value = code(key, scope);
-    if (global.$cache == undefined) return;
-    setCache(clas, we, global.$cache);
-    return value;
   }
 
   function model(node, scope) {
