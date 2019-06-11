@@ -15,10 +15,9 @@ export class View {
     app.view ? this.view(app) : this.component(app)
   }
   view(app) {
-    app.model = observer(app.model, function set(cache, newCache) {
-      deepen(cache, newCache);
-    }, function get(path) {
-      global.$path = path;
+    app.model = observer(app.model, {
+      set(cache, newCache) { deepen(cache, newCache); },
+      get(path) { global.$path = path; }
     });
     this.model = app.model;
     var view = query(app.view);

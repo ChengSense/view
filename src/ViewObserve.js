@@ -2,7 +2,7 @@ import { global } from "./ViewIndex";
 import { Path } from "./ViewScope";
 import { cacher } from "./ViewResolver";
 
-export function observer(target, callSet, callGet) {
+export function observer(target, call) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -25,7 +25,9 @@ export function observer(target, callSet, callGet) {
         cache.set(prop, new Map());
         Reflect.set(parent, prop, val.$target || val);
         setValue(proxy[prop], oldValue);
+        let path = root ? `${root}.${prop}` : prop;
         mq.publish(target, "set", [oldCache, cache.get(prop)]);
+        mq.publish(target, path, [oldValue]);
         return true;
       }
     }
@@ -156,12 +158,11 @@ export function observer(target, callSet, callGet) {
       )(target)
       return global.$cache;
     }
-
   }
 
-  mq.subscribe(target, "set", callSet);
-  mq.subscribe(target, "get", callGet);
-
+  Object.keys(call).forEach(key => {
+    mq.subscribe(target, key, call[key]);
+  });
   return target;
 }
 

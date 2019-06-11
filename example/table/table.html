@@ -38,7 +38,7 @@
         <table>
           <thead>
             <tr>
-              <th class="k-header k-unselect" each="item:i:columns" data-field="{i}" @mousemove="resize" >{item}</th>
+              <th class="k-header k-unselect" each="item:i:columns" data-field="{i}" @mousemove="resize">{item}</th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>
@@ -50,20 +50,14 @@
         <tbody>
           <tr each="item:id:list" class="{id%2?'k-alt':''}">
             <td each="col:i:item" data-field="{i}" data-row="{id}">
-              @when(edit==id){
-                <input value="{col}">
-              }.when{
-                {col}
-              }
+              @when(edit==id){ <input value="{col}"> }
+              .when{ {col} }
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
               <span class="k-button k-button-icontext k-grid-edit" @click="edit(id)">
-                @when(edit==id){
-                  保存
-                }.when{
-                  编辑
-                }
+                @when(edit==id){ 保存 }
+                .when{ 编辑 }
               </span>
               <span class="k-button k-button-icontext k-grid-delete" @click="del(id)">删除</span>
             </td>
@@ -82,7 +76,7 @@
         "age": "西湖店" + data.length,
         "username": "西湖-" + data.length,
         "address": "西湖区-" + data.length
-      })
+      });
     }
     return data;
   }
@@ -91,16 +85,16 @@
   var grid = new View({
     view: "#grid",
     model: {
-      pageX: 0,
-      width: 0,
-      edit: "edit",
       columns: {
         "id": "档案编号",
         "age": "门店名称",
         "username": "借款人",
         "address": "住址"
       },
-      list: data()
+      list: data(),
+      edit: "edit",
+      pageX: 0,
+      width: 0,
     },
     action: {
       add: function () {

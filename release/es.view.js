@@ -446,7 +446,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           new Function('scope', express)(scope);
         });
         let value = code(owner._express, scope);
-        if (value.has(owner.value)) owner.checked = true;
+        if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
         console.log(error);
       }
@@ -780,7 +780,7 @@ function clearNodes(nodes) {
   });
 }
 
-function observer(target, callSet, callGet) {
+function observer(target, call) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -803,7 +803,9 @@ function observer(target, callSet, callGet) {
         cache.set(prop, new Map());
         Reflect.set(parent, prop, val.$target || val);
         setValue(proxy[prop], oldValue);
+        let path = root ? `${root}.${prop}` : prop;
         mq.publish(target, "set", [oldCache, cache.get(prop)]);
+        mq.publish(target, path, [oldValue]);
         return true;
       }
     }
@@ -934,12 +936,11 @@ function observer(target, callSet, callGet) {
       )(target);
       return global.$cache;
     }
-
   }
 
-  mq.subscribe(target, "set", callSet);
-  mq.subscribe(target, "get", callGet);
-
+  Object.keys(call).forEach(key => {
+    mq.subscribe(target, key, call[key]);
+  });
   return target;
 }
 
@@ -1237,10 +1238,9 @@ class View$1 {
     app.view ? this.view(app) : this.component(app);
   }
   view(app) {
-    app.model = observer(app.model, function set(cache, newCache) {
-      deepen(cache, newCache);
-    }, function get(path) {
-      global.$path = path;
+    app.model = observer(app.model, {
+      set(cache, newCache) { deepen(cache, newCache); },
+      get(path) { global.$path = path; }
     });
     this.model = app.model;
     var view = query(app.view);

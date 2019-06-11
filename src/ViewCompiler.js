@@ -246,7 +246,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           new Function('scope', express)(scope);
         });
         let value = code(owner._express, scope);
-        if (value.has(owner.value)) owner.checked = true;
+        if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
         console.log(error);
       }

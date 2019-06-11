@@ -459,7 +459,7 @@ var view = (function (exports) {
             new Function('scope', express)(scope);
           });
           var value = code(owner._express, scope);
-          if (value.has(owner.value)) owner.checked = true;
+          if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
         } catch (error) {
           console.log(error);
         }
@@ -800,7 +800,7 @@ var view = (function (exports) {
     });
   }
 
-  function observer(target, callSet, callGet) {
+  function observer(target, call) {
     if (_typeof(target) != 'object') return target;
     target = new Proxy(target, handler());
 
@@ -824,7 +824,9 @@ var view = (function (exports) {
           cache.set(prop, new Map());
           Reflect.set(parent, prop, val.$target || val);
           setValue(proxy[prop], oldValue);
+          var path = root ? "".concat(root, ".").concat(prop) : prop;
           mq.publish(target, "set", [oldCache, cache.get(prop)]);
+          mq.publish(target, path, [oldValue]);
           return true;
         }
       };
@@ -963,8 +965,9 @@ var view = (function (exports) {
       }
     }
 
-    mq.subscribe(target, "set", callSet);
-    mq.subscribe(target, "get", callGet);
+    Object.keys(call).forEach(function (key) {
+      mq.subscribe(target, key, call[key]);
+    });
     return target;
   }
 
@@ -1312,10 +1315,13 @@ var view = (function (exports) {
     _createClass(View, [{
       key: "view",
       value: function view(app) {
-        app.model = observer(app.model, function set(cache, newCache) {
-          deepen(cache, newCache);
-        }, function get(path) {
-          global.$path = path;
+        app.model = observer(app.model, {
+          set: function set(cache, newCache) {
+            deepen(cache, newCache);
+          },
+          get: function get(path) {
+            global.$path = path;
+          }
         });
         this.model = app.model;
         var view = query(app.view);
