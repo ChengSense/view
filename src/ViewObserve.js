@@ -16,7 +16,8 @@ export function observer(target, call) {
         if (!parent.hasOwnProperty(prop)) return parent[prop];
         let path = root ? `${root}.${prop}` : prop;
         let value = getValue(values, cache, parent, prop, path);
-        global.$cache = cache.get(prop);
+        global.$cache.delete(root);
+        global.$cache.set(path, cache.get(prop));
         mq.publish(target, "get", [path]);
         return value;
       },
@@ -28,8 +29,7 @@ export function observer(target, call) {
         Reflect.set(parent, prop, val.$target || val);
         setValue(proxy[prop], oldValue);
         let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "set", [oldCache, cache.get(prop)]);
-        mq.publish(target, path, [oldValue]);
+        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
         return true;
       }
     }
@@ -50,10 +50,10 @@ export function observer(target, call) {
   function setValue(object, oldObject) {
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
-        let value = object[prop];
-        let cache = global.$cache;
-        let oldValue = oldObject[prop];
-        let oldCache = global.$cache;
+        global.$cache = new Map();
+        let value = object[prop], cache = global.$cache;
+        global.$cache = new Map();
+        let oldValue = oldObject[prop], oldCache = global.$cache;
         if (typeof value != "object" && typeof oldValue != "object") mq.publish(target, "set", [oldCache, cache]);
         setValue(value, oldValue);
       });
@@ -121,12 +121,13 @@ export function observer(target, call) {
     };
     Reflect.setPrototypeOf(meths, object);
     function getCache() {
+      global.$cache = new Map();
       new Function('scope',
         `
         return scope${Path(root)};
         `
       )(target);
-      return global.$cache;
+      return global.$cache.get(root);
     }
     return meths[name];
   }

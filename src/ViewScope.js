@@ -4,7 +4,7 @@ import { global } from "./ViewIndex";
 export function code(_express, _scope) {
   try {
     global.$path = undefined;
-    global.$cache = undefined;
+    global.$cache = new Map();
     _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
   } catch (e) {
@@ -14,6 +14,8 @@ export function code(_express, _scope) {
 
 export function codex(_express, _scope) {
   try {
+    global.$path = undefined;
+    global.$cache = new Map();
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
     return Code(_express)(_scope);
   } catch (e) {

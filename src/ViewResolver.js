@@ -17,6 +17,7 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
+      global.$cache = new Map();
       let app = code(node.clas.nodeValue, node.scope);
       let $cache = global.$cache;
       node.path = global.$path;
@@ -135,13 +136,14 @@ var arrayEach = {
 };
 
 export function setCache(clas, we, $cache) {
-  if (!$cache) return;
-  let cache = $cache.get(we);
-  if (cache) {
-    cache.ones(clas)
-  } else {
-    $cache.set(we, [clas]);
-  }
+  $cache.forEach(value => {
+    let cache = value.get(we);
+    if (cache) {
+      cache.ones(clas);
+    } else {
+      value.set(we, [clas]);
+    }
+  });
 }
 
 function insertion(nodes, node) {

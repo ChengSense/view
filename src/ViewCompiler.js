@@ -133,7 +133,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       let clas = attrNode(child, scope, child.cloneNode());
       if (new RegExp($expres).test(child.nodeValue)) {
         binding.attrExpress(child, scope, clas);
-        child.nodeValue = codex(child.nodeValue, scope);
+        child.nodeValue = codex(child.nodeValue, scope.$target);
       }
       bind(child, scope);
     });
@@ -164,8 +164,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($express).exec(node.nodeValue)) {
-      binding.express(node, scope, clas, express[0]);
-      node.nodeValue = code(express[1], scope.$target);
+      node.nodeValue = code(express[1], scope);
+      binding.express(node, scope, clas);
     }
   }
 
@@ -200,11 +200,12 @@ export function Compiler(node, scopes, childNodes, content, we) {
       clas.node = node;
       dep(key, scope, clas);
     },
-    express(node, scope, clas, key) {
+    express(node, scope, clas) {
+      if (global.$cache == undefined) return;
       clas.resolver = "express";
       clas.scope = scope;
       clas.node = node;
-      dep(key, scope, clas);
+      setCache(clas, we, global.$cache);
     },
     attrExpress(node, scope, clas) {
       var nodeValue = clas.clas.nodeValue;
@@ -221,11 +222,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function dep(key, scope, clas) {
-    key.replace($word, function (key) {
-      code(key, scope);
-      if (global.$cache == undefined) return;
-      setCache(clas, we, global.$cache);
-    });
+    let value = code(key, scope);
+    if (global.$cache == undefined) return;
+    setCache(clas, we, global.$cache);
+    return value;
   }
 
   function model(node, scope) {

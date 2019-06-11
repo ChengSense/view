@@ -130,7 +130,6 @@ var view = (function (exports) {
   var $expres = /\{\s*([^\{\}]*)\s*\}/g;
   var $component = /\{\s*\s*@([^\{\}]*)\s*\}/;
   var $close = /(^\s*\}\s*$)/;
-  var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
   var $event = /^@(.*)/;
 
   function init(dom) {
@@ -168,7 +167,7 @@ var view = (function (exports) {
   function code(_express, _scope) {
     try {
       global.$path = undefined;
-      global.$cache = undefined;
+      global.$cache = new Map();
       _express = _express.replace($express, "$1");
       return Code(_express)(_scope);
     } catch (e) {
@@ -177,6 +176,8 @@ var view = (function (exports) {
   }
   function codex(_express, _scope) {
     try {
+      global.$path = undefined;
+      global.$cache = new Map();
       _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
       return Code(_express)(_scope);
     } catch (e) {
@@ -342,7 +343,7 @@ var view = (function (exports) {
 
         if (new RegExp($expres).test(child.nodeValue)) {
           binding.attrExpress(child, scope, clas);
-          child.nodeValue = codex(child.nodeValue, scope);
+          child.nodeValue = codex(child.nodeValue, scope.$target);
         }
 
         bind(child, scope);
@@ -375,8 +376,8 @@ var view = (function (exports) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
       } else if (express = new RegExp($express).exec(node.nodeValue)) {
-        binding.express(node, scope, clas, express[0]);
-        node.nodeValue = code(express[1], scope.$target);
+        node.nodeValue = code(express[1], scope);
+        binding.express(node, scope, clas);
       }
     }
 
@@ -411,11 +412,12 @@ var view = (function (exports) {
         clas.node = node;
         dep(key, scope, clas);
       },
-      express: function express(node, scope, clas, key) {
+      express: function express(node, scope, clas) {
+        if (global.$cache == undefined) return;
         clas.resolver = "express";
         clas.scope = scope;
         clas.node = node;
-        dep(key, scope, clas);
+        setCache(clas, we, global.$cache);
       },
       attrExpress: function attrExpress(node, scope, clas) {
         var nodeValue = clas.clas.nodeValue;
@@ -431,11 +433,10 @@ var view = (function (exports) {
     };
 
     function dep(key, scope, clas) {
-      key.replace($word, function (key) {
-        code(key, scope);
-        if (global.$cache == undefined) return;
-        setCache(clas, we, global.$cache);
-      });
+      var value = code(key, scope);
+      if (global.$cache == undefined) return;
+      setCache(clas, we, global.$cache);
+      return value;
     }
 
     function model(node, scope) {
@@ -624,6 +625,7 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
+        global.$cache = new Map();
         var app = code(node.clas.nodeValue, node.scope);
         var $cache = global.$cache;
         node.path = global.$path;
@@ -742,14 +744,15 @@ var view = (function (exports) {
     }
   };
   function setCache(clas, we, $cache) {
-    if (!$cache) return;
-    var cache = $cache.get(we);
+    $cache.forEach(function (value) {
+      var cache = value.get(we);
 
-    if (cache) {
-      cache.ones(clas);
-    } else {
-      $cache.set(we, [clas]);
-    }
+      if (cache) {
+        cache.ones(clas);
+      } else {
+        value.set(we, [clas]);
+      }
+    });
   }
 
   function insertion(nodes, node) {
@@ -815,7 +818,8 @@ var view = (function (exports) {
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
-          global.$cache = cache.get(prop);
+          global.$cache["delete"](root);
+          global.$cache.set(path, cache.get(prop));
           mq.publish(target, "get", [path]);
           return value;
         },
@@ -827,8 +831,7 @@ var view = (function (exports) {
           Reflect.set(parent, prop, val.$target || val);
           setValue(proxy[prop], oldValue);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [oldCache, cache.get(prop)]);
-          mq.publish(target, path, [oldValue]);
+          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
           return true;
         }
       };
@@ -851,10 +854,12 @@ var view = (function (exports) {
     function setValue(object, oldObject) {
       if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
         Object.keys(oldObject).forEach(function (prop) {
-          var value = object[prop];
-          var cache = global.$cache;
-          var oldValue = oldObject[prop];
-          var oldCache = global.$cache;
+          global.$cache = new Map();
+          var value = object[prop],
+              cache = global.$cache;
+          global.$cache = new Map();
+          var oldValue = oldObject[prop],
+              oldCache = global.$cache;
           if (_typeof(value) != "object" && _typeof(oldValue) != "object") mq.publish(target, "set", [oldCache, cache]);
           setValue(value, oldValue);
         });
@@ -926,8 +931,9 @@ var view = (function (exports) {
       Reflect.setPrototypeOf(meths, object);
 
       function getCache() {
+        global.$cache = new Map();
         new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
-        return global.$cache;
+        return global.$cache.get(root);
       }
 
       return meths[name];
@@ -1334,14 +1340,20 @@ var view = (function (exports) {
 
   function deepen(cache, newCache) {
     if (cache && newCache) {
-      cache.forEach(function (nodes, we) {
-        slice(nodes).forEach(function (node) {
-          if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
+      cache.forEach(function (caches) {
+        if (!caches) return;
+        caches.forEach(function (nodes, we) {
+          slice(nodes).forEach(function (node) {
+            if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
+          });
         });
       });
     } else if (cache && !newCache) {
-      cache.forEach(function (nodes) {
-        clearNodes(nodes);
+      cache.forEach(function (caches) {
+        if (!caches) return;
+        caches.forEach(function (nodes) {
+          clearNodes(nodes);
+        });
       });
     }
   }

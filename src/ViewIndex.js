@@ -53,17 +53,23 @@ function clearNode(nodes, status) {
 
 function deepen(cache, newCache) {
   if (cache && newCache) {
-    cache.forEach((nodes, we) => {
-      slice(nodes).forEach(node => {
-        if (clearNode([node]))
-          resolver[node.resolver](node, we, newCache);
-        else
-          nodes.remove(node);
-      })
+    cache.forEach(caches => {
+      if (!caches) return;
+      caches.forEach((nodes, we) => {
+        slice(nodes).forEach(node => {
+          if (clearNode([node]))
+            resolver[node.resolver](node, we, newCache);
+          else
+            nodes.remove(node);
+        })
+      });
     });
   } else if (cache && !newCache) {
-    cache.forEach(nodes => {
-      clearNodes(nodes)
+    cache.forEach(caches => {
+      if (!caches) return;
+      caches.forEach(nodes => {
+        clearNodes(nodes)
+      });
     });
   }
 }
