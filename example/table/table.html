@@ -38,7 +38,12 @@
         <table>
           <thead>
             <tr>
-              <th class="k-header k-unselect" each="item:i:columns" data-field="{i}" @mousemove="resize">{item}</th>
+              <th class="k-header k-unselect" 
+                each="item:i:columns" 
+                data-field="{i}" 
+                @mousemove="resize">
+                {item}
+              </th>
               <th class="k-header">操作项</th>
             </tr>
           </thead>

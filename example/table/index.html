@@ -17,7 +17,7 @@
           :model="{newTodo}"
           @change="addTodo">
       </header>
-      <section class="main" style="display:{todos.length>0?'block':'none'}">
+      <section class="main" style="display:{display}">
         <input class="toggle-all" type="checkbox" :model="allDone">
         <ul class="todo-list">
           <li each="todo:todos"
@@ -37,7 +37,7 @@
           </li>
         </ul>
       </section>
-      <footer class="footer" style="display:{todos.length>0?'block':'none'}">
+      <footer class="footer" style="display:{display}">
         <span class="todo-count">
           <strong>{ todos.length }</strong> { remaining | pluralize } left
         </span>

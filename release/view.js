@@ -795,7 +795,7 @@ var view = (function (exports) {
     });
   }
 
-  function observer(target, call) {
+  function observer(target, call, watch) {
     if (_typeof(target) != 'object') return target;
     target = new Proxy(target, handler());
 
@@ -821,9 +821,11 @@ var view = (function (exports) {
           values.set(prop, undefined);
           cache.set(prop, new Map());
           Reflect.set(parent, prop, val.$target || val);
-          setValue(proxy[prop], oldValue);
+          var value = proxy[prop];
+          setValue(value, oldValue);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
+          mq.publish(target, path, [value, oldValue]);
           return true;
         }
       };
@@ -932,7 +934,10 @@ var view = (function (exports) {
     }
 
     Object.keys(call).forEach(function (key) {
-      mq.subscribe(target, key, call[key]);
+      return mq.subscribe(target, key, call[key]);
+    });
+    Object.keys(watch || {}).forEach(function (key) {
+      return mq.subscribe(target, key, watch[key]);
     });
     return target;
   }
@@ -973,16 +978,16 @@ var view = (function (exports) {
           this.map.set(scope, _data);
         }
 
-        this.notify(cache.get(event));
+        this.notify(cache.get(event), scope);
       }
     }, {
       key: "notify",
-      value: function notify(action) {
+      value: function notify(action, scope) {
         if (action) {
           var _loop = function _loop() {
             var data = action.data.shift();
             action.queue.forEach(function (call) {
-              call(data[0], data[1], data[2]);
+              call.apply(scope, data);
             });
           };
 
@@ -995,7 +1000,7 @@ var view = (function (exports) {
               var _loop2 = function _loop2() {
                 var data = action.data.shift();
                 action.queue.forEach(function (call) {
-                  call(data[0], data[1], data[2]);
+                  call.apply(scope, data);
                 });
               };
 
@@ -1275,6 +1280,7 @@ var view = (function (exports) {
       };
       this.model = app.model;
       this.action = app.action;
+      this.watch = app.watch;
       app.view ? this.view(app) : this.component(app);
     }
 
@@ -1288,7 +1294,7 @@ var view = (function (exports) {
           get: function get(path) {
             global.$path = path;
           }
-        });
+        }, app.watch);
         this.model = app.model;
         var view = query(app.view);
         var node = initCompiler(init(slice(view)))[0];

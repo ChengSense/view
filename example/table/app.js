@@ -4,7 +4,7 @@ let app = new View({
     todos: [],
     newTodo: "",
     editedTodo: null,
-    visibility: "all"
+    display: "none"
   },
   action: {
     addTodo() {
@@ -41,8 +41,8 @@ let app = new View({
     }
   },
   watch: {
-    visibility: function (val) {
-      this.fullName = val + ' ' + this.lastName
+    "todos.length"(length) {
+      this.display = length > 0 ? 'block' : 'none';
     }
   }
 });

@@ -775,7 +775,7 @@ function clearNodes(nodes) {
   });
 }
 
-function observer(target, call) {
+function observer(target, call, watch) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -800,9 +800,11 @@ function observer(target, call) {
         values.set(prop, undefined);
         cache.set(prop, new Map());
         Reflect.set(parent, prop, val.$target || val);
-        setValue(proxy[prop], oldValue);
+        let value = proxy[prop];
+        setValue(value, oldValue);
         let path = root ? `${root}.${prop}` : prop;
         mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
+        mq.publish(target, path, [value, oldValue]);
         return true;
       }
     }
@@ -905,9 +907,9 @@ function observer(target, call) {
     return meths[name];
   }
 
-  Object.keys(call).forEach(key => {
-    mq.subscribe(target, key, call[key]);
-  });
+  Object.keys(call).forEach(key => mq.subscribe(target, key, call[key]));
+  Object.keys(watch || {}).forEach(key => mq.subscribe(target, key, watch[key]));
+
   return target;
 }
 
@@ -931,15 +933,15 @@ class Mess {
       data.set(event, { data: [data], queue: [] });
       this.map.set(scope, data);
     }
-    this.notify(cache.get(event));
+    this.notify(cache.get(event), scope);
   }
 
-  notify(action) {
+  notify(action, scope) {
     if (action) {
       while (action.data.length) {
         const data = action.data.shift();
         action.queue.forEach(function (call) {
-          call(data[0], data[1], data[2]);
+          call.apply(scope, data);
         });
       }
     }
@@ -949,7 +951,7 @@ class Mess {
           while (action.data.length) {
             const data = action.data.shift();
             action.queue.forEach(function (call) {
-              call(data[0], data[1], data[2]);
+              call.apply(scope, data);
             });
           }
         });
@@ -1202,13 +1204,15 @@ class View$1 {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
+    this.watch = app.watch;
     app.view ? this.view(app) : this.component(app);
   }
   view(app) {
     app.model = observer(app.model, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
-    });
+    }, app.watch);
+
     this.model = app.model;
     var view = query(app.view);
     var node = initCompiler(init(slice(view)))[0];

@@ -12,13 +12,15 @@ export class View {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
+    this.watch = app.watch;
     app.view ? this.view(app) : this.component(app)
   }
   view(app) {
     app.model = observer(app.model, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
-    });
+    }, app.watch);
+
     this.model = app.model;
     var view = query(app.view);
     var node = initCompiler(init(slice(view)))[0];
