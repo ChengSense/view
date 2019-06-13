@@ -130,7 +130,9 @@ var view = (function (exports) {
 
   function codec(_express, _scope, we) {
     try {
-      return Code(_express)(we.methd || _scope);
+      var methd = Reflect.getPrototypeOf(we.methd);
+      Reflect.setPrototypeOf(methd, _scope);
+      return Code(_express)(we.methd);
     } catch (e) {
       return undefined;
     }
@@ -177,19 +179,14 @@ var view = (function (exports) {
       action: we.action,
       watch: we.watch
     };
+    we.action = we.action || {};
+    Reflect.setPrototypeOf(action, Function.prototype);
+    Object.values(we.action).forEach(function (methd) {
+      return Reflect.setPrototypeOf(methd, action);
+    });
     var methd = Object.assign({}, action);
-
-    if (we.action) {
-      Reflect.setPrototypeOf(action, Function.prototype);
-      Object.values(we.action).forEach(function (methd) {
-        return Reflect.setPrototypeOf(methd, action);
-      });
-    }
-
-    if (we.methd) {
-      Reflect.setPrototypeOf(methd, we.model);
-      Reflect.setPrototypeOf(we.methd, methd);
-    }
+    we.methd = we.methd || {};
+    Reflect.setPrototypeOf(we.methd, methd);
   }
 
   function Compiler(node, scopes, childNodes, content, we) {

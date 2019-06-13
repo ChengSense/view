@@ -102,7 +102,9 @@ function codex(_express, _scope, we) {
 
 function codec(_express, _scope, we) {
   try {
-    return Code(_express)(we.methd || _scope);
+    let methd = Reflect.getPrototypeOf(we.methd);
+    Reflect.setPrototypeOf(methd, _scope);
+    return Code(_express)(we.methd);
   } catch (e) {
     return undefined;
   }
@@ -160,15 +162,13 @@ function handler(proto) {
 
 function setScopes(we) {
   let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
+  we.action = we.action || {};
+  Reflect.setPrototypeOf(action, Function.prototype);
+  Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
+
   let methd = Object.assign({}, action);
-  if (we.action) {
-    Reflect.setPrototypeOf(action, Function.prototype);
-    Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
-  }
-  if (we.methd) {
-    Reflect.setPrototypeOf(methd, we.model);
-    Reflect.setPrototypeOf(we.methd, methd);
-  }
+  we.methd = we.methd || {};
+  Reflect.setPrototypeOf(we.methd, methd);
 }
 
 function Compiler(node, scopes, childNodes, content, we) {
