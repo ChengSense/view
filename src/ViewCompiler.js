@@ -150,11 +150,11 @@ export function Compiler(node, scopes, childNodes, content, we) {
         if (array) {
           var name = node.nodeValue.toString().replace(array[0], "");
           let methd = code(name, we.action);
-          owner.on(key, methd, scope, we, array[1]);
+          owner.on(key, methd, scope, array[1]);
         }
         else {
           let methd = code(node.nodeValue, we.action);
-          owner.on(key, methd, scope, we);
+          owner.on(key, methd, scope);
         }
       });
     }
@@ -236,7 +236,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
@@ -250,7 +250,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         if (value == owner.value) owner.checked = true;
         owner.name = global.$path;
@@ -265,7 +265,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         blank(value) ? handle() : owner.value = value;
       } catch (error) {
@@ -279,7 +279,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
       } catch (error) {
         console.log(error);
       }

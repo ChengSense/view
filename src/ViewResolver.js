@@ -1,5 +1,5 @@
 import { Compiler, compoNode } from "./ViewCompiler";
-import { blank, each, extend, slice } from "./ViewLang";
+import { blank, each, slice } from "./ViewLang";
 import { global, View } from "./ViewIndex";
 import { code, codex } from "./ViewScope";
 
@@ -22,7 +22,7 @@ export var resolver = {
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      extend(app.model, node.scope);
+      Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);

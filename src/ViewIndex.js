@@ -1,9 +1,10 @@
-import { init, initCompiler } from "./ViewInit";
-import { inject, slice } from "./ViewLang";
 import { resolver, clearNodes } from "./ViewResolver";
+import { init, initCompiler } from "./ViewInit";
 import { observer } from "./ViewObserve";
+import { setScopes } from "./ViewScope";
 import { Router } from "./ViewRouter";
 import { query } from "./ViewElmemt";
+import { slice } from "./ViewLang";
 
 export let global = { $path: undefined };
 
@@ -27,6 +28,7 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
+    setScopes(this);
     resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {

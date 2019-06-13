@@ -1,4 +1,4 @@
-import { each, extend, slice } from "./ViewLang";
+import { each, slice } from "./ViewLang";
 import { code } from "./ViewScope";
 
 export function query(express) {
@@ -12,18 +12,15 @@ export function query(express) {
   }
 }
 
-function addListener(type, methods, scope, we) {
+function addListener(type, methods, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         })
       });
@@ -35,11 +32,8 @@ function addListener(type, methods, scope, we) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         })
       });
@@ -51,11 +45,8 @@ function addListener(type, methods, scope, we) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         })
       });
@@ -76,7 +67,7 @@ function removeListener(type, handler) {
 }
 
 Object.assign(Node.prototype, {
-  on: function (type, handler, scope, we, params) {
+  on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
         let methods = this._manager.get(type);
@@ -91,7 +82,7 @@ Object.assign(Node.prototype, {
         let methods = new Map();
         methods.set(handler, [params]);
         this._manager.set(type, methods);
-        addListener.call(this, type, methods, scope, we);
+        addListener.call(this, type, methods, scope);
       }
     }
     else {
@@ -99,7 +90,7 @@ Object.assign(Node.prototype, {
       methods.set(handler, [params]);
       this._manager = new Map();
       this._manager.set(type, methods);
-      addListener.call(this, type, methods, scope, we);
+      addListener.call(this, type, methods, scope);
     }
     return this;
   },

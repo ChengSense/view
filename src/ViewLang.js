@@ -1,4 +1,3 @@
-import { View } from "./ViewIndex";
 export function whiles(obj, methd, me) {
   while (obj.length) {
     var data = obj[0];
@@ -34,35 +33,10 @@ export function slice(obj) {
   return [].slice.call(obj);
 }
 
-export function inject(methds, parent) {
-  if (methds)
-    Object.values(methds).forEach(methd => {
-      let root = Object.assign({}, parent);
-      root.__proto__ = Function.__proto__;
-      methd.__proto__ = root;
-    });
-}
 
-export function extend(object, parent) {
-  Reflect.setPrototypeOf(object, Object.prototype);
-  object.__proto__ = parent;
-  return object;
-}
 
 export function blank(str) {
   return str == null || str == undefined || str == "";
-}
-
-if (!Object.values) {
-  Object.assign(Object.prototype, {
-    values(object) {
-      let values = [];
-      Object.keys(object).forEach(key => {
-        values.push(object[key]);
-      });
-      return values;
-    }
-  });
 }
 
 Object.assign(Array.prototype, {

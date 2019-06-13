@@ -33,26 +33,10 @@ function slice(obj) {
   return [].slice.call(obj);
 }
 
-function extend(object, parent) {
-  Reflect.setPrototypeOf(object, Object.prototype);
-  object.__proto__ = parent;
-  return object;
-}
+
 
 function blank(str) {
   return str == null || str == undefined || str == "";
-}
-
-if (!Object.values) {
-  Object.assign(Object.prototype, {
-    values(object) {
-      let values = [];
-      Object.keys(object).forEach(key => {
-        values.push(object[key]);
-      });
-      return values;
-    }
-  });
 }
 
 Object.assign(Array.prototype, {
@@ -94,37 +78,6 @@ var $component = /\{\s*\s*@([^\{\}]*)\s*\}/;
 var $close = /(^\s*\}\s*$)/;
 var $event = /^@(.*)/;
 
-function init(dom) {
-  each(dom, function (node) {
-    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
-      init(slice(node.childNodes));
-    if (node.nodeType == 3)
-      node.nodeValue.replace($lang, function (tag) {
-        var nodes = node.nodeValue.split(tag);
-        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
-        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
-        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
-      });
-  });
-  return dom;
-}
-
-function initCompiler(node, children) {
-  let list = children || [];
-  whiles(node, function (child) {
-    node.shift();
-    if (new RegExp($close).test(child.nodeValue)) return true;
-    var item = { clas: child.cloneNode(true), children: [] };
-    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
-    if (child.nodeType == 1) {
-      initCompiler(slice(child.childNodes), item.children);
-    }
-    else if (new RegExp($chen).test(child.nodeValue)) {
-      initCompiler(node, item.children);
-    }  });
-  return list;
-}
-
 function code(_express, _scope) {
   try {
     global.$path = undefined;
@@ -149,9 +102,7 @@ function codex(_express, _scope, we) {
 
 function codec(_express, _scope, we) {
   try {
-    let methd = Object.assign({ $view: we.view, $methd: we.methd }, we.methd);
-    Reflect.setPrototypeOf(methd, _scope);
-    return Code(_express)(methd);
+    return Code(_express)(we.methd || _scope);
   } catch (e) {
     return undefined;
   }
@@ -204,6 +155,19 @@ function handler(proto) {
       if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
       return Reflect.set(parent, prop, val);
     }
+  }
+}
+
+function setScopes(we) {
+  let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
+  let methd = Object.assign({}, action);
+  if (we.action) {
+    Reflect.setPrototypeOf(action, Function.prototype);
+    Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
+  }
+  if (we.methd) {
+    Reflect.setPrototypeOf(methd, we.model);
+    Reflect.setPrototypeOf(we.methd, methd);
   }
 }
 
@@ -353,11 +317,11 @@ function Compiler(node, scopes, childNodes, content, we) {
         if (array) {
           var name = node.nodeValue.toString().replace(array[0], "");
           let methd = code(name, we.action);
-          owner.on(key, methd, scope, we, array[1]);
+          owner.on(key, methd, scope, array[1]);
         }
         else {
           let methd = code(node.nodeValue, we.action);
-          owner.on(key, methd, scope, we);
+          owner.on(key, methd, scope);
         }
       });
     }
@@ -439,7 +403,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
@@ -453,7 +417,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`;
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         if (value == owner.value) owner.checked = true;
         owner.name = global.$path;
@@ -468,7 +432,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`;
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
         let value = code(owner._express, scope);
         blank(value) ? handle() : owner.value = value;
       } catch (error) {
@@ -482,7 +446,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
           let express = `${_express}='${_value}';`;
           new Function('scope', express)(scope);
-        }, scope, we);
+        }, scope);
       } catch (error) {
         console.log(error);
       }
@@ -607,7 +571,7 @@ var resolver = {
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      extend(app.model, node.scope);
+      Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
@@ -775,6 +739,37 @@ function clearNodes(nodes) {
     if (child.childNodes)
       clearNodes(child.childNodes);
   });
+}
+
+function init(dom) {
+  each(dom, function (node) {
+    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
+      init(slice(node.childNodes));
+    if (node.nodeType == 3)
+      node.nodeValue.replace($lang, function (tag) {
+        var nodes = node.nodeValue.split(tag);
+        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
+        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
+        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
+      });
+  });
+  return dom;
+}
+
+function initCompiler(node, children) {
+  let list = children || [];
+  whiles(node, function (child) {
+    node.shift();
+    if (new RegExp($close).test(child.nodeValue)) return true;
+    var item = { clas: child.cloneNode(true), children: [] };
+    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+    if (child.nodeType == 1) {
+      initCompiler(slice(child.childNodes), item.children);
+    }
+    else if (new RegExp($chen).test(child.nodeValue)) {
+      initCompiler(node, item.children);
+    }  });
+  return list;
 }
 
 function observer(target, call, watch) {
@@ -1070,18 +1065,15 @@ function query(express) {
   }
 }
 
-function addListener(type, methods, scope, we) {
+function addListener(type, methods, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         });
       });
@@ -1093,11 +1085,8 @@ function addListener(type, methods, scope, we) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         });
       });
@@ -1109,11 +1098,8 @@ function addListener(type, methods, scope, we) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = Object.assign({
-            $view: we.view,
-            $action: we.action
-          }, we.action);
-          Reflect.setPrototypeOf(action, scope);
+          let action = { $view: method.view, $action: method.action };
+          Reflect.setPrototypeOf(action, scope || method.model);
           method.apply(action, args);
         });
       });
@@ -1134,7 +1120,7 @@ function removeListener(type, handler) {
 }
 
 Object.assign(Node.prototype, {
-  on: function (type, handler, scope, we, params) {
+  on: function (type, handler, scope, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
         let methods = this._manager.get(type);
@@ -1149,7 +1135,7 @@ Object.assign(Node.prototype, {
         let methods = new Map();
         methods.set(handler, [params]);
         this._manager.set(type, methods);
-        addListener.call(this, type, methods, scope, we);
+        addListener.call(this, type, methods, scope);
       }
     }
     else {
@@ -1157,7 +1143,7 @@ Object.assign(Node.prototype, {
       methods.set(handler, [params]);
       this._manager = new Map();
       this._manager.set(type, methods);
-      addListener.call(this, type, methods, scope, we);
+      addListener.call(this, type, methods, scope);
     }
     return this;
   },
@@ -1227,6 +1213,7 @@ class View$1 {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
+    setScopes(this);
     resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {

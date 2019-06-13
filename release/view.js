@@ -68,27 +68,9 @@ var view = (function (exports) {
   function slice(obj) {
     return [].slice.call(obj);
   }
-  function extend(object, parent) {
-    Reflect.setPrototypeOf(object, Object.prototype);
-    object.__proto__ = parent;
-    return object;
-  }
   function blank(str) {
     return str == null || str == undefined || str == "";
   }
-
-  if (!Object.values) {
-    Object.assign(Object.prototype, {
-      values: function values(object) {
-        var values = [];
-        Object.keys(object).forEach(function (key) {
-          values.push(object[key]);
-        });
-        return values;
-      }
-    });
-  }
-
   Object.assign(Array.prototype, {
     remove: function remove(n) {
       var index = this.indexOf(n);
@@ -125,38 +107,6 @@ var view = (function (exports) {
   var $close = /(^\s*\}\s*$)/;
   var $event = /^@(.*)/;
 
-  function init(dom) {
-    each(dom, function (node) {
-      if (node.childNodes[0] && !/(CODE|SCRIPT)/.test(node.nodeName)) init(slice(node.childNodes));
-      if (node.nodeType == 3) node.nodeValue.replace($lang, function (tag) {
-        var nodes = node.nodeValue.split(tag);
-        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
-        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
-        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
-      });
-    });
-    return dom;
-  }
-  function initCompiler(node, children) {
-    var list = children || [];
-    whiles(node, function (child) {
-      node.shift();
-      if (new RegExp($close).test(child.nodeValue)) return true;
-      var item = {
-        clas: child.cloneNode(true),
-        children: []
-      };
-      if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
-
-      if (child.nodeType == 1) {
-        initCompiler(slice(child.childNodes), item.children);
-      } else if (new RegExp($chen).test(child.nodeValue)) {
-        initCompiler(node, item.children);
-      }
-    });
-    return list;
-  }
-
   function code(_express, _scope) {
     try {
       global.$path = undefined;
@@ -180,12 +130,7 @@ var view = (function (exports) {
 
   function codec(_express, _scope, we) {
     try {
-      var methd = Object.assign({
-        $view: we.view,
-        $methd: we.methd
-      }, we.methd);
-      Reflect.setPrototypeOf(methd, _scope);
-      return Code(_express)(methd);
+      return Code(_express)(we.methd || _scope);
     } catch (e) {
       return undefined;
     }
@@ -224,6 +169,27 @@ var view = (function (exports) {
         return Reflect.set(parent, prop, val);
       }
     };
+  }
+  function setScopes(we) {
+    var action = {
+      view: we.view,
+      model: we.model,
+      action: we.action,
+      watch: we.watch
+    };
+    var methd = Object.assign({}, action);
+
+    if (we.action) {
+      Reflect.setPrototypeOf(action, Function.prototype);
+      Object.values(we.action).forEach(function (methd) {
+        return Reflect.setPrototypeOf(methd, action);
+      });
+    }
+
+    if (we.methd) {
+      Reflect.setPrototypeOf(methd, we.model);
+      Reflect.setPrototypeOf(we.methd, methd);
+    }
   }
 
   function Compiler(node, scopes, childNodes, content, we) {
@@ -369,11 +335,11 @@ var view = (function (exports) {
           if (array) {
             var name = node.nodeValue.toString().replace(array[0], "");
             var methd = code(name, we.action);
-            owner.on(key, methd, scope, we, array[1]);
+            owner.on(key, methd, scope, array[1]);
           } else {
             var _methd = code(node.nodeValue, we.action);
 
-            owner.on(key, _methd, scope, we);
+            owner.on(key, _methd, scope);
           }
         });
       }
@@ -458,7 +424,7 @@ var view = (function (exports) {
 
             var express = "".concat(_express, ".").concat(owner.checked ? "ones" : "remove", "('").concat(_value, "');");
             new Function('scope', express)(scope);
-          }, scope, we);
+          }, scope);
           var value = code(owner._express, scope);
           if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
         } catch (error) {
@@ -473,7 +439,7 @@ var view = (function (exports) {
 
             var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
-          }, scope, we);
+          }, scope);
           var value = code(owner._express, scope);
           if (value == owner.value) owner.checked = true;
           owner.name = global.$path;
@@ -490,7 +456,7 @@ var view = (function (exports) {
 
             var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
-          }, scope, we);
+          }, scope);
           var value = code(owner._express, scope);
           blank(value) ? handle() : owner.value = value;
         } catch (error) {
@@ -505,7 +471,7 @@ var view = (function (exports) {
 
             var express = "".concat(_express, "='").concat(_value, "';");
             new Function('scope', express)(scope);
-          }, scope, we);
+          }, scope);
         } catch (error) {
           console.log(error);
         }
@@ -630,7 +596,7 @@ var view = (function (exports) {
         var $cache = global.$cache;
         node.path = global.$path;
         if (blank(app)) return;
-        extend(app.model, node.scope);
+        Reflect.setPrototypeOf(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
@@ -801,6 +767,38 @@ var view = (function (exports) {
       if (child.node && child.node.parentNode) return child.node.parentNode.removeChild(child.node);
       if (child.childNodes) clearNodes(child.childNodes);
     });
+  }
+
+  function init(dom) {
+    each(dom, function (node) {
+      if (node.childNodes[0] && !/(CODE|SCRIPT)/.test(node.nodeName)) init(slice(node.childNodes));
+      if (node.nodeType == 3) node.nodeValue.replace($lang, function (tag) {
+        var nodes = node.nodeValue.split(tag);
+        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
+        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
+        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
+      });
+    });
+    return dom;
+  }
+  function initCompiler(node, children) {
+    var list = children || [];
+    whiles(node, function (child) {
+      node.shift();
+      if (new RegExp($close).test(child.nodeValue)) return true;
+      var item = {
+        clas: child.cloneNode(true),
+        children: []
+      };
+      if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
+
+      if (child.nodeType == 1) {
+        initCompiler(slice(child.childNodes), item.children);
+      } else if (new RegExp($chen).test(child.nodeValue)) {
+        initCompiler(node, item.children);
+      }
+    });
+    return list;
   }
 
   function observer(target, call, watch) {
@@ -1142,18 +1140,18 @@ var view = (function (exports) {
     }
   }
 
-  function addListener(type, methods, scope, we) {
+  function addListener(type, methods, scope) {
     if (this.addEventListener) {
       this.addEventListener(type, function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = Object.assign({
-              $view: we.view,
-              $action: we.action
-            }, we.action);
-            Reflect.setPrototypeOf(action, scope);
+            var action = {
+              $view: method.view,
+              $action: method.action
+            };
+            Reflect.setPrototypeOf(action, scope || method.model);
             method.apply(action, args);
           });
         });
@@ -1164,11 +1162,11 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = Object.assign({
-              $view: we.view,
-              $action: we.action
-            }, we.action);
-            Reflect.setPrototypeOf(action, scope);
+            var action = {
+              $view: method.view,
+              $action: method.action
+            };
+            Reflect.setPrototypeOf(action, scope || method.model);
             method.apply(action, args);
           });
         });
@@ -1179,11 +1177,11 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = Object.assign({
-              $view: we.view,
-              $action: we.action
-            }, we.action);
-            Reflect.setPrototypeOf(action, scope);
+            var action = {
+              $view: method.view,
+              $action: method.action
+            };
+            Reflect.setPrototypeOf(action, scope || method.model);
             method.apply(action, args);
           });
         });
@@ -1202,7 +1200,7 @@ var view = (function (exports) {
   }
 
   Object.assign(Node.prototype, {
-    on: function on(type, handler, scope, we, params) {
+    on: function on(type, handler, scope, params) {
       if (this._manager) {
         if (this._manager.get(type)) {
           var methods = this._manager.get(type);
@@ -1219,7 +1217,7 @@ var view = (function (exports) {
 
           this._manager.set(type, _methods);
 
-          addListener.call(this, type, _methods, scope, we);
+          addListener.call(this, type, _methods, scope);
         }
       } else {
         var _methods2 = new Map();
@@ -1230,7 +1228,7 @@ var view = (function (exports) {
 
         this._manager.set(type, _methods2);
 
-        addListener.call(this, type, _methods2, scope, we);
+        addListener.call(this, type, _methods2, scope);
       }
 
       return this;
@@ -1315,6 +1313,7 @@ var view = (function (exports) {
         var node = initCompiler(init(slice(view)))[0];
         this.node = node;
         this.view = view[0];
+        setScopes(this);
         resolver.view(this.view, node, app.model, this.content, this);
       }
     }, {

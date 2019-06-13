@@ -25,9 +25,7 @@ export function codex(_express, _scope, we) {
 
 function codec(_express, _scope, we) {
   try {
-    let methd = Object.assign({ $view: we.view, $methd: we.methd }, we.methd);
-    Reflect.setPrototypeOf(methd, _scope);
-    return Code(_express)(methd);
+    return Code(_express)(we.methd || _scope);
   } catch (e) {
     return undefined;
   }
@@ -80,5 +78,18 @@ export function handler(proto) {
       if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
       return Reflect.set(parent, prop, val);
     }
+  }
+}
+
+export function setScopes(we) {
+  let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
+  let methd = Object.assign({}, action);
+  if (we.action) {
+    Reflect.setPrototypeOf(action, Function.prototype);
+    Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
+  }
+  if (we.methd) {
+    Reflect.setPrototypeOf(methd, we.model);
+    Reflect.setPrototypeOf(we.methd, methd);
   }
 }
