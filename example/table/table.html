@@ -60,7 +60,7 @@
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
-              <span class="k-button k-button-icontext k-grid-edit" @click="edit(id)">
+              <span class="k-button k-button-icontext k-grid-edit" @click="edit1(id)">
                 @when(edit==id){ 保存 }
                 .when{ 编辑 }
               </span>
@@ -75,7 +75,7 @@
 <script type="text/javascript">
   function data() {
     var data = [];
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 10; i++) {
       data.push({
         "id": 10000 + data.length,
         "age": "西湖店" + data.length,
@@ -105,7 +105,7 @@
       add: function () {
         this.list = data();
       },
-      edit: function (id) {
+      edit1: function (id) {
         this.edit = this.edit == id ? "edit" : id;
       },
       del: function (id) {

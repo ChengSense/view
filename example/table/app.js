@@ -25,12 +25,9 @@ let app = new View({
       this.editedTodo = todo;
     },
     doneEdit(todo) {
-      if (!this.editedTodo) return
-      this.editedTodo = null;
-      todo.title = todo.title.trim();
-      if (!todo.title) {
-        this.removeTodo(todo)
-      }
+      this.todos.forEach(value => {
+        value.completed = true;
+      })
     },
     cancelEdit(todo) {
       this.editedTodo = null;
@@ -40,9 +37,12 @@ let app = new View({
       this.todos = filters.active(this.todos);
     }
   },
-  watch: {
-    "todos.length"(length) {
-      this.display = length > 0 ? 'block' : 'none';
+  methd: {
+    display() {
+      return this.todos.length > 0 ? 'block' : 'none';
+    },
+    completed(todo) {
+      return todo.completed ? 'completed' : '';
     }
   }
 });

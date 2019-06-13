@@ -17,12 +17,12 @@
           :model="{newTodo}"
           @change="addTodo">
       </header>
-      <section class="main" style="display:{display}">
+      <section class="main" style="display:{display()}">
         <input class="toggle-all" type="checkbox" :model="allDone">
         <ul class="todo-list">
           <li each="todo:todos"
             key="{todo.id}"
-            class="todo {todo.completed ? 'completed':''}">
+            class="todo {completed(todo)}">
             <div class="view">
               <input class="toggle" type="checkbox" :model="{todo.completed}">
               <label @dblclick="editTodo(todo)">{ todo.title }</label>
@@ -37,7 +37,7 @@
           </li>
         </ul>
       </section>
-      <footer class="footer" style="display:{display}">
+      <footer class="footer" style="display:{display()}">
         <span class="todo-count">
           <strong>{ todos.length }</strong> { remaining | pluralize } left
         </span>

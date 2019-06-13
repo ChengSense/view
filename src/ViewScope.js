@@ -12,12 +12,22 @@ export function code(_express, _scope) {
   }
 }
 
-export function codex(_express, _scope) {
+export function codex(_express, _scope, we) {
   try {
     global.$path = undefined;
     global.$cache = new Map();
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Code(_express)(_scope);
+    return codec(_express, _scope, we);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+function codec(_express, _scope, we) {
+  try {
+    let methd = Object.assign({ $view: we.view, $methd: we.methd }, we.methd);
+    Reflect.setPrototypeOf(methd, _scope);
+    return Code(_express)(methd);
   } catch (e) {
     return undefined;
   }
@@ -67,6 +77,7 @@ export function handler(proto) {
       return Reflect.get(proto, prop);
     },
     set(parent, prop, val, proxy) {
+      if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
       return Reflect.set(parent, prop, val);
     }
   }

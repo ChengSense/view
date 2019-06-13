@@ -13,6 +13,7 @@ export class View {
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
+    this.methd = app.methd;
     app.view ? this.view(app) : this.component(app)
   }
   view(app) {
@@ -26,7 +27,6 @@ export class View {
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    inject(app.action, { $view: this.view, $model: app.model, $action: app.action });
     resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {

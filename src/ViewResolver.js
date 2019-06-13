@@ -83,7 +83,7 @@ export var resolver = {
   },
   express: function (node, we, cache) {
     try {
-      node.node.nodeValue = codex(node.clas.nodeValue, node.scope);
+      node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
       setCache(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;

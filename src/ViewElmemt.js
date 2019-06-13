@@ -12,17 +12,19 @@ export function query(express) {
   }
 }
 
-function addListener(type, methods, scope) {
+function addListener(type, methods, scope, we) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
-          var args = param ? code(`[${param}]`, scope) : [];
+          let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extend({
-            $view: method.$view,
-            $action: method.$action
-          }, method.$model), args);
+          let action = Object.assign({
+            $view: we.view,
+            $action: we.action
+          }, we.action);
+          Reflect.setPrototypeOf(action, scope);
+          method.apply(action, args);
         })
       });
     }, false);
@@ -31,12 +33,14 @@ function addListener(type, methods, scope) {
     this.attachEvent('on' + type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
-          var args = param ? code(`[${param}]`, scope) : [];
+          let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extend({
-            $view: method.$view,
-            $action: method.$action
-          }, method.$model), args);
+          let action = Object.assign({
+            $view: we.view,
+            $action: we.action
+          }, we.action);
+          Reflect.setPrototypeOf(action, scope);
+          method.apply(action, args);
         })
       });
     });
@@ -45,12 +49,14 @@ function addListener(type, methods, scope) {
     element['on' + type] = function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
-          var args = param ? code(`[${param}]`, scope) : [];
+          let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          method.apply(extend({
-            $view: method.$view,
-            $action: method.$action
-          }, method.$model), args);
+          let action = Object.assign({
+            $view: we.view,
+            $action: we.action
+          }, we.action);
+          Reflect.setPrototypeOf(action, scope);
+          method.apply(action, args);
         })
       });
     };
@@ -70,7 +76,7 @@ function removeListener(type, handler) {
 }
 
 Object.assign(Node.prototype, {
-  on: function (type, handler, scope, params) {
+  on: function (type, handler, scope, we, params) {
     if (this._manager) {
       if (this._manager.get(type)) {
         let methods = this._manager.get(type);
@@ -85,7 +91,7 @@ Object.assign(Node.prototype, {
         let methods = new Map();
         methods.set(handler, [params]);
         this._manager.set(type, methods);
-        addListener.call(this, type, methods, scope);
+        addListener.call(this, type, methods, scope, we);
       }
     }
     else {
@@ -93,7 +99,7 @@ Object.assign(Node.prototype, {
       methods.set(handler, [params]);
       this._manager = new Map();
       this._manager.set(type, methods);
-      addListener.call(this, type, methods, scope);
+      addListener.call(this, type, methods, scope, we);
     }
     return this;
   },
