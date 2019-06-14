@@ -1,30 +1,30 @@
-export function whiles(obj, methd, me) {
+export function whiles(obj, method, me) {
   while (obj.length) {
     var data = obj[0];
-    if (methd.call(me, data, obj))
+    if (method.call(me, data, obj))
       break;
   }
 }
 
-export function each(obj, methd, arg) {
+export function each(obj, method, arg) {
   if (!obj) return;
   arg = arg || obj;
   Object.keys(obj).every(i => {
     var data = obj[i];
-    return !methd.call(data, data, i, arg);
+    return !method.call(data, data, i, arg);
   })
   return arg;
 }
 
-export function forEach(obj, methd, me) {
+export function forEach(obj, method, me) {
   if (!obj) return;
   if (obj.hasOwnProperty("$index")) {
     for (let i = obj.$index; i < obj.length; i++) {
-      methd.call(me, obj[i], i);
+      method.call(me, obj[i], i);
     }
   } else {
     Object.keys(obj).forEach(i => {
-      methd.call(me, obj[i], i);
+      method.call(me, obj[i], i);
     })
   }
 }

@@ -37,31 +37,31 @@ var view = (function (exports) {
     return Constructor;
   }
 
-  function whiles(obj, methd, me) {
+  function whiles(obj, method, me) {
     while (obj.length) {
       var data = obj[0];
-      if (methd.call(me, data, obj)) break;
+      if (method.call(me, data, obj)) break;
     }
   }
-  function each(obj, methd, arg) {
+  function each(obj, method, arg) {
     if (!obj) return;
     arg = arg || obj;
     Object.keys(obj).every(function (i) {
       var data = obj[i];
-      return !methd.call(data, data, i, arg);
+      return !method.call(data, data, i, arg);
     });
     return arg;
   }
-  function forEach(obj, methd, me) {
+  function forEach(obj, method, me) {
     if (!obj) return;
 
     if (obj.hasOwnProperty("$index")) {
       for (var i = obj.$index; i < obj.length; i++) {
-        methd.call(me, obj[i], i);
+        method.call(me, obj[i], i);
       }
     } else {
       Object.keys(obj).forEach(function (i) {
-        methd.call(me, obj[i], i);
+        method.call(me, obj[i], i);
       });
     }
   }
@@ -130,9 +130,9 @@ var view = (function (exports) {
 
   function codec(_express, _scope, we) {
     try {
-      var methd = Reflect.getPrototypeOf(we.methd);
-      Reflect.setPrototypeOf(methd, _scope);
-      return Code(_express)(we.methd);
+      var filter = Reflect.getPrototypeOf(we.filter);
+      Reflect.setPrototypeOf(filter, _scope);
+      return Code(_express)(we.filter);
     } catch (e) {
       return undefined;
     }
@@ -181,12 +181,12 @@ var view = (function (exports) {
     };
     we.action = we.action || {};
     Reflect.setPrototypeOf(action, Function.prototype);
-    Object.values(we.action).forEach(function (methd) {
-      return Reflect.setPrototypeOf(methd, action);
+    Object.values(we.action).forEach(function (method) {
+      return Reflect.setPrototypeOf(method, action);
     });
-    var methd = Object.assign({}, action);
-    we.methd = we.methd || {};
-    Reflect.setPrototypeOf(we.methd, methd);
+    var filter = Object.assign({}, action);
+    we.filter = we.filter || {};
+    Reflect.setPrototypeOf(we.filter, filter);
   }
 
   function Compiler(node, scopes, childNodes, content, we) {
@@ -331,12 +331,12 @@ var view = (function (exports) {
 
           if (array) {
             var name = node.nodeValue.toString().replace(array[0], "");
-            var methd = code(name, we.action);
-            owner.on(key, methd, scope, array[1]);
+            var method = code(name, we.action);
+            owner.on(key, method, scope, array[1]);
           } else {
-            var _methd = code(node.nodeValue, we.action);
+            var _method = code(node.nodeValue, we.action);
 
-            owner.on(key, _methd, scope);
+            owner.on(key, _method, scope);
           }
         });
       }
@@ -408,8 +408,8 @@ var view = (function (exports) {
 
       var _express = "scope".concat(Path(owner._express));
 
-      var methd = input[owner.type] || input[owner.localName] || input.other;
-      methd(node, scope, _express);
+      var method = input[owner.type] || input[owner.localName] || input.other;
+      method(node, scope, _express);
     }
 
     var input = {
@@ -1290,7 +1290,7 @@ var view = (function (exports) {
       this.model = app.model;
       this.action = app.action;
       this.watch = app.watch;
-      this.methd = app.methd;
+      this.filter = app.filter;
       app.view ? this.view(app) : this.component(app);
     }
 

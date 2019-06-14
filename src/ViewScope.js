@@ -25,9 +25,9 @@ export function codex(_express, _scope, we) {
 
 function codec(_express, _scope, we) {
   try {
-    let methd = Reflect.getPrototypeOf(we.methd);
-    Reflect.setPrototypeOf(methd, _scope);
-    return Code(_express)(we.methd);
+    let filter = Reflect.getPrototypeOf(we.filter);
+    Reflect.setPrototypeOf(filter, _scope);
+    return Code(_express)(we.filter);
   } catch (e) {
     return undefined;
   }
@@ -87,9 +87,9 @@ export function setScopes(we) {
   let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
   we.action = we.action || {};
   Reflect.setPrototypeOf(action, Function.prototype);
-  Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
+  Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
 
-  let methd = Object.assign({}, action);
-  we.methd = we.methd || {};
-  Reflect.setPrototypeOf(we.methd, methd);
+  let filter = Object.assign({}, action);
+  we.filter = we.filter || {};
+  Reflect.setPrototypeOf(we.filter, filter);
 }

@@ -14,7 +14,7 @@ export class View {
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
-    this.methd = app.methd;
+    this.filter = app.filter;
     app.view ? this.view(app) : this.component(app)
   }
   view(app) {

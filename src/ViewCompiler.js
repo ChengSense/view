@@ -2,7 +2,7 @@ import { global } from "./ViewIndex";
 import { blank, forEach, slice, whiles } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
 import { code, codex, Path, setVariable, handler } from "./ViewScope";
-import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, $word } from "./ViewExpress";
+import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
@@ -149,12 +149,12 @@ export function Compiler(node, scopes, childNodes, content, we) {
         var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
         if (array) {
           var name = node.nodeValue.toString().replace(array[0], "");
-          let methd = code(name, we.action);
-          owner.on(key, methd, scope, array[1]);
+          let method = code(name, we.action);
+          owner.on(key, method, scope, array[1]);
         }
         else {
-          let methd = code(node.nodeValue, we.action);
-          owner.on(key, methd, scope);
+          let method = code(node.nodeValue, we.action);
+          owner.on(key, method, scope);
         }
       });
     }
@@ -224,8 +224,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
     let owner = node.ownerElement;
     owner._express = node.nodeValue.replace($express, "$1");
     let _express = `scope${Path(owner._express)}`;
-    let methd = (input[owner.type] || input[owner.localName] || input.other);
-    methd(node, scope, _express);
+    let method = (input[owner.type] || input[owner.localName] || input.other);
+    method(node, scope, _express);
   }
 
   let input = {

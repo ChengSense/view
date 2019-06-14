@@ -1,30 +1,30 @@
-function whiles(obj, methd, me) {
+function whiles(obj, method, me) {
   while (obj.length) {
     var data = obj[0];
-    if (methd.call(me, data, obj))
+    if (method.call(me, data, obj))
       break;
   }
 }
 
-function each(obj, methd, arg) {
+function each(obj, method, arg) {
   if (!obj) return;
   arg = arg || obj;
   Object.keys(obj).every(i => {
     var data = obj[i];
-    return !methd.call(data, data, i, arg);
+    return !method.call(data, data, i, arg);
   });
   return arg;
 }
 
-function forEach(obj, methd, me) {
+function forEach(obj, method, me) {
   if (!obj) return;
   if (obj.hasOwnProperty("$index")) {
     for (let i = obj.$index; i < obj.length; i++) {
-      methd.call(me, obj[i], i);
+      method.call(me, obj[i], i);
     }
   } else {
     Object.keys(obj).forEach(i => {
-      methd.call(me, obj[i], i);
+      method.call(me, obj[i], i);
     });
   }
 }
@@ -102,9 +102,9 @@ function codex(_express, _scope, we) {
 
 function codec(_express, _scope, we) {
   try {
-    let methd = Reflect.getPrototypeOf(we.methd);
-    Reflect.setPrototypeOf(methd, _scope);
-    return Code(_express)(we.methd);
+    let filter = Reflect.getPrototypeOf(we.filter);
+    Reflect.setPrototypeOf(filter, _scope);
+    return Code(_express)(we.filter);
   } catch (e) {
     return undefined;
   }
@@ -164,11 +164,11 @@ function setScopes(we) {
   let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
   we.action = we.action || {};
   Reflect.setPrototypeOf(action, Function.prototype);
-  Object.values(we.action).forEach(methd => Reflect.setPrototypeOf(methd, action));
+  Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
 
-  let methd = Object.assign({}, action);
-  we.methd = we.methd || {};
-  Reflect.setPrototypeOf(we.methd, methd);
+  let filter = Object.assign({}, action);
+  we.filter = we.filter || {};
+  Reflect.setPrototypeOf(we.filter, filter);
 }
 
 function Compiler(node, scopes, childNodes, content, we) {
@@ -316,12 +316,12 @@ function Compiler(node, scopes, childNodes, content, we) {
         var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
         if (array) {
           var name = node.nodeValue.toString().replace(array[0], "");
-          let methd = code(name, we.action);
-          owner.on(key, methd, scope, array[1]);
+          let method = code(name, we.action);
+          owner.on(key, method, scope, array[1]);
         }
         else {
-          let methd = code(node.nodeValue, we.action);
-          owner.on(key, methd, scope);
+          let method = code(node.nodeValue, we.action);
+          owner.on(key, method, scope);
         }
       });
     }
@@ -391,8 +391,8 @@ function Compiler(node, scopes, childNodes, content, we) {
     let owner = node.ownerElement;
     owner._express = node.nodeValue.replace($express, "$1");
     let _express = `scope${Path(owner._express)}`;
-    let methd = (input[owner.type] || input[owner.localName] || input.other);
-    methd(node, scope, _express);
+    let method = (input[owner.type] || input[owner.localName] || input.other);
+    method(node, scope, _express);
   }
 
   let input = {
@@ -1199,7 +1199,7 @@ class View$1 {
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
-    this.methd = app.methd;
+    this.filter = app.filter;
     app.view ? this.view(app) : this.component(app);
   }
   view(app) {
