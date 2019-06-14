@@ -7,7 +7,8 @@ export function code(_express, _scope) {
     global.$cache = new Map();
     _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error)
     return undefined;
   }
 }
@@ -18,7 +19,8 @@ export function codex(_express, _scope, we) {
     global.$cache = new Map();
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
     return codec(_express, _scope, we);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error)
     return undefined;
   }
 }
@@ -28,7 +30,8 @@ function codec(_express, _scope, we) {
     let filter = Reflect.getPrototypeOf(we.filter);
     Reflect.setPrototypeOf(filter, _scope);
     return Code(_express)(we.filter);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error)
     return undefined;
   }
 }
@@ -44,7 +47,8 @@ export function Code(_express) {
 export function Path(path) {
   try {
     return path.replace(/(\w+)\.?/g, "['$1']");
-  } catch (e) {
+  } catch (error) {
+    console.warn(error)
     return undefined;
   }
 }
@@ -84,7 +88,7 @@ export function handler(proto) {
 }
 
 export function setScopes(we) {
-  let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
+  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
   we.action = we.action || {};
   Reflect.setPrototypeOf(action, Function.prototype);
   Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));

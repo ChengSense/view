@@ -5,7 +5,7 @@ export function query(express) {
   try {
     var doc = document.querySelectorAll(express);
     return doc;
-  } catch (e) {
+  } catch (error) {
     var newNode = document.createElement("div");
     newNode.innerHTML = express.trim();
     return newNode.childNodes;
@@ -19,8 +19,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         })
       });
@@ -32,8 +33,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         })
       });
@@ -45,8 +47,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         })
       });

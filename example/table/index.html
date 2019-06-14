@@ -14,7 +14,7 @@
         <input class="new-todo"
           autofocus autocomplete="off"
           placeholder="What needs to be done?"
-          :model="{newTodo}"
+          :model="newTodo"
           @change="addTodo">
       </header>
       <section class="main" style="display:{display()}">
@@ -24,12 +24,11 @@
             key="{todo.id}"
             class="todo {completed(todo)}">
             <div class="view">
-              <input class="toggle" type="checkbox" :model="{todo.completed}">
+              <input class="toggle" type="checkbox" :model="todo.completed">
               <label @dblclick="editTodo(todo)">{ todo.title }</label>
               <button class="destroy" @click="removeTodo(todo)"></button>
             </div>
             <input class="edit" type="text"
-              v-todo-focus="todo == editedTodo"
               vlue="{todo.title}"
               @blur="doneEdit(todo)"
               @keyup.enter="doneEdit(todo)"
@@ -42,11 +41,14 @@
           <strong>{ todos.length }</strong> { remaining | pluralize } left
         </span>
         <ul class="filters">
-          <li><a href="#/all" class="{ visibility == 'all' ? 'selected':'' }">All</a></li>
-          <li><a href="#/active" class="{ visibility == 'active' ? 'selected':'' }">Active</a></li>
-          <li><a href="#/completed" class="{ visibility == 'completed' ? 'selected':'' }">Completed</a></li>
+          <li><a href="#/all" class="{visiClass('all')}">All</a></li>
+          <li><a href="#/active" class="{visiClass('active')}">Active</a></li>
+          <li><a href="#/completed" class="{visiClass('completed')}">Completed</a></li>
         </ul>
-        <button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
+        <button
+          class="clear-completed" 
+          @click="removeCompleted" 
+          v-show="{todos.length > remaining()}">
           Clear completed
         </button>
       </footer>
@@ -58,10 +60,8 @@
     </footer>
 
     <script>
-    // for testing
     if (navigator.userAgent.indexOf('PhantomJS') > -1) localStorage.clear()
     </script>
-    <!-- Delete ".min" for console warnings in development -->
     <script src="../../release/view.js"></script>
     <script src="app.js"></script>
   </body>

@@ -84,7 +84,8 @@ function code(_express, _scope) {
     global.$cache = new Map();
     _express = _express.replace($express, "$1");
     return Code(_express)(_scope);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error);
     return undefined;
   }
 }
@@ -95,7 +96,8 @@ function codex(_express, _scope, we) {
     global.$cache = new Map();
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
     return codec(_express, _scope, we);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error);
     return undefined;
   }
 }
@@ -105,7 +107,8 @@ function codec(_express, _scope, we) {
     let filter = Reflect.getPrototypeOf(we.filter);
     Reflect.setPrototypeOf(filter, _scope);
     return Code(_express)(we.filter);
-  } catch (e) {
+  } catch (error) {
+    console.warn(error);
     return undefined;
   }
 }
@@ -121,7 +124,8 @@ function Code(_express) {
 function Path(path) {
   try {
     return path.replace(/(\w+)\.?/g, "['$1']");
-  } catch (e) {
+  } catch (error) {
+    console.warn(error);
     return undefined;
   }
 }
@@ -161,7 +165,7 @@ function handler(proto) {
 }
 
 function setScopes(we) {
-  let action = { view: we.view, model: we.model, action: we.action, watch: we.watch };
+  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
   we.action = we.action || {};
   Reflect.setPrototypeOf(action, Function.prototype);
   Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
@@ -407,7 +411,7 @@ function Compiler(node, scopes, childNodes, content, we) {
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     radio(node, scope, _express) {
@@ -422,7 +426,7 @@ function Compiler(node, scopes, childNodes, content, we) {
         if (value == owner.value) owner.checked = true;
         owner.name = global.$path;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     select(node, scope, _express) {
@@ -436,7 +440,7 @@ function Compiler(node, scopes, childNodes, content, we) {
         let value = code(owner._express, scope);
         blank(value) ? handle() : owner.value = value;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     other(node, scope, _express) {
@@ -448,7 +452,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           new Function('scope', express)(scope);
         }, scope);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   };
@@ -560,8 +564,8 @@ var resolver = {
       content.children = node.children;
       content.clas = node.clas;
       view.reappend(doc);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   component: function (node, we) {
@@ -581,8 +585,8 @@ var resolver = {
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   when: function (node, we) {
@@ -595,8 +599,8 @@ var resolver = {
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   each: function (node, we) {
@@ -609,8 +613,8 @@ var resolver = {
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   arrayEach: function (node, we, index, nodes) {
@@ -626,8 +630,8 @@ var resolver = {
       node.childNodes.splices(childNodes);
       nodes.remove(content.childNodes[0]);
       if (insert.parentNode) insert.after(doc);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   express: function (node, we, cache) {
@@ -636,8 +640,8 @@ var resolver = {
       setCache(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   },
   attribute: function (node, we, cache) {
@@ -647,8 +651,8 @@ var resolver = {
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 };
@@ -661,8 +665,8 @@ var cacher = function (cache, index, add) {
           arrayEach[node.resolver](node, we, nodes, index, add);
         else
           resolver[node.resolver](node, we, cache);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     });
   });
@@ -678,8 +682,8 @@ var arrayEach = {
         var nodes = node.childNodes.splice(index + 1);
         clearNodes(nodes);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 };
@@ -705,8 +709,8 @@ function insertion(nodes, node) {
       }      node = insertion(child.childNodes);
     });
     return node;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -727,8 +731,8 @@ function insertNode(nodes, node) {
       }
     });
     return node;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -1058,7 +1062,7 @@ function query(express) {
   try {
     var doc = document.querySelectorAll(express);
     return doc;
-  } catch (e) {
+  } catch (error) {
     var newNode = document.createElement("div");
     newNode.innerHTML = express.trim();
     return newNode.childNodes;
@@ -1072,8 +1076,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         });
       });
@@ -1085,8 +1090,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         });
       });
@@ -1098,8 +1104,9 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let action = { $view: method.view, $action: method.action };
-          Reflect.setPrototypeOf(action, scope || method.model);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
           method.apply(action, args);
         });
       });
@@ -1234,8 +1241,8 @@ function clearNode(nodes, status) {
       }      status = clearNode(child.childNodes);
     });
     return status;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
   }
 }
 

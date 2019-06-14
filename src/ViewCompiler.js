@@ -240,7 +240,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     radio(node, scope, _express) {
@@ -255,7 +255,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         if (value == owner.value) owner.checked = true;
         owner.name = global.$path;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     select(node, scope, _express) {
@@ -269,7 +269,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         let value = code(owner._express, scope);
         blank(value) ? handle() : owner.value = value;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
     other(node, scope, _express) {
@@ -281,7 +281,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           new Function('scope', express)(scope);
         }, scope);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   }

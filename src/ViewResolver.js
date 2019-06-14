@@ -11,8 +11,8 @@ export var resolver = {
       content.children = node.children;
       content.clas = node.clas;
       view.reappend(doc);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   component: function (node, we) {
@@ -32,8 +32,8 @@ export var resolver = {
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   when: function (node, we) {
@@ -46,8 +46,8 @@ export var resolver = {
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   each: function (node, we) {
@@ -60,8 +60,8 @@ export var resolver = {
       childNodes.replace(node, childNodes.pop())
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   arrayEach: function (node, we, index, nodes) {
@@ -77,8 +77,8 @@ export var resolver = {
       node.childNodes.splices(childNodes);
       nodes.remove(content.childNodes[0]);
       if (insert.parentNode) insert.after(doc);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   express: function (node, we, cache) {
@@ -87,8 +87,8 @@ export var resolver = {
       setCache(node, we, cache);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   },
   attribute: function (node, we, cache) {
@@ -98,8 +98,8 @@ export var resolver = {
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error)
     }
   }
 };
@@ -112,8 +112,8 @@ export var cacher = function (cache, index, add) {
           arrayEach[node.resolver](node, we, nodes, index, add);
         else
           resolver[node.resolver](node, we, cache);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     })
   });
@@ -129,8 +129,8 @@ var arrayEach = {
         var nodes = node.childNodes.splice(index + 1);
         clearNodes(nodes);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 };
@@ -157,8 +157,8 @@ function insertion(nodes, node) {
       node = insertion(child.childNodes);
     });
     return node;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error)
   }
 }
 
@@ -179,8 +179,8 @@ function insertNode(nodes, node) {
       }
     });
     return node;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error)
   }
 }
 

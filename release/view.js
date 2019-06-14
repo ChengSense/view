@@ -113,7 +113,8 @@ var view = (function (exports) {
       global.$cache = new Map();
       _express = _express.replace($express, "$1");
       return Code(_express)(_scope);
-    } catch (e) {
+    } catch (error) {
+      console.warn(error);
       return undefined;
     }
   }
@@ -123,7 +124,8 @@ var view = (function (exports) {
       global.$cache = new Map();
       _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
       return codec(_express, _scope, we);
-    } catch (e) {
+    } catch (error) {
+      console.warn(error);
       return undefined;
     }
   }
@@ -133,7 +135,8 @@ var view = (function (exports) {
       var filter = Reflect.getPrototypeOf(we.filter);
       Reflect.setPrototypeOf(filter, _scope);
       return Code(_express)(we.filter);
-    } catch (e) {
+    } catch (error) {
+      console.warn(error);
       return undefined;
     }
   }
@@ -144,7 +147,8 @@ var view = (function (exports) {
   function Path(path) {
     try {
       return path.replace(/(\w+)\.?/g, "['$1']");
-    } catch (e) {
+    } catch (error) {
+      console.warn(error);
       return undefined;
     }
   }
@@ -174,10 +178,10 @@ var view = (function (exports) {
   }
   function setScopes(we) {
     var action = {
-      view: we.view,
-      model: we.model,
-      action: we.action,
-      watch: we.watch
+      $view: we.view,
+      $model: we.model,
+      $action: we.action,
+      $watch: we.watch
     };
     we.action = we.action || {};
     Reflect.setPrototypeOf(action, Function.prototype);
@@ -425,7 +429,7 @@ var view = (function (exports) {
           var value = code(owner._express, scope);
           if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       },
       radio: function radio(node, scope, _express) {
@@ -441,7 +445,7 @@ var view = (function (exports) {
           if (value == owner.value) owner.checked = true;
           owner.name = global.$path;
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       },
       select: function select(node, scope, _express) {
@@ -457,7 +461,7 @@ var view = (function (exports) {
           var value = code(owner._express, scope);
           blank(value) ? handle() : owner.value = value;
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       },
       other: function other(node, scope, _express) {
@@ -470,7 +474,7 @@ var view = (function (exports) {
             new Function('scope', express)(scope);
           }, scope);
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       }
     };
@@ -582,8 +586,8 @@ var view = (function (exports) {
         content.clas = node.clas;
 
         _view.reappend(doc);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     component: function component(node, we) {
@@ -606,8 +610,8 @@ var view = (function (exports) {
         setCache(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     when: function when(node, we) {
@@ -619,8 +623,8 @@ var view = (function (exports) {
         new Compiler(doc, node.scope, slice(node.children), node.content, we);
         childNodes.replace(node, childNodes.pop());
         if (insert.parentNode) insert.parentNode.replaceChild(doc, insert);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     each: function each(node, we) {
@@ -632,8 +636,8 @@ var view = (function (exports) {
         new Compiler(doc, node.scope, [node], node.content, we);
         childNodes.replace(node, childNodes.pop());
         if (insert.parentNode) insert.parentNode.replaceChild(doc, insert);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     arrayEach: function arrayEach(node, we, index, nodes) {
@@ -656,8 +660,8 @@ var view = (function (exports) {
         node.childNodes.splices(childNodes);
         nodes.remove(content.childNodes[0]);
         if (insert.parentNode) insert.after(doc);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     express: function express(node, we, cache) {
@@ -665,8 +669,8 @@ var view = (function (exports) {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
         setCache(node, we, cache);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     },
     attribute: function attribute(node, we, cache) {
@@ -676,8 +680,8 @@ var view = (function (exports) {
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
-      } catch (e) {
-        console.log(e);
+      } catch (error) {
+        console.error(error);
       }
     }
   };
@@ -686,8 +690,8 @@ var view = (function (exports) {
       nodes.forEach(function (node) {
         try {
           if (arrayEach[node.resolver]) arrayEach[node.resolver](node, we, nodes, index, add);else resolver[node.resolver](node, we, cache);
-        } catch (e) {
-          console.error(e);
+        } catch (error) {
+          console.error(error);
         }
       });
     });
@@ -701,8 +705,8 @@ var view = (function (exports) {
           var nodes = node.childNodes.splice(index + 1);
           clearNodes(nodes);
         }
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     }
   };
@@ -729,8 +733,8 @@ var view = (function (exports) {
         node = insertion(child.childNodes);
       });
       return node;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -754,8 +758,8 @@ var view = (function (exports) {
         }
       });
       return node;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -1130,7 +1134,7 @@ var view = (function (exports) {
     try {
       var doc = document.querySelectorAll(express);
       return doc;
-    } catch (e) {
+    } catch (error) {
       var newNode = document.createElement("div");
       newNode.innerHTML = express.trim();
       return newNode.childNodes;
@@ -1144,11 +1148,9 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = {
-              $view: method.view,
-              $action: method.action
-            };
-            Reflect.setPrototypeOf(action, scope || method.model);
+            var proto = Reflect.getPrototypeOf(method);
+            var action = Object.assign({}, proto);
+            Reflect.setPrototypeOf(action, scope || method.$model);
             method.apply(action, args);
           });
         });
@@ -1159,11 +1161,9 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = {
-              $view: method.view,
-              $action: method.action
-            };
-            Reflect.setPrototypeOf(action, scope || method.model);
+            var proto = Reflect.getPrototypeOf(method);
+            var action = Object.assign({}, proto);
+            Reflect.setPrototypeOf(action, scope || method.$model);
             method.apply(action, args);
           });
         });
@@ -1174,11 +1174,9 @@ var view = (function (exports) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var action = {
-              $view: method.view,
-              $action: method.action
-            };
-            Reflect.setPrototypeOf(action, scope || method.model);
+            var proto = Reflect.getPrototypeOf(method);
+            var action = Object.assign({}, proto);
+            Reflect.setPrototypeOf(action, scope || method.$model);
             method.apply(action, args);
           });
         });
@@ -1337,8 +1335,8 @@ var view = (function (exports) {
         status = clearNode(child.childNodes);
       });
       return status;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 

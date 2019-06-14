@@ -50,8 +50,8 @@ function clearNode(nodes, status) {
       status = clearNode(child.childNodes);
     });
     return status;
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error)
   }
 }
 
