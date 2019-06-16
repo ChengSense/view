@@ -171,8 +171,8 @@ var view = (function (exports) {
         return Reflect.get(proto, prop);
       },
       set: function set(parent, prop, val, proxy) {
-        if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
-        return Reflect.set(parent, prop, val);
+        if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
+        return Reflect.set(proto, prop, val);
       }
     };
   }
@@ -208,9 +208,9 @@ var view = (function (exports) {
             binding.attrEach(null, scopes, clas, content, dataSource);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes.$target);
+              if (id) scope[id.trim()] = index;
               scope = new Proxy(scope, handler(scopes));
               setVariable(scope, variable, global.$path);
-              if (id) scope[id.trim()] = index;
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("each");
               node.appendChild(newNode);
@@ -247,9 +247,9 @@ var view = (function (exports) {
             var children = slice(child.children);
             forEach(dataSource, function (item, index) {
               var scope = Object.create(scopes.$target);
+              if (id) scope[id.trim()] = index;
               scope = new Proxy(scope, handler(scopes));
               setVariable(scope, variable, global.$path);
-              if (id) scope[id.trim()] = index;
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
               compiler(node, scope, slice(children), clasNodes);
@@ -594,10 +594,11 @@ var view = (function (exports) {
       try {
         global.$cache = new Map();
         var app = code(node.clas.nodeValue, node.scope);
+        app.model = app.model.$target || app.model;
         var $cache = global.$cache;
         node.path = global.$path;
         if (blank(app)) return;
-        Reflect.setPrototypeOf(app.model, node.scope);
+        Reflect.setPrototypeOf(app.model, node.scope.$target);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
@@ -605,7 +606,8 @@ var view = (function (exports) {
           view: app.component,
           model: app.model,
           action: app.action
-        });
+        }, node.scope);
+        app.model = component.model;
         var clasNodes = compoNode(insert, node, component);
         setCache(clasNodes, we, $cache);
         childNodes.replace(node, clasNodes);
@@ -802,7 +804,7 @@ var view = (function (exports) {
     return list;
   }
 
-  function observer(target, call, watch) {
+  function observer(target, proto, call, watch) {
     if (_typeof(target) != 'object') return target;
     target = new Proxy(target, handler());
 
@@ -814,7 +816,8 @@ var view = (function (exports) {
           if (prop == "$target") return parent;
           var method = array(proxy, prop, root);
           if (method) return method;
-          if (!parent.hasOwnProperty(prop)) return parent[prop];
+          if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
+          if (!parent.hasOwnProperty(prop)) return proto[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
           global.$cache["delete"](root);
@@ -823,6 +826,7 @@ var view = (function (exports) {
           return value;
         },
         set: function set(parent, prop, val, proxy) {
+          if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
           var oldValue = values.get(prop);
           var oldCache = cache.get(prop);
           values.set(prop, undefined);
@@ -853,6 +857,8 @@ var view = (function (exports) {
     }
 
     function setValue(object, oldObject) {
+      if (object instanceof View) return;
+
       if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
         Object.keys(oldObject).forEach(function (prop) {
           global.$cache = new Map();
@@ -1278,7 +1284,7 @@ var view = (function (exports) {
   var View$1 =
   /*#__PURE__*/
   function () {
-    function View(app) {
+    function View(app, parent) {
       _classCallCheck(this, View);
 
       this.content = {
@@ -1289,13 +1295,13 @@ var view = (function (exports) {
       this.action = app.action;
       this.watch = app.watch;
       this.filter = app.filter;
-      app.view ? this.view(app) : this.component(app);
+      app.view ? this.view(app, parent || {}) : this.component(app);
     }
 
     _createClass(View, [{
       key: "view",
-      value: function view(app) {
-        app.model = observer(app.model, {
+      value: function view(app, parent) {
+        app.model = observer(app.model, parent, {
           set: function set(cache, newCache) {
             deepen(cache, newCache);
           },

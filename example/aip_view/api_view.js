@@ -197,6 +197,7 @@ var home = new View({
   component: "#home",
   model: {
     ifaces: api.api.getList(),
+    groups: api.group.getList(),
     sets: api.setting.getList()
   }
 });
@@ -352,7 +353,9 @@ let router = new Router(app, {
     component: home,
     router: "router",
     action(param) {
-
+      home.model.ifaces = api.api.getList();
+      home.model.sets = api.setting.getList();
+      home.model.groups = api.group.getList();
     }
   },
   "iface": {

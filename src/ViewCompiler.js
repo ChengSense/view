@@ -20,9 +20,9 @@ export function Compiler(node, scopes, childNodes, content, we) {
           binding.attrEach(null, scopes, clas, content, dataSource);
           forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
             scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index;
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -62,9 +62,9 @@ export function Compiler(node, scopes, childNodes, content, we) {
           let children = slice(child.children);
           forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
             scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index;
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);

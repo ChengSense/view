@@ -19,14 +19,16 @@ export var resolver = {
     try {
       global.$cache = new Map();
       let app = code(node.clas.nodeValue, node.scope);
+      app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope);
+      Reflect.setPrototypeOf(app.model, node.scope.$target);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.component, model: app.model, action: app.action }, node.scope);
+      app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);

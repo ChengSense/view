@@ -9,16 +9,16 @@ import { slice } from "./ViewLang";
 export let global = { $path: undefined };
 
 export class View {
-  constructor(app) {
+  constructor(app, parent) {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
-    app.view ? this.view(app) : this.component(app)
+    app.view ? this.view(app, parent || {}) : this.component(app)
   }
-  view(app) {
-    app.model = observer(app.model, {
+  view(app, parent) {
+    app.model = observer(app.model, parent, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
     }, app.watch);

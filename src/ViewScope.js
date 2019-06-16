@@ -81,8 +81,8 @@ export function handler(proto) {
       return Reflect.get(proto, prop);
     },
     set(parent, prop, val, proxy) {
-      if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
-      return Reflect.set(parent, prop, val);
+      if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
+      return Reflect.set(proto, prop, val);
     }
   }
 }

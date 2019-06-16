@@ -2,7 +2,7 @@ import { global } from "./ViewIndex";
 import { Path } from "./ViewScope";
 import { cacher } from "./ViewResolver";
 
-export function observer(target, call, watch) {
+export function observer(target, proto, call, watch) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -13,7 +13,8 @@ export function observer(target, call, watch) {
         if (prop == "$target") return parent;
         let method = array(proxy, prop, root);
         if (method) return method;
-        if (!parent.hasOwnProperty(prop)) return parent[prop];
+        if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
+        if (!parent.hasOwnProperty(prop)) return proto[prop];
         let path = root ? `${root}.${prop}` : prop;
         let value = getValue(values, cache, parent, prop, path);
         global.$cache.delete(root);
@@ -22,6 +23,7 @@ export function observer(target, call, watch) {
         return value;
       },
       set(parent, prop, val, proxy) {
+        if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
         let oldValue = values.get(prop)
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
@@ -50,6 +52,7 @@ export function observer(target, call, watch) {
   }
 
   function setValue(object, oldObject) {
+    if (object instanceof View) return;
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
         global.$cache = new Map();

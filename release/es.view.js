@@ -158,8 +158,8 @@ function handler(proto) {
       return Reflect.get(proto, prop);
     },
     set(parent, prop, val, proxy) {
-      if (proto.hasOwnProperty(prop)) return Reflect.set(proto, prop, val);
-      return Reflect.set(parent, prop, val);
+      if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
+      return Reflect.set(proto, prop, val);
     }
   }
 }
@@ -191,9 +191,9 @@ function Compiler(node, scopes, childNodes, content, we) {
           binding.attrEach(null, scopes, clas, content, dataSource);
           forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
             scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index;
             var newNode = child.clas.cloneNode();
             newNode.removeAttribute("each");
             node.appendChild(newNode);
@@ -233,9 +233,9 @@ function Compiler(node, scopes, childNodes, content, we) {
           let children = slice(child.children);
           forEach(dataSource, function (item, index) {
             var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
             scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index;
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -572,14 +572,16 @@ var resolver = {
     try {
       global.$cache = new Map();
       let app = code(node.clas.nodeValue, node.scope);
+      app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope);
+      Reflect.setPrototypeOf(app.model, node.scope.$target);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View$1({ view: app.component, model: app.model, action: app.action });
+      let component = new View$1({ view: app.component, model: app.model, action: app.action }, node.scope);
+      app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
@@ -776,7 +778,7 @@ function initCompiler(node, children) {
   return list;
 }
 
-function observer(target, call, watch) {
+function observer(target, proto, call, watch) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -787,7 +789,8 @@ function observer(target, call, watch) {
         if (prop == "$target") return parent;
         let method = array(proxy, prop, root);
         if (method) return method;
-        if (!parent.hasOwnProperty(prop)) return parent[prop];
+        if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
+        if (!parent.hasOwnProperty(prop)) return proto[prop];
         let path = root ? `${root}.${prop}` : prop;
         let value = getValue(values, cache, parent, prop, path);
         global.$cache.delete(root);
@@ -796,6 +799,7 @@ function observer(target, call, watch) {
         return value;
       },
       set(parent, prop, val, proxy) {
+        if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
         let oldValue = values.get(prop);
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
@@ -824,6 +828,7 @@ function observer(target, call, watch) {
   }
 
   function setValue(object, oldObject) {
+    if (object instanceof View) return;
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
         global.$cache = new Map();
@@ -1201,16 +1206,16 @@ Object.assign(NodeList.prototype, {
 let global = { $path: undefined };
 
 class View$1 {
-  constructor(app) {
+  constructor(app, parent) {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
-    app.view ? this.view(app) : this.component(app);
+    app.view ? this.view(app, parent || {}) : this.component(app);
   }
-  view(app) {
-    app.model = observer(app.model, {
+  view(app, parent) {
+    app.model = observer(app.model, parent, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
     }, app.watch);
