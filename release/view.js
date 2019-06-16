@@ -95,16 +95,16 @@ var view = (function (exports) {
     }
   });
 
-  var $lang = /((@each|@when|\.when)\s*\((.*)\)\s*\{|\{\s*([^\{\}]*)\s*\}|\s*\}\s*|\.when\s*\{)/g;
+  var $lang = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
   var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
-  var $express = /\{\s*@?([^\{\}]*)\s*\}/;
-  var $expres = /\{\s*([^\{\}]*)\s*\}/g;
-  var $component = /\{\s*\s*@([^\{\}]*)\s*\}/;
-  var $close = /(^\s*\}\s*$)/;
+  var $express = /\{\s*@?([^\{\}]*)\}/;
+  var $expres = /\{([^\{\}]*)\}/g;
+  var $component = /\{\s*@([^\{\}]*)\}/;
+  var $close = /^\}$/;
   var $event = /^@(.*)/;
 
   function code(_express, _scope) {
@@ -353,7 +353,7 @@ var view = (function (exports) {
       if (new RegExp($component).test(node.nodeValue)) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
-      } else if (express = new RegExp($express).exec(node.nodeValue)) {
+      } else if (express = new RegExp($expres).exec(node.nodeValue)) {
         node.nodeValue = code(express[1], scope);
         binding.express(node, scope, clas);
       }
