@@ -8,7 +8,7 @@
 </head>
 
 <body>
-  <div each="item:id:list" data-row="{id}"> {item.i} </div>
+  <div @each="item:id:list" data-row="{id}"> {item.i} </div>
   <button @click="shift">{shift}</button>
   <button @click="unshift">{unshift}</button>
   <button @click="pop">{pop}</button>

@@ -21,7 +21,7 @@
 
 <body>
 
-  <div each="item:i:list">
+  <div @each="item:i:list">
     @each(l:item){
       <div @click="alert(param1)">
         @when(i==1){

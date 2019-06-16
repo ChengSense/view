@@ -180,8 +180,8 @@ function Compiler(node, scopes, childNodes, content, we) {
   function compiler(node, scopes, childNodes, content) {
     whiles(childNodes, function (child, childNodes) {
       if (child.clas.nodeType == 1) {
-        if (child.clas.hasAttribute("each")) {
-          var expreses = child.clas.getAttribute("each").split(":");
+        if (child.clas.hasAttribute("@each")) {
+          var expreses = child.clas.getAttribute("@each").split(":");
           var variable = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
@@ -195,7 +195,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             scope = new Proxy(scope, handler(scopes));
             setVariable(scope, variable, global.$path);
             var newNode = child.clas.cloneNode();
-            newNode.removeAttribute("each");
+            newNode.removeAttribute("@each");
             node.appendChild(newNode);
             var clasNodes = classNode(newNode, child);
             clas.childNodes.push(clasNodes);

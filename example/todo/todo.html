@@ -20,7 +20,7 @@
       <section class="main" style="display:{display()}">
         <input class="toggle-all" type="checkbox" :model="allDone">
         <ul class="todo-list">
-          <li each="todo:todos"
+          <li @each="todo:todos"
             key="{todo.id}"
             class="todo {completed(todo)}">
             <div class="view">

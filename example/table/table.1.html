@@ -38,7 +38,7 @@
         <table>
           <thead>
             <tr>
-              <th each="item:i:columns" class="k-header k-unselect" data-field="{i}">
+              <th @each="item:i:columns" class="k-header k-unselect" data-field="{i}">
                 {item}
               </th>
               <th class="k-header">操作项</th>
@@ -50,8 +50,8 @@
     <div class="k-grid-content k-auto-scrollable" style="height: 643px;">
       <table style="height: auto;">
         <tbody>
-          <tr each="item:id:list" class="{id%2?'k-alt':''}">
-            <td each="col:i:item" data-field="{i}" data-row="{id}">
+          <tr @each="item:id:list" class="{id%2?'k-alt':''}">
+            <td @each="col:i:item" data-field="{i}" data-row="{id}">
               {@flux[id][i]:text}
             </td>
             <td>

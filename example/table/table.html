@@ -39,7 +39,7 @@
           <thead>
             <tr>
               <th class="k-header k-unselect" 
-                each="item:i:columns" 
+                @each="item:i:columns" 
                 data-field="{i}" 
                 @mousemove="resize">
                 {item}
@@ -53,8 +53,8 @@
     <div class="k-grid-content k-auto-scrollable" style="height: 643px;" @scroll="scroll">
       <table style="height: auto;">
         <tbody>
-          <tr each="item:id:list" class="{id%2?'k-alt':''}">
-            <td each="col:i:item" data-field="{i}" data-row="{id}">
+          <tr @each="item:id:list" class="{id%2?'k-alt':''}">
+            <td @each="col:i:item" data-field="{i}" data-row="{id}">
               @when(edit==id){ <input value="{col}"> }
               .when{ {col} }
             </td>

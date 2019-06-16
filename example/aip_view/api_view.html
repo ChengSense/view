@@ -86,7 +86,7 @@
         </div>
 
         <div id="iface">
-          <div class="card text-left" each="item:i:ifaces">
+          <div class="card text-left" @each="item:i:ifaces">
             <div class="card-header py-0">
               <h5 class="mb-0">
                 <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{i}" aria-expanded="true">
@@ -99,7 +99,7 @@
               <div class="card-body">
                 <table class="table">
                   <tbody>
-                    <tr each="iface:item.list">
+                    <tr @each="iface:item.list">
                       <th scope="row">
                         <span class="badge badge-success">{iface.method}</span>
                       </th>
@@ -149,7 +149,7 @@
                     <th scope="row" class="text-right">主机列表：</th>
                     <td>
                       <select class="form-control form-control-sm col-sm-2" value="{iface.host}">
-                        <option value="{host.host}" each="host:hosts">{host.userName}</option>
+                        <option value="{host.host}" @each="host:hosts">{host.userName}</option>
                       </select>
                     </td>
                   </tr>
@@ -171,7 +171,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr each="item:iface.params">
+                          <tr @each="item:iface.params">
                             <td>{item.name}</td>
                             <td>
                               <input type="text" class="form-control form-control-sm" value="{item.value}">
@@ -234,7 +234,7 @@
                   <div class="col-sm-4">
                     <select class="form-control" value="{iface.gid}">
                       <option>选择分组</option>
-                      <option each="item:groups" value="{item.id}">{item.group_name}</option>
+                      <option @each="item:groups" value="{item.id}">{item.group_name}</option>
                     </select>
                   </div>
                 </div>
@@ -261,7 +261,7 @@
                     </div>
                   </div>
                 </fieldset>
-                <fieldset class="form-group" each="item:i:iface.params">
+                <fieldset class="form-group" @each="item:i:iface.params">
                   <div class="row">
                     <legend class="col-form-label col-sm-2 pt-0"></legend>
                     <div class="col-sm-8">
@@ -335,7 +335,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr each="group:list">
+                  <tr @each="group:list">
                     <td>{group.group_name}</td>
                     <td>{group.code}</td>
                     <td>
@@ -401,7 +401,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr each="set:list">
+                  <tr @each="set:list">
                     <td>{set.userName}</td>
                     <td>{set.host}</td>
                     <td>

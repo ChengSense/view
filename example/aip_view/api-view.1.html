@@ -116,7 +116,7 @@
             <div id="collapseOne{index}" class="collapse show">
               <table class="table">
                 <tbody>
-                  <tr each="iface:item.list">
+                  <tr @each="iface:item.list">
                     <th scope="row">{iface.method}</th>
                     <td>{iface.name}</td>
                     <td>{iface.comment}</td>
@@ -173,7 +173,7 @@
                 <div class="col-sm-4">
                   <select class="form-control" value="{iface.gid}">
                     <option>选择分组</option>
-                    <option each="item:ifaces" value="{item.id}">{item.group_name}</option>
+                    <option @each="item:ifaces" value="{item.id}">{item.group_name}</option>
                   </select>
                 </div>
               </div>
@@ -200,7 +200,7 @@
                   </div>
                 </div>
               </fieldset>
-              <fieldset class="form-group" each="item:i:iface.params">
+              <fieldset class="form-group" @each="item:i:iface.params">
                 <div class="row">
                   <legend class="col-form-label col-sm-2 pt-0"></legend>
                   <div class="col-sm-8">
@@ -282,7 +282,7 @@
                   <td scope="row">主机地址：</td>
                   <td>
                     <select class="form-control form-control-sm col-sm-3 mr-1" value="{host}">
-                      <option value="{host.host}" each="host:hosts">{host.userName}</option>
+                      <option value="{host.host}" @each="host:hosts">{host.userName}</option>
                     </select>
                   </td>
                 </tr>
@@ -304,7 +304,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr each="item:iface.params">
+                        <tr @each="item:iface.params">
                           <td>{item.name}</td>
                           <td>
                             <input type="text" class="form-control form-control-sm" value="{item.value}">
@@ -348,7 +348,7 @@
               <h6 scope="col" style="font-weight: bold">分组列表</h6>
               <hr>
             </div>
-            <ul class="list-group mb-3" each="group:list">
+            <ul class="list-group mb-3" @each="group:list">
               <li class="list-group-item">
                 <div class="d-flex w-100 justify-content-between">
                   {group.group_name} - {group.code}
@@ -400,7 +400,7 @@
               <h6 scope="col" style="font-weight: bold">设置主机列表</h6>
               <hr>
             </div>
-            <ul class="list-group mb-3" each="set:list">
+            <ul class="list-group mb-3" @each="set:list">
               <li class="list-group-item">
                 <div class="d-flex w-100 justify-content-between">
                   {set.userName} - {set.host}
