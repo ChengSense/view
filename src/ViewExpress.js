@@ -8,5 +8,5 @@ export var $express = /\{\s*@?([^\{\}]*)\}/;
 export var $expres = /\{([^\{\}]*)\}/g;
 export var $component = /\{\s*@([^\{\}]*)\}/;
 export var $close = /^\}$/;
-export var $word = /(\w+)((\.\w+)|(\[(.+)\]))*/g;
+export var $word = $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 export var $event = /^@(.*)/;

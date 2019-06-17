@@ -39,6 +39,26 @@
       }
     }
   });
+
+  function Code(_express) {
+    $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;;
+    console.log(_express);
+    _express = _express.replace($word, word =>
+      word.match(/'/) ? word : "_scope.".concat(word)
+    );
+    console.log(_express);
+  }
+
+  [
+    "del",
+    "[del]",
+    "[_$del]",
+    "editTitle(item)",
+    "'' + (id) + ''",
+    "'' + (list.id % 2 ? 'k-alt' : '') + ''"
+  ].forEach(_express => {
+    Code(_express);
+  });
 </script>
 </body>
 

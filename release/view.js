@@ -105,6 +105,7 @@ var view = (function (exports) {
   var $expres = /\{([^\{\}]*)\}/g;
   var $component = /\{\s*@([^\{\}]*)\}/;
   var $close = /^\}$/;
+  var $word = $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $event = /^@(.*)/;
 
   function code(_express, _scope) {
@@ -112,7 +113,7 @@ var view = (function (exports) {
       global.$path = undefined;
       global.$cache = new Map();
       _express = _express.replace($express, "$1");
-      return Code(_express)(_scope);
+      return Code(_express, _scope);
     } catch (error) {
       console.warn(error);
       return undefined;
@@ -145,16 +146,23 @@ var view = (function (exports) {
     try {
       var filter = Reflect.getPrototypeOf(we.filter);
       Reflect.setPrototypeOf(filter, _scope);
-      return Code(_express)(we.filter);
+      return Code(_express, we.filter);
     } catch (error) {
       console.warn(error);
       return undefined;
     }
   }
 
-  function Code(_express) {
-    return new Function('_scope', "with (_scope) {\n       return ".concat(_express, ";\n    }"));
+  var codeCacher = new Map();
+
+  function Code(_express, scope) {
+    var express = codeCacher.get(_express);
+    if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
+      return word.match(/["']/) ? word : "scope.".concat(word);
+    }));
+    return new Function('scope', "return ".concat(express, ";"))(scope);
   }
+
   function Path(path) {
     try {
       return path.replace(/(\w+)\.?/g, "['$1']");
