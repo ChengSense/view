@@ -177,6 +177,7 @@ var view = (function (exports) {
   function handler(proto) {
     return {
       get: function get(parent, prop, proxy) {
+        if (prop == Symbol.unscopables) return;
         if (prop == "$target") return parent;
         if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
         return Reflect.get(proto, prop);
@@ -827,7 +828,7 @@ var view = (function (exports) {
           if (prop == "$target") return parent;
           var method = array(proxy, prop, root);
           if (method) return method;
-          if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
+          if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.get(proto, prop);
           if (!parent.hasOwnProperty(prop)) return parent[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
@@ -837,7 +838,7 @@ var view = (function (exports) {
           return value;
         },
         set: function set(parent, prop, val, proxy) {
-          if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
+          if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.set(proto, prop, val);
           var oldValue = values.get(prop);
           var oldCache = cache.get(prop);
           values.set(prop, undefined);

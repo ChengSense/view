@@ -33,8 +33,6 @@ export function slice(obj) {
   return [].slice.call(obj);
 }
 
-
-
 export function blank(str) {
   return str == null || str == undefined || str == "";
 }

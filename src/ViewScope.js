@@ -88,6 +88,7 @@ export function setVariable(scope, variable, path) {
 export function handler(proto) {
   return {
     get(parent, prop, proxy) {
+      if (prop == Symbol.unscopables) return;
       if (prop == "$target") return parent;
       if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
       return Reflect.get(proto, prop);
