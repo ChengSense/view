@@ -828,7 +828,7 @@ var view = (function (exports) {
           var method = array(proxy, prop, root);
           if (method) return method;
           if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
-          if (!parent.hasOwnProperty(prop)) return proto[prop];
+          if (!parent.hasOwnProperty(prop)) return parent[prop];
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
           global.$cache["delete"](root);
@@ -839,7 +839,6 @@ var view = (function (exports) {
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
           var oldValue = values.get(prop);
-          if (val == oldValue) return true;
           var oldCache = cache.get(prop);
           values.set(prop, undefined);
           cache.set(prop, new Map());

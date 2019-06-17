@@ -14,7 +14,7 @@ export function observer(target, proto, call, watch) {
         let method = array(proxy, prop, root);
         if (method) return method;
         if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.get(proto, prop);
-        if (!parent.hasOwnProperty(prop)) return proto[prop];
+        if (!parent.hasOwnProperty(prop)) return parent[prop];
         let path = root ? `${root}.${prop}` : prop;
         let value = getValue(values, cache, parent, prop, path);
         global.$cache.delete(root);
@@ -25,7 +25,6 @@ export function observer(target, proto, call, watch) {
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
         let oldValue = values.get(prop)
-        if (val == oldValue) return true;
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
         cache.set(prop, new Map());
