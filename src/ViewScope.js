@@ -25,6 +25,18 @@ export function codex(_express, _scope, we) {
   }
 }
 
+export function codeo(_express, _scope, we) {
+  try {
+    global.$path = undefined;
+    global.$cache = new Map();
+    _express = _express.replace($express, "$1");
+    return codec(_express, _scope, we);
+  } catch (error) {
+    console.warn(error)
+    return undefined;
+  }
+}
+
 function codec(_express, _scope, we) {
   try {
     let filter = Reflect.getPrototypeOf(we.filter);

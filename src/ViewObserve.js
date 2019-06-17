@@ -25,6 +25,7 @@ export function observer(target, proto, call, watch) {
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
         let oldValue = values.get(prop)
+        if (val == oldValue) return true;
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
         cache.set(prop, new Map());

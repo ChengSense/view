@@ -52,12 +52,12 @@
         <tbody>
           <tr @each="item:id:list" class="{id%2?'k-alt':''}">
             <td @each="col:i:item" data-field="{i}" data-row="{id}">
-              {@flux[id][i]:text}
+              {@editing(item)}
             </td>
             <td>
-              <span class="k-button k-button-icontext k-grid-add" @click="add()">添加</span>
-              <span class="k-button k-button-icontext k-grid-edit" @click="edit(id)">
-                编辑
+              <span class="k-button k-button-icontext k-grid-add" @click="add">添加</span>
+              <span class="k-button k-button-icontext k-grid-edit" @click="edit(item)">
+                {editTitle(item)}
               </span>
               <span class="k-button k-button-icontext k-grid-delete" @click="del(id)">删除</span>
             </td>
@@ -68,19 +68,6 @@
   </div>
 </body>
 <script type="text/javascript">
-  function data() {
-    var data = [];
-    for (var i = 0; i < 10; i++) {
-      data.push({
-        id: 10000 + data.length,
-        age: "宁波店" + data.length,
-        username: "小小的-" + data.length,
-        address: "西湖区-" + data.length
-      })
-    }
-    return data;
-  }
-
   var input = new View({
     component: "<div><input value='{col}'></div>",
     model: {}
@@ -93,32 +80,64 @@
 
   var grid = new View({
     view: "#grid",
-    components: {
-      text, input
-    },
-    flux: {},
     model: {
-      edit: true,
+      edit: false,
+      text: text,
+      node: {},
       columns: {
         id: "档案编号",
         age: "门店名称",
         username: "借款人",
         address: "住址"
       },
-      list: data()
+      list: (function data() {
+        var data = [];
+        for (var i = 0; i < 10; i++) {
+          data.push({
+            "id": 10000 + data.length,
+            "age": "西湖店" + data.length,
+            "username": "西湖-" + data.length,
+            "address": "西湖区-" + data.length
+          });
+        }
+        return data;
+      })()
     },
     action: {
-      add: function () {
-        this.list = data();
-      },
-      edit: function (id) {
-        var node = this.$flux[id];
-        Object.keys(node).forEach(i => {
-          node[i] = node[i] == input ? text : input;
+      add() {
+        this.list.push({
+          "id": 10000 + this.list.length,
+          "age": "西湖店" + this.list.length,
+          "username": "西湖-" + this.list.length,
+          "address": "西湖区-" + this.list.length
         });
       },
-      del: function (id) {
+      edit(item) {
+        this.node = item;
+        if (this.edit == false) {
+          this.edit = true;
+        } else {
+          this.edit = false;
+        }
+      },
+      del(id) {
         this.list.splice(id, 1);
+      }
+    },
+    filter: {
+      editing(item) {
+        if (this.edit && this.node == item) {
+          return input;
+        } else {
+          return text;
+        }
+      },
+      editTitle(item) {
+        if (this.edit && this.node == item) {
+          return "保存";
+        } else {
+          return "编辑";
+        }
       }
     }
   });

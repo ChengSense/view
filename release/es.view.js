@@ -102,6 +102,18 @@ function codex(_express, _scope, we) {
   }
 }
 
+function codeo(_express, _scope, we) {
+  try {
+    global.$path = undefined;
+    global.$cache = new Map();
+    _express = _express.replace($express, "$1");
+    return codec(_express, _scope, we);
+  } catch (error) {
+    console.warn(error);
+    return undefined;
+  }
+}
+
 function codec(_express, _scope, we) {
   try {
     let filter = Reflect.getPrototypeOf(we.filter);
@@ -339,7 +351,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = code(express[1], scope);
+      node.nodeValue = codeo(express[1], scope, we);
       binding.express(node, scope, clas);
     }
   }
@@ -571,7 +583,7 @@ var resolver = {
   component: function (node, we) {
     try {
       global.$cache = new Map();
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = codeo(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       node.path = global.$path;
@@ -801,6 +813,7 @@ function observer(target, proto, call, watch) {
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
         let oldValue = values.get(prop);
+        if (val == oldValue) return true;
         let oldCache = cache.get(prop);
         values.set(prop, undefined);
         cache.set(prop, new Map());

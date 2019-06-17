@@ -129,6 +129,17 @@ var view = (function (exports) {
       return undefined;
     }
   }
+  function codeo(_express, _scope, we) {
+    try {
+      global.$path = undefined;
+      global.$cache = new Map();
+      _express = _express.replace($express, "$1");
+      return codec(_express, _scope, we);
+    } catch (error) {
+      console.warn(error);
+      return undefined;
+    }
+  }
 
   function codec(_express, _scope, we) {
     try {
@@ -354,7 +365,7 @@ var view = (function (exports) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
       } else if (express = new RegExp($expres).exec(node.nodeValue)) {
-        node.nodeValue = code(express[1], scope);
+        node.nodeValue = codeo(express[1], scope, we);
         binding.express(node, scope, clas);
       }
     }
@@ -593,7 +604,7 @@ var view = (function (exports) {
     component: function component(node, we) {
       try {
         global.$cache = new Map();
-        var app = code(node.clas.nodeValue, node.scope);
+        var app = codeo(node.clas.nodeValue, node.scope, we);
         app.model = app.model.$target || app.model;
         var $cache = global.$cache;
         node.path = global.$path;
@@ -828,6 +839,7 @@ var view = (function (exports) {
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && prop in proto) return Reflect.set(proto, prop, val);
           var oldValue = values.get(prop);
+          if (val == oldValue) return true;
           var oldCache = cache.get(prop);
           values.set(prop, undefined);
           cache.set(prop, new Map());

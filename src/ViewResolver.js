@@ -1,7 +1,7 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
 import { global, View } from "./ViewIndex";
-import { code, codex } from "./ViewScope";
+import { codeo, codex } from "./ViewScope";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -18,7 +18,7 @@ export var resolver = {
   component: function (node, we) {
     try {
       global.$cache = new Map();
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = codeo(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       node.path = global.$path;
