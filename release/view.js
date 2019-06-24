@@ -105,7 +105,7 @@ var view = (function (exports) {
   var $expres = /\{([^\{\}]*)\}/g;
   var $component = /\{\s*@([^\{\}]*)\}/;
   var $close = /^\}$/;
-  var $word = $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+  var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $event = /^@(.*)/;
 
   function code(_express, _scope) {
