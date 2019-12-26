@@ -171,26 +171,16 @@ var view = (function (exports) {
       return undefined;
     }
   }
-  function setVariable(scope, variable, path) {
-    path = "".concat(Path(path));
-    Object.defineProperty(scope, variable, {
-      get: function get() {
-        return new Function('scope', "\n        return scope".concat(path, ";\n        "))(scope);
-      },
-      set: function set(val) {
-        new Function('scope', 'val', "\n        scope".concat(path, "=val;\n        "))(scope, val);
-      }
-    });
-  }
-  function handler(proto) {
+  function handler(proto, field, scope, key) {
     return {
-      get: function get(parent, prop, proxy) {
-        if (prop == Symbol.unscopables) return;
+      get: function get(parent, prop) {
+        if (field == prop) return Reflect.get(scope, key);
         if (prop == "$target") return parent;
         if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
         return Reflect.get(proto, prop);
       },
-      set: function set(parent, prop, val, proxy) {
+      set: function set(parent, prop, val) {
+        if (field == prop) return Reflect.set(scope, key, val);
         if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
         return Reflect.set(proto, prop, val);
       }
@@ -219,18 +209,17 @@ var view = (function (exports) {
         if (child.clas.nodeType == 1) {
           if (child.clas.hasAttribute("@each")) {
             var expreses = child.clas.getAttribute("@each").split(":");
-            var variable = expreses.shift().trim();
+            var field = expreses.shift().trim();
             var source = expreses.pop().trim();
             var id = expreses.shift();
-            var dataSource = code(source, scopes);
+            var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.attrEach(null, scopes, clas, content, dataSource);
-            forEach(dataSource, function (item, index) {
+            binding.attrEach(null, scopes, clas, content, sources);
+            forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
               if (id) scope[id.trim()] = index;
-              scope = new Proxy(scope, handler(scopes));
-              setVariable(scope, variable, global.$path);
+              scope = new Proxy(scope, handler(scopes, field, sources, index));
               var newNode = child.clas.cloneNode();
               newNode.removeAttribute("@each");
               node.appendChild(newNode);
@@ -257,19 +246,18 @@ var view = (function (exports) {
         } else {
           if ($each.test(child.clas.nodeValue)) {
             var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-            var variable = expreses.shift().trim();
+            var field = expreses.shift().trim();
             var source = expreses.pop().trim();
             var id = expreses.shift();
-            var dataSource = code(source, scopes);
+            var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.each(null, scopes, clas, content, dataSource);
+            binding.each(null, scopes, clas, content, sources);
             var children = slice(child.children);
-            forEach(dataSource, function (item, index) {
+            forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
               if (id) scope[id.trim()] = index;
-              scope = new Proxy(scope, handler(scopes));
-              setVariable(scope, variable, global.$path);
+              scope = new Proxy(scope, handler(scopes, field, sources, index));
               var clasNodes = classNode(null, child);
               clas.childNodes.push(clasNodes);
               compiler(node, scope, slice(children), clasNodes);

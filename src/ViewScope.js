@@ -71,35 +71,16 @@ export function Path(path) {
   }
 }
 
-export function setVariable(scope, variable, path) {
-  path = `${Path(path)}`
-  Object.defineProperty(scope, variable, {
-    get() {
-      return new Function('scope',
-        `
-        return scope${path};
-        `
-      )(scope);
-    },
-    set(val) {
-      new Function('scope', 'val',
-        `
-        scope${path}=val;
-        `
-      )(scope, val);
-    }
-  });
-}
-
-export function handler(proto) {
+export function handler(proto, field, scope, key) {
   return {
-    get(parent, prop, proxy) {
-      if (prop == Symbol.unscopables) return;
+    get(parent, prop) {
+      if (field == prop) return Reflect.get(scope, key);
       if (prop == "$target") return parent;
       if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
       return Reflect.get(proto, prop);
     },
-    set(parent, prop, val, proxy) {
+    set(parent, prop, val) {
+      if (field == prop) return Reflect.set(scope, key, val);
       if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
       return Reflect.set(proto, prop, val);
     }

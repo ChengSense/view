@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>index</title>
+</head>
+<div>
+  <div>
+
+  </div>
+</div>
+
+<body>
+</body>
+
+</html>
+<script type="text/javascript">
+  class Observer {
+    constructor(target) {
+      this.target = new Proxy(target, handler());
+    }
+  }
+
+  function handler(root) {
+    let values = new Map(), cache = new Map();
+    return {
+      get(parent, prop, proxy) {
+        if (prop == "$target") return parent;
+        let value = values.get(prop);
+        if (value != undefined) return value;
+        let path = root ? `${root}.${prop}` : prop;
+        value = Reflect.get(parent, prop);
+        if (typeof value == "object") value = new Proxy(value, handler(path));
+        cache.set(prop, new Map());
+        values.set(prop, value);
+        return value;
+      },
+      set(parent, prop, val, proxy) {
+        let oldValue = values.get(prop)
+        let oldCache = cache.get(prop);
+        values.delete(prop);
+        cache.delete(prop);
+        Reflect.set(parent, prop, val.$target || val);
+        let path = root ? `${root}.${prop}` : prop;
+        return true;
+      }
+    }
+  }
+
+  let a = {
+    user: {
+      child: {
+        name: "aaaa"
+      }
+    }
+  }
+  let b = new Observer(a).target;
+  console.log(b.user.child.name)
+</script>
+</body>
+
+</html>
