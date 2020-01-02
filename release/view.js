@@ -606,7 +606,7 @@ var view = (function (exports) {
         var $cache = global.$cache;
         node.path = global.$path;
         if (blank(app)) return;
-        Reflect.setPrototypeOf(app.model, node.scope.$target);
+        Reflect.setPrototypeOf(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
@@ -614,7 +614,7 @@ var view = (function (exports) {
           view: app.component,
           model: app.model,
           action: app.action
-        }, node.scope);
+        });
         app.model = component.model;
         var clasNodes = compoNode(insert, node, component);
         setCache(clasNodes, we, $cache);
@@ -812,7 +812,7 @@ var view = (function (exports) {
     return list;
   }
 
-  function observer(target, proto, call, watch) {
+  function observer(target, call, watch) {
     if (_typeof(target) != 'object') return target;
     target = new Proxy(target, handler());
 
@@ -824,8 +824,7 @@ var view = (function (exports) {
           if (prop == "$target") return parent;
           var method = array(proxy, prop, root);
           if (method) return method;
-          if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.get(proto, prop);
-          if (!parent.hasOwnProperty(prop)) return parent[prop];
+          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
           var value = getValue(values, cache, parent, prop, path);
           global.$cache["delete"](root);
@@ -834,11 +833,11 @@ var view = (function (exports) {
           return value;
         },
         set: function set(parent, prop, val, proxy) {
-          if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.set(proto, prop, val);
+          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
           var oldValue = values.get(prop);
           var oldCache = cache.get(prop);
-          values.set(prop, undefined);
-          cache.set(prop, new Map());
+          values["delete"](prop);
+          cache["delete"](prop);
           Reflect.set(parent, prop, val.$target || val);
           var value = proxy[prop];
           setValue(value, oldValue);
@@ -1292,7 +1291,7 @@ var view = (function (exports) {
   var View$1 =
   /*#__PURE__*/
   function () {
-    function View(app, parent) {
+    function View(app) {
       _classCallCheck(this, View);
 
       this.content = {
@@ -1303,13 +1302,13 @@ var view = (function (exports) {
       this.action = app.action;
       this.watch = app.watch;
       this.filter = app.filter;
-      app.view ? this.view(app, parent || {}) : this.component(app);
+      app.view ? this.view(app) : this.component(app);
     }
 
     _createClass(View, [{
       key: "view",
-      value: function view(app, parent) {
-        app.model = observer(app.model, parent, {
+      value: function view(app) {
+        app.model = observer(app.model, {
           set: function set(cache, newCache) {
             deepen(cache, newCache);
           },

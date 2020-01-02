@@ -573,11 +573,11 @@ var resolver = {
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope.$target);
+      Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View$1({ view: app.component, model: app.model, action: app.action }, node.scope);
+      let component = new View$1({ view: app.component, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, $cache);
@@ -775,7 +775,7 @@ function initCompiler(node, children) {
   return list;
 }
 
-function observer(target, proto, call, watch) {
+function observer(target, call, watch) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -786,8 +786,7 @@ function observer(target, proto, call, watch) {
         if (prop == "$target") return parent;
         let method = array(proxy, prop, root);
         if (method) return method;
-        if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.get(proto, prop);
-        if (!parent.hasOwnProperty(prop)) return parent[prop];
+        if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
         let path = root ? `${root}.${prop}` : prop;
         let value = getValue(values, cache, parent, prop, path);
         global.$cache.delete(root);
@@ -796,11 +795,11 @@ function observer(target, proto, call, watch) {
         return value;
       },
       set(parent, prop, val, proxy) {
-        if (!parent.hasOwnProperty(prop) && Reflect.has(proto, prop)) return Reflect.set(proto, prop, val);
+        if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
         let oldValue = values.get(prop);
         let oldCache = cache.get(prop);
-        values.set(prop, undefined);
-        cache.set(prop, new Map());
+        values.delete(prop);
+        cache.delete(prop);
         Reflect.set(parent, prop, val.$target || val);
         let value = proxy[prop];
         setValue(value, oldValue);
@@ -1203,16 +1202,16 @@ Object.assign(NodeList.prototype, {
 let global = { $path: undefined };
 
 class View$1 {
-  constructor(app, parent) {
+  constructor(app) {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
-    app.view ? this.view(app, parent || {}) : this.component(app);
+    app.view ? this.view(app) : this.component(app);
   }
-  view(app, parent) {
-    app.model = observer(app.model, parent, {
+  view(app) {
+    app.model = observer(app.model, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
     }, app.watch);

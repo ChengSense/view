@@ -23,11 +23,11 @@ export var resolver = {
       let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope.$target);
+      Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action }, node.scope);
+      let component = new View({ view: app.component, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, $cache);
