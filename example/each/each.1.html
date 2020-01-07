@@ -8,13 +8,12 @@
 </head>
 
 <body>
-  <div @each="item:id:list" data-row="{id}"> {item.i} </div>
+  <div @each="item:id:list" data-row="{id}"> {item} </div>
   <button @click="shift">{shift}</button>
   <button @click="unshift">{unshift}</button>
   <button @click="pop">{pop}</button>
   <button @click="push">{push}</button>
   <button @click="splice">{splice}</button>
-  <button @click="reverse">{reverse}</button>
 </body>
 
 </html>
@@ -22,34 +21,29 @@
   var app = new View({
     view: "body",
     model: {
-      list: [{ i: 1 }, { i: 2 }, { i: 3 }, { i: 4 }, { i: 5 }, { i: 6 }, { i: 7 }, { i: 8 }, { i: 9 }, { i: 10 }],
+      list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       pop: "pop！",
       shift: "shift！",
       unshift: "unshift！",
       push: "push！",
-      splice: "splice！",
-      reverse: "reverse！"
+      splice: "splice！"
     },
     action: {
-      pop(el) {
-        this.list.pop();
-      },
       shift() {
         this.list.shift();
       },
       unshift() {
-        this.list.unshift({ i: this.list.length + 1 });
+        this.list.unshift(1);
+      },
+      pop(el) {
+        this.list.pop();
       },
       push() {
-        this.list.push({ i: this.list.length + 1 });
+        this.list.push(this.list.length + 1);
       },
       splice() {
-        this.list.splice(8, 0, { i: this.list.length + 1 }, { i: this.list.length + 1 });
-      },
-      reverse() {
-        this.list.reverse();
+        this.list.splice(0, 1, this.list.length + 1);
       }
     }
   });
-
 </script>

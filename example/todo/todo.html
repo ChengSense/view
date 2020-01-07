@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Vue.js • TodoMVC</title>
+    <link rel="stylesheet" href="https://unpkg.com/todomvc-app-css@2.0.4/index.css">
+    <script src="https://unpkg.com/director@1.2.8/build/director.js"></script>
+    <style>[v-cloak] { display: none; }</style>
+  </head>
+  <body>
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <input class="new-todo"
+          autofocus autocomplete="off"
+          placeholder="What needs to be done?"
+          :model="newTodo"
+          @change="addTodo">
+      </header>
+      <section class="main" style="display:{display()}">
+        <input class="toggle-all" type="checkbox" :model="allDone">
+        <ul class="todo-list">
+          <li @each="todo:todos"
+            key="{todo.id}"
+            class="todo {completed(todo)}">
+            <div class="view">
+              <input class="toggle" type="checkbox" :model="todo.completed">
+              <label @dblclick="editTodo(todo)">{ todo.title }</label>
+              <button class="destroy" @click="removeTodo(todo)"></button>
+            </div>
+            <input class="edit" type="text"
+              vlue="{todo.title}"
+              @blur="doneEdit(todo)"
+              @keyup.enter="doneEdit(todo)"
+              @keyup.esc="cancelEdit(todo)">
+          </li>
+        </ul>
+      </section>
+      <footer class="footer" style="display:{display()}">
+        <span class="todo-count">
+          <strong>{ todos.length }</strong> { remaining | pluralize } left
+        </span>
+        <ul class="filters">
+          <li><a href="#/all" class="{visiClass('all')}">All</a></li>
+          <li><a href="#/active" class="{visiClass('active')}">Active</a></li>
+          <li><a href="#/completed" class="{visiClass('completed')}">Completed</a></li>
+        </ul>
+        <button
+          class="clear-completed" 
+          @click="removeCompleted" 
+          v-show="{todos.length > remaining()}">
+          Clear completed
+        </button>
+      </footer>
+    </section>
+    <footer class="info">
+      <p>Double-click to edit a todo</p>
+      <p>Written by <a href="http://evanyou.me">Evan You</a></p>
+      <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    </footer>
+
+    <script>
+    if (navigator.userAgent.indexOf('PhantomJS') > -1) localStorage.clear()
+    </script>
+    <script src="../../release/view.js"></script>
+    <script src="todo.js"></script>
+  </body>
+</html>

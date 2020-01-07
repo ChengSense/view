@@ -1,9 +1,10 @@
-import { observe } from "./ViewObserve";
-import { query } from "./ViewElmemt";
+import { resolver, clearNodes } from "./ViewResolver";
 import { init, initCompiler } from "./ViewInit";
-import { each, slice, clone } from "./ViewLang";
-import { resolver } from "./ViewResolver";
+import { observer } from "./ViewObserve";
+import { setScopes } from "./ViewScope";
 import { Router } from "./ViewRouter";
+import { query } from "./ViewElmemt";
+import { slice } from "./ViewLang";
 
 export let global = { $path: undefined };
 
@@ -12,24 +13,23 @@ export class View {
     this.content = { childNodes: [], children: [] };
     this.model = app.model;
     this.action = app.action;
-    var we = this;
-
-    observe(app.model, function set(path, value, oldValue) {
-      deepen(we.content, path, we);
-      attrDeepen(global.$attres);
-    }, function get(path) {
-      global.$path = path;
-    });
-
-    app.view ? this.view(app) : this.component(app);
+    this.watch = app.watch;
+    this.filter = app.filter;
+    app.view ? this.view(app) : this.component(app)
   }
   view(app) {
+    app.model = observer(app.model, {
+      set(cache, newCache) { deepen(cache, newCache); },
+      get(path) { global.$path = path; }
+    }, app.watch);
+
+    this.model = app.model;
     var view = query(app.view);
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    app.model.$action = app.action;
-    resolver["view"](this.view, node, app.model, this.content, this);
+    setScopes(this);
+    resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {
     var view = query(app.component);
@@ -39,26 +39,45 @@ export class View {
   }
 }
 
-function deepen(content, path, we) {
-  each(content.childNodes, function (node) {
-    if (node.path && node.path.has(path)) {
-      return resolver[node.resolver](node, we);
-    }
-    if (node.childNodes[0])
-      deepen(node, path, we);
-  });
+function clearNode(nodes, status) {
+  try {
+    nodes.every(child => {
+      if (child.node) {
+        let node = child.node.ownerElement || child.node;
+        status = document.body.contains(node);
+        return false;
+      };
+      status = clearNode(child.childNodes);
+    });
+    return status;
+  } catch (error) {
+    console.error(error)
+  }
 }
 
-function attrDeepen(attres) {
-  attres.forEach(attre => {
-    each(slice(attre), function (node) {
-      if (node.node && !node.node.ownerElement.parentNode)
-        attre.remove(node);
-      resolver[node.resolver](node);
+function deepen(cache, newCache) {
+  if (cache && newCache) {
+    cache.forEach(caches => {
+      if (!caches) return;
+      caches.forEach((nodes, we) => {
+        slice(nodes).forEach(node => {
+          if (clearNode([node]))
+            resolver[node.resolver](node, we, newCache);
+          else
+            nodes.remove(node);
+        })
+      });
     });
-  })
+  } else if (cache && !newCache) {
+    cache.forEach(caches => {
+      if (!caches) return;
+      caches.forEach(nodes => {
+        clearNodes(nodes)
+      });
+    });
+  }
 }
 
 window.View = View;
 window.Router = Router;
-window.clone = clone;
+window.query = query;

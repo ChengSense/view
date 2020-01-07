@@ -1,19 +1,111 @@
-import { each, extend, slice } from "./ViewLang";
+import { each, slice } from "./ViewLang";
+import { code } from "./ViewScope";
 
 export function query(express) {
   try {
     var doc = document.querySelectorAll(express);
     return doc;
-  } catch (e) {
+  } catch (error) {
     var newNode = document.createElement("div");
     newNode.innerHTML = express.trim();
     return newNode.childNodes;
   }
 }
 
-extend(Node, {
-  on(type, methd) {
-    this.addEventListener(type, methd);
+function addListener(type, methods, scope) {
+  if (this.addEventListener) {
+    this.addEventListener(type, function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        })
+      });
+    }, false);
+  }
+  else if (this.attachEvent) {
+    this.attachEvent('on' + type, function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        })
+      });
+    });
+  }
+  else {
+    element['on' + type] = function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        })
+      });
+    };
+  }
+}
+
+function removeListener(type, handler) {
+  if (this.addEventListener) {
+    this.removeEventListener(type, handler, false);
+  }
+  else if (this.detachEvent) {
+    this.detachEvent('on' + type, handler);
+  }
+  else {
+    element['on' + type] = null;
+  }
+}
+
+Object.assign(Node.prototype, {
+  on: function (type, handler, scope, params) {
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        let methods = this._manager.get(type);
+        if (methods.get(handler)) {
+          methods.get(handler).ones(params);
+        }
+        else {
+          methods.set(handler, [params]);
+        }
+      }
+      else {
+        let methods = new Map();
+        methods.set(handler, [params]);
+        this._manager.set(type, methods);
+        addListener.call(this, type, methods, scope);
+      }
+    }
+    else {
+      let methods = new Map();
+      methods.set(handler, [params]);
+      this._manager = new Map();
+      this._manager.set(type, methods);
+      addListener.call(this, type, methods, scope);
+    }
+    return this;
+  },
+  off: function (type, handler) {
+    if (this._manager) {
+      let methods = this._manager.get(type);
+      if (methods == undefined) return;
+      methods.delete(handler);
+      if (methods.size) return;
+      this._manager.delete(type);
+      removeListener.call(this, type, handler);
+    }
     return this;
   },
   reappend(node) {
@@ -26,17 +118,25 @@ extend(Node, {
   before(node) {
     this.parentNode.insertBefore(node, this);
   },
+  after(node) {
+    if (this.nextSibling)
+      this.parentNode.insertBefore(node, this.nextSibling);
+    else
+      this.parentNode.appendChild(node);
+  }
 });
 
-extend(NodeList, {
+Object.assign(NodeList.prototype, {
   on(type, call) {
     each(this, function (node) {
       node.on(type, call);
     });
+    return this;
   },
   off(type, call) {
     each(this, function (node) {
       node.off(type, call);
     });
+    return this;
   }
 });

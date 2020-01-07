@@ -1,29 +1,29 @@
-import { forEach, whiles, slice, blank } from "./ViewLang";
-import { code, codev, codex, Path, setVariable } from "./ViewScope";
-import { $express, $expres, $component, $each, $when, $whec, $whea, $chen, $word, $event } from "./ViewExpress";
 import { global } from "./ViewIndex";
-import { resolver } from "./ViewResolver";
+import { blank, forEach, slice, whiles } from "./ViewLang";
+import { setCache, resolver } from "./ViewResolver";
+import { code, codeo, codex, Path, setVariable, handler } from "./ViewScope";
+import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
   function compiler(node, scopes, childNodes, content) {
     whiles(childNodes, function (child, childNodes) {
       if (child.clas.nodeType == 1) {
-        if (child.clas.hasAttribute("each")) {
-          var expreses = child.clas.getAttribute("each").split(":");
-          var variable = expreses.shift().trim();
+        if (child.clas.hasAttribute("@each")) {
+          var expreses = child.clas.getAttribute("@each").split(":");
+          var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var dataSource = code(source, scopes);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content, dataSource);
-          forEach(dataSource, function (item, index) {
-            var scope = Object.create(scopes || {});
-            setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
+          binding.attrEach(null, scopes, clas, content, sources);
+          forEach(sources, function (item, index) {
+            var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
+            scope = new Proxy(scope, handler(scopes, field, sources, index));
             var newNode = child.clas.cloneNode();
-            newNode.removeAttribute("each");
+            newNode.removeAttribute("@each");
             node.appendChild(newNode);
             var clasNodes = classNode(newNode, child);
             clas.childNodes.push(clasNodes);
@@ -51,18 +51,18 @@ export function Compiler(node, scopes, childNodes, content, we) {
       else {
         if ($each.test(child.clas.nodeValue)) {
           var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-          var variable = expreses.shift().trim();
+          var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var dataSource = code(source, scopes);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content, dataSource);
+          binding.each(null, scopes, clas, content, sources);
           let children = slice(child.children);
-          forEach(dataSource, function (item, index) {
-            var scope = Object.create(scopes || {});
-            setVariable(scope, variable, global.$path);
-            if (id) scope[id.trim()] = index.toString();
+          forEach(sources, function (item, index) {
+            var scope = Object.create(scopes.$target);
+            if (id) scope[id.trim()] = index;
+            scope = new Proxy(scope, handler(scopes, field, sources, index));
             var clasNodes = classNode(null, child);
             clas.childNodes.push(clasNodes);
             compiler(node, scope, slice(children), clasNodes);
@@ -127,10 +127,15 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function attrExpress(node, scope) {
     forEach(node.attributes, function (child) {
+      if (!child) return;
       let clas = attrNode(child, scope, child.cloneNode());
-      if (new RegExp($expres).test(child.nodeValue)) {
+      if (clas.clas.name == ":model") {
+        model(child, scope);
+      }
+      else if (new RegExp($expres).test(child.nodeValue)) {
+        if (clas.clas.name == "value") model(child, scope);
+        child.nodeValue = codex(child.nodeValue, scope, we);
         binding.attrExpress(child, scope, clas);
-        child.nodeValue = codex(child.nodeValue, scope);
       }
       bind(child, scope);
     });
@@ -139,9 +144,16 @@ export function Compiler(node, scopes, childNodes, content, we) {
       node.name.replace($event, function (key) {
         key = key.replace($event, "$1");
         let owner = node.ownerElement;
-        owner.on(key, function (event) {
-          codev(node.nodeValue, scope, event);
-        })
+        var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+        if (array) {
+          var name = node.nodeValue.toString().replace(array[0], "");
+          let method = code(name, we.action);
+          owner.on(key, method, scope, array[1]);
+        }
+        else {
+          let method = code(node.nodeValue, we.action);
+          owner.on(key, method, scope);
+        }
       });
     }
   }
@@ -151,11 +163,11 @@ export function Compiler(node, scopes, childNodes, content, we) {
     attrExpress(node, scope);
     if (new RegExp($component).test(node.nodeValue)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas);
+      resolver["component"](clas, we);
     }
-    else if (express = new RegExp($express).exec(node.nodeValue)) {
-      binding.express(node, scope, clas, express[0]);
-      node.nodeValue = code(express[1], scope);
+    else if (express = new RegExp($expres).exec(node.nodeValue)) {
+      node.nodeValue = codeo(express[1], scope, we);
+      binding.express(node, scope, clas);
     }
   }
 
@@ -164,82 +176,111 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   let binding = {
-    attrEach(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+    attrEach(node, scope, clas, content) {
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
+      setCache(clas, we, global.$cache);
     },
-    each(node, scope, clas, content, value) {
-      if (value == undefined || global.$path == undefined) return;
+    each(node, scope, clas, content) {
+      if (global.$cache == undefined) return;
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
-      clas.path = [global.$path];
       clas.node = node;
+      setCache(clas, we, global.$cache);
     },
     when(node, scope, clas) {
+      if (global.$cache == undefined) return;
       var nodeValue = clas.clas.nodeValue;
       let whens = new RegExp($when).exec(nodeValue);
       if (!whens) return;
-      let key = whens.pop();
       clas.resolver = "when";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
-      dep(key, scope, clas);
+      setCache(clas, we, global.$cache);
     },
-    express(node, scope, clas, key) {
+    express(node, scope, clas) {
+      if (global.$cache == undefined) return;
       clas.resolver = "express";
       clas.scope = scope;
-      clas.path = [];
       clas.node = node;
-      dep(key, scope, clas);
+      setCache(clas, we, global.$cache);
     },
     attrExpress(node, scope, clas) {
-      var nodeValue = clas.clas.nodeValue;
-      nodeValue.replace($expres, function (key) {
-        clas.resolver = "express";
-        clas.scope = scope;
-        clas.path = [];
-        clas.node = node;
-        dep(key, scope, clas);
-      });
-      if (clas.clas.name == "value")
-        model(node, scope);
+      if (global.$cache == undefined) return;
+      clas.resolver = "express";
+      clas.scope = scope;
+      clas.node = node;
+      setCache(clas, we, global.$cache);
     }
   }
 
-  function dep(key, scope, clas) {
-    key.replace($word, function (key) {
-      if (code(key, scope) == undefined || global.$path == undefined) return;
-      if (clas.clas.nodeType == 2) {
-        let attres = global.$attres.get(we);
-        if (attres) {
-          attres.push(clas)
-        } else {
-          global.$attres.set(we, [clas]);
-        }
-      }
-      clas.path.push(global.$path);
-    });
+  function model(node, scope) {
+    let owner = node.ownerElement;
+    owner._express = node.nodeValue.replace($express, "$1");
+    let _express = `scope${Path(owner._express)}`;
+    let method = (input[owner.type] || input[owner.localName] || input.other);
+    method(node, scope, _express);
   }
 
-  function model(node, scope) {
-    var owner = node.ownerElement, handle;
-    owner._express = node.nodeValue.replace($express, "$1");
-    owner.on("change", handle = function () {
-      new Function('scope',
-        `
-        scope${Path(owner._express)}='${owner.value.replace(/(\'|\")/g, "\\$1")}';
-        `
-      )(scope);
-    });
-    if (owner.nodeName == "SELECT") {
-      let value = code(owner._express, scope);
-      blank(value) ? handle() : owner.value = value;
+  let input = {
+    checkbox(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
+          new Function('scope', express)(scope);
+        }, scope);
+        let value = code(owner._express, scope);
+        if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    radio(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        }, scope);
+        let value = code(owner._express, scope);
+        if (value == owner.value) owner.checked = true;
+        owner.name = global.$path;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    select(node, scope, _express) {
+      try {
+        var owner = node.ownerElement, handle;
+        owner.on("change", handle = function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        }, scope);
+        let value = code(owner._express, scope);
+        blank(value) ? handle() : owner.value = value;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    other(node, scope, _express) {
+      try {
+        var owner = node.ownerElement;
+        owner.on("change", function () {
+          let _value = owner.value.replace(/(\'|\")/g, "\\$1");
+          let express = `${_express}='${_value}';`
+          new Function('scope', express)(scope);
+        }, scope);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 
@@ -264,8 +305,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       childNodes: [{
         node: comment,
         clas: child.clas,
-        children: [],
         scope: child.scope,
+        children: [],
         childNodes: []
       }]
     };
@@ -284,8 +325,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
         childNodes: [{
           node: comment,
           clas: child.clas,
-          children: [],
           scope: child.scope,
+          children: [],
           childNodes: []
         }]
       });
@@ -302,8 +343,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
     clas.content = content;
     clas.childNodes.push({
       node: comment,
-      children: [],
       content: clas,
+      children: [],
       childNodes: []
     });
   }
@@ -312,8 +353,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
     return {
       node: newNode,
       clas: clas,
-      children: [],
       scope: scope,
+      children: [],
       childNodes: []
     };
   }
@@ -324,20 +365,19 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
 export function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
+  Reflect.deleteProperty(child, "path");
   node.before(comment);
   component.content.node = component.view;
   return {
-    node: child.node,
     clas: child.clas,
     children: [component.node],
     scope: child.scope,
     resolver: child.resolver,
     content: child.content,
-    path: child.path,
     childNodes: [{
       node: comment,
-      children: [],
       scope: child.scope,
+      children: [],
       childNodes: []
     }, component.content]
   };

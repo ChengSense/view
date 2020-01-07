@@ -21,15 +21,15 @@
 
 <body>
 
-  <div each="item:i:list">
+  <div @each="item:i:list">
     @each(l:item){
-      <div @click="alert(`{{param1}}`)">
+      <div @click="alert(param1)">
         @when(i==1){
-          <div id="{{i}}">{{param1}}</div>
+          <div id="{i}">{param1}</div>
         }.when(i==2){
-          <div>{{param2}}</div>
+          <div>{param2}</div>
         }.when{
-          <div>{{l}}</div>
+          <div>{l}</div>
         }
       </div>
     }
@@ -43,7 +43,7 @@
     view: "body",
     model: {
       router: "",
-      list: [[1, 2],[3,4], [5,6]],
+      list: [[1, 2],[3, 4], [5, 6]],
       param1: "param1",
       param2: "param2"
     },
@@ -80,26 +80,26 @@
       <a href="#edit/qwe/qwe">edit !</a>
     </li>
     <li>
-      <input value="{{param1}}" /> + <input value="{{param2}}" />
+      <input value="{param1}" /> + <input value="{param2}" />
     </li>
     <li>
-      {{@router}}
+      {@router}
     </li>
   </ul>
   <home>
-    {{name}} => {{param1+param2}}
+    {name} => {param1+param2}
     <br>
-    <input value="{{name}}" />
+    <input value="{name}" />
   </home>
   <detail>
-    {{name}} => {{param1+param2}}
+    {name} => {param1+param2}
     <br>
-    <input value="{{name}}" />
+    <input value="{name}" />
   </detail>
   <edit>
-    {{name}} => {{param1+param2}}
+    {name} => {param1+param2}
     <br>
-    <input value="{{name}}" />
+    <input value="{name}" />
   </edit>
 </body>
 

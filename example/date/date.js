@@ -1,11 +1,4 @@
-function extend(object, src) {
-  var prototype = object.prototype || object.__proto__;
-  for (var key in src) {
-    prototype[key] = src[key];
-  }
-  return object;
-}
-extend(Date, {
+Object.assign(Date.prototype, {
   Last: function () {
     var date = new Date(this);
     date.setMonth((date.getMonth() - 1), 1);

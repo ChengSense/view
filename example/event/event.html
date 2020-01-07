@@ -10,9 +10,30 @@
 <body>
 
   <div @click="alert(param1)">
-    {{param1}}
+    {param1}
   </div>
-  <input value="{{param1}}"/>
+  <input value="{param1}" />
+  <br/>
+
+  <form>
+    <input type="radio" :model="sex" value="male">
+    Male
+    <br/>
+    <input type="radio" :model="sex" value="female">
+    Female
+    <br/>
+    {sex}
+  </form>
+
+  <form>
+    <input type="checkbox" :model="texts" value="A">
+    A
+    <br/>
+    <input type="checkbox" :model="texts" value="B">
+    B
+    <br/>
+    [{texts.join(',')}]
+  </form>
 
 </body>
 
@@ -23,9 +44,14 @@
     model: {
       router: "",
       param1: "点我！",
-      param2: "3333"
+      param2: "3333",
+      sex: "female",
+      texts: ["A"]
     },
     action: {
+      change(el) {
+        console.log(el);
+      },
       alert(el) {
         this.param1 = "我变成了你！";
       }
