@@ -270,8 +270,8 @@ function Compiler(node, scopes, childNodes, content, we) {
       }
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
-        child.nodeValue = codex(child.nodeValue, scope, we);
         binding.attrExpress(child, scope, clas, child.nodeValue);
+        child.nodeValue = codex(child.nodeValue, scope);
       }
       bind(child, scope);
     });
@@ -618,8 +618,8 @@ var resolver = {
 function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      word = "scope.".concat(word);
-      let value = new Function('scope', `return ${word}$;`)(clas.scope);
+      word = `scope.${word}$`;
+      let value = new Function('scope', `return ${word};`)(clas.scope);
       if (value == undefined) return;
       let cache = value.get(we);
       if (cache) {
@@ -638,7 +638,8 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      }      node = insertion(child.childNodes);
+      };
+      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -717,19 +718,23 @@ function observer(target, call, watch) {
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
-        if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
-        let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "get", [path]);
-        let value = values.get(prop);
-        if (value != undefined) return value;
-        let cache = caches.get(prop);
-        if (cache != undefined) return cache;
-        caches.set(`${prop}$`, new Map());
-        value = Reflect.get(parent, prop);
-        if (value instanceof View) return value;
-        if (typeof value == "object") value = new Proxy(value, handler(path));
-        values.set(prop, value);
-        return value;
+        if (new String(prop).endsWith("$")) {
+          let cache = caches.get(prop);
+          if (cache != undefined) return cache;
+          return Reflect.get(parent, prop);
+        } else {
+          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
+          let path = root ? `${root}.${prop}` : prop;
+          mq.publish(target, "get", [path]);
+          let value = values.get(prop);
+          if (value != undefined) return value;
+          caches.set(`${prop}$`, new Map());
+          value = Reflect.get(parent, prop);
+          if (value instanceof View) return value;
+          if (typeof value == "object") value = new Proxy(value, handler(path));
+          values.set(prop, value);
+          return value;
+        }
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
@@ -1086,7 +1091,8 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      }      status = clearNode(child.childNodes);
+      };
+      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {

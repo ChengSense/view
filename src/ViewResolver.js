@@ -139,8 +139,8 @@ var arrayEach = {
 export function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      word = "scope.".concat(word);
-      let value = new Function('scope', `return ${word}$;`)(clas.scope)
+      word = `scope.${word}$`;
+      let value = new Function('scope', `return ${word};`)(clas.scope)
       if (value == undefined) return;
       let cache = value.get(we);
       if (cache) {

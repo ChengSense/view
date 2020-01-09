@@ -135,8 +135,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       }
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
-        child.nodeValue = codex(child.nodeValue, scope, we);
         binding.attrExpress(child, scope, clas, child.nodeValue);
+        child.nodeValue = codex(child.nodeValue, scope, we);
       }
       bind(child, scope);
     });

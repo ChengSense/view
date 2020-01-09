@@ -9,19 +9,23 @@ export function observer(target, call, watch) {
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
-        if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
-        let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "get", [path]);
-        let value = values.get(prop);
-        if (value != undefined) return value;
-        let cache = caches.get(prop);
-        if (cache != undefined) return cache;
-        caches.set(`${prop}$`, new Map());
-        value = Reflect.get(parent, prop);
-        if (value instanceof View) return value;
-        if (typeof value == "object") value = new Proxy(value, handler(path));
-        values.set(prop, value);
-        return value;
+        if (new String(prop).endsWith("$")) {
+          let cache = caches.get(prop);
+          if (cache != undefined) return cache;
+          return Reflect.get(parent, prop);
+        } else {
+          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
+          let path = root ? `${root}.${prop}` : prop;
+          mq.publish(target, "get", [path]);
+          let value = values.get(prop);
+          if (value != undefined) return value;
+          caches.set(`${prop}$`, new Map());
+          value = Reflect.get(parent, prop);
+          if (value instanceof View) return value;
+          if (typeof value == "object") value = new Proxy(value, handler(path));
+          values.set(prop, value);
+          return value;
+        }
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);

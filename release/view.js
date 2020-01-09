@@ -289,8 +289,8 @@ var view = (function (exports) {
           model(child, scope);
         } else if (new RegExp($expres).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
-          child.nodeValue = codex(child.nodeValue, scope, we);
           binding.attrExpress(child, scope, clas, child.nodeValue);
+          child.nodeValue = codex(child.nodeValue, scope);
         }
 
         bind(child, scope);
@@ -652,8 +652,8 @@ var view = (function (exports) {
   function setCache(clas, we, express) {
     express.replace($word, function (word) {
       if (!word.match(/["']/)) {
-        word = "scope.".concat(word);
-        var value = new Function('scope', "return ".concat(word, "$;"))(clas.scope);
+        word = "scope.".concat(word, "$");
+        var value = new Function('scope', "return ".concat(word, ";"))(clas.scope);
         if (value == undefined) return;
         var cache = value.get(we);
 
@@ -674,6 +674,8 @@ var view = (function (exports) {
           child.node = null;
           return node;
         }
+
+        ;
         node = insertion(child.childNodes);
       });
       return node;
@@ -756,19 +758,24 @@ var view = (function (exports) {
       return {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
-          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
-          var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "get", [path]);
-          var value = values.get(prop);
-          if (value != undefined) return value;
-          var cache = caches.get(prop);
-          if (cache != undefined) return cache;
-          caches.set("".concat(prop, "$"), new Map());
-          value = Reflect.get(parent, prop);
-          if (value instanceof View) return value;
-          if (_typeof(value) == "object") value = new Proxy(value, handler(path));
-          values.set(prop, value);
-          return value;
+
+          if (new String(prop).endsWith("$")) {
+            var cache = caches.get(prop);
+            if (cache != undefined) return cache;
+            return Reflect.get(parent, prop);
+          } else {
+            if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
+            var path = root ? "".concat(root, ".").concat(prop) : prop;
+            mq.publish(target, "get", [path]);
+            var value = values.get(prop);
+            if (value != undefined) return value;
+            caches.set("".concat(prop, "$"), new Map());
+            value = Reflect.get(parent, prop);
+            if (value instanceof View) return value;
+            if (_typeof(value) == "object") value = new Proxy(value, handler(path));
+            values.set(prop, value);
+            return value;
+          }
         },
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
@@ -1189,6 +1196,8 @@ var view = (function (exports) {
           status = document.body.contains(node);
           return false;
         }
+
+        ;
         status = clearNode(child.childNodes);
       });
       return status;
