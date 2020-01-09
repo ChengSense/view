@@ -82,7 +82,7 @@ export var resolver = {
       console.error(error)
     }
   },
-  express: function (node, we, cache) {
+  express: function (node, we) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
       setCache(node, we, node.clas.nodeValue);
@@ -92,7 +92,7 @@ export var resolver = {
       console.error(error)
     }
   },
-  attribute: function (node, we, cache) {
+  attribute: function (node, we) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
       setCache(node, we, node.clas.name);
@@ -139,8 +139,7 @@ var arrayEach = {
 export function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      word = `scope.${word}$`;
-      let value = new Function('scope', `return ${word};`)(clas.scope)
+      let value = new Function('scope', `return scope.${word}$;`)(clas.scope)
       if (value == undefined) return;
       let cache = value.get(we);
       if (cache) {

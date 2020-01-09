@@ -271,7 +271,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
         binding.attrExpress(child, scope, clas, child.nodeValue);
-        child.nodeValue = codex(child.nodeValue, scope);
+        child.nodeValue = codex(child.nodeValue, scope, we);
       }
       bind(child, scope);
     });
@@ -592,7 +592,7 @@ var resolver = {
       console.error(error);
     }
   },
-  express: function (node, we, cache) {
+  express: function (node, we) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
       setCache(node, we, node.clas.nodeValue);
@@ -602,7 +602,7 @@ var resolver = {
       console.error(error);
     }
   },
-  attribute: function (node, we, cache) {
+  attribute: function (node, we) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
       setCache(node, we, node.clas.name);
@@ -615,11 +615,41 @@ var resolver = {
   }
 };
 
+var cacher = function (cache, index, add) {
+  cache.forEach((nodes, we) => {
+    nodes.forEach(node => {
+      try {
+        if (arrayEach[node.resolver])
+          arrayEach[node.resolver](node, we, nodes, index, add);
+        else
+          resolver[node.resolver](node, we, cache);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  });
+};
+
+var arrayEach = {
+  each: function (node, we, children, index, add) {
+    try {
+      if (add > 0) {
+        resolver.arrayEach(node, we, index, children);
+      }
+      else {
+        var nodes = node.childNodes.splice(index + 1);
+        clearNodes(nodes);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+};
+
 function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      word = `scope.${word}$`;
-      let value = new Function('scope', `return ${word};`)(clas.scope);
+      let value = new Function('scope', `return scope.${word}$;`)(clas.scope);
       if (value == undefined) return;
       let cache = value.get(we);
       if (cache) {
@@ -638,8 +668,7 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      };
-      node = insertion(child.childNodes);
+      }      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -709,7 +738,7 @@ function initCompiler(node, children) {
   return list;
 }
 
-function observer(target, call, watch) {
+function observer(target, call) {
   if (typeof target != 'object') return target;
   target = new Proxy(target, handler());
 
@@ -732,6 +761,7 @@ function observer(target, call, watch) {
           value = Reflect.get(parent, prop);
           if (value instanceof View) return value;
           if (typeof value == "object") value = new Proxy(value, handler(path));
+          array(value, caches.get(`${prop}$`));
           values.set(prop, value);
           return value;
         }
@@ -745,8 +775,7 @@ function observer(target, call, watch) {
         Reflect.set(parent, prop, val.$target || val);
         let value = proxy[prop];
         setValue(value, oldValue);
-        let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(`${prop}$`)]])]);
+        mq.publish(target, "set", [oldCache, caches.get(`${prop}$`)]);
         return true;
       }
     }
@@ -766,6 +795,67 @@ function observer(target, call, watch) {
 
   Object.keys(call).forEach(key => mq.subscribe(target, key, call[key]));
   return target;
+}
+
+function array(object, cache) {
+  if (!Array.isArray(object)) return;
+  Reflect.setPrototypeOf(object, {
+    shift() {
+      var method = Array.prototype.shift;
+      let data = method.apply(this, arguments);
+      let index = this.length;
+      cacher(cache, index);
+      return data;
+    },
+    pop() {
+      var method = Array.prototype.pop;
+      let data = method.apply(this, arguments);
+      let index = this.length;
+      cacher(cache, index);
+      return data;
+    },
+    splice() {
+      var method = Array.prototype.splice;
+      if (this.length) {
+        let index = this.length;
+        let data = method.apply(this, arguments);
+        arguments.length > 2 ? this.$index = index : index = this.length;
+        cacher(cache, index, arguments.length - 2);
+        Reflect.deleteProperty(this, "$index");
+        return data;
+      }
+    },
+    unshift() {
+      var method = Array.prototype.unshift;
+      if (arguments.length) {
+        let index = this.$index = this.length;
+        let data = method.apply(this, arguments);
+        cacher(cache, index, arguments.length);
+        Reflect.deleteProperty(this, "$index");
+        return data;
+      }
+    },
+    push() {
+      var method = Array.prototype.push;
+      if (arguments.length) {
+        let index = this.$index = this.length;
+        let data = method.apply(this, arguments);
+        cacher(cache, index, arguments.length);
+        Reflect.deleteProperty(this, "$index");
+        return data;
+      }
+    },
+    reverse() {
+      var method = Array.prototype.reverse;
+      let data = method.apply(this, arguments);
+      return data;
+    },
+    sort() {
+      var method = Array.prototype.sort;
+      let data = method.apply(this, arguments);
+      return data;
+    }
+  });
 }
 
 class Mess {
@@ -1091,8 +1181,7 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      };
-      status = clearNode(child.childNodes);
+      }      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {
@@ -1102,23 +1191,17 @@ function clearNode(nodes, status) {
 
 function deepen(cache, newCache) {
   if (cache && newCache) {
-    cache.forEach(caches => {
-      if (!caches) return;
-      caches.forEach((nodes, we) => {
-        slice(nodes).forEach(node => {
-          if (clearNode([node]))
-            resolver[node.resolver](node, we, newCache);
-          else
-            nodes.remove(node);
-        });
+    cache.forEach((nodes, we) => {
+      slice(nodes).forEach(node => {
+        if (clearNode([node]))
+          resolver[node.resolver](node, we, newCache);
+        else
+          nodes.remove(node);
       });
     });
   } else if (cache && !newCache) {
-    cache.forEach(caches => {
-      if (!caches) return;
-      caches.forEach(nodes => {
-        clearNodes(nodes);
-      });
+    cache.forEach((nodes, we) => {
+      clearNodes(nodes);
     });
   }
 }

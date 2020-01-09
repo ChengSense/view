@@ -290,7 +290,7 @@ var view = (function (exports) {
         } else if (new RegExp($expres).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
           binding.attrExpress(child, scope, clas, child.nodeValue);
-          child.nodeValue = codex(child.nodeValue, scope);
+          child.nodeValue = codex(child.nodeValue, scope, we);
         }
 
         bind(child, scope);
@@ -628,7 +628,7 @@ var view = (function (exports) {
         console.error(error);
       }
     },
-    express: function express(node, we, cache) {
+    express: function express(node, we) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
         setCache(node, we, node.clas.nodeValue);
@@ -637,7 +637,7 @@ var view = (function (exports) {
         console.error(error);
       }
     },
-    attribute: function attribute(node, we, cache) {
+    attribute: function attribute(node, we) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
         setCache(node, we, node.clas.name);
@@ -649,11 +649,35 @@ var view = (function (exports) {
       }
     }
   };
+  var cacher = function cacher(cache, index, add) {
+    cache.forEach(function (nodes, we) {
+      nodes.forEach(function (node) {
+        try {
+          if (arrayEach[node.resolver]) arrayEach[node.resolver](node, we, nodes, index, add);else resolver[node.resolver](node, we, cache);
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    });
+  };
+  var arrayEach = {
+    each: function each(node, we, children, index, add) {
+      try {
+        if (add > 0) {
+          resolver.arrayEach(node, we, index, children);
+        } else {
+          var nodes = node.childNodes.splice(index + 1);
+          clearNodes(nodes);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
   function setCache(clas, we, express) {
     express.replace($word, function (word) {
       if (!word.match(/["']/)) {
-        word = "scope.".concat(word, "$");
-        var value = new Function('scope', "return ".concat(word, ";"))(clas.scope);
+        var value = new Function('scope', "return scope.".concat(word, "$;"))(clas.scope);
         if (value == undefined) return;
         var cache = value.get(we);
 
@@ -674,8 +698,6 @@ var view = (function (exports) {
           child.node = null;
           return node;
         }
-
-        ;
         node = insertion(child.childNodes);
       });
       return node;
@@ -748,7 +770,7 @@ var view = (function (exports) {
     return list;
   }
 
-  function observer(target, call, watch) {
+  function observer(target, call) {
     if (_typeof(target) != 'object') return target;
     target = new Proxy(target, handler());
 
@@ -773,6 +795,7 @@ var view = (function (exports) {
             value = Reflect.get(parent, prop);
             if (value instanceof View) return value;
             if (_typeof(value) == "object") value = new Proxy(value, handler(path));
+            array(value, caches.get("".concat(prop, "$")));
             values.set(prop, value);
             return value;
           }
@@ -786,8 +809,7 @@ var view = (function (exports) {
           Reflect.set(parent, prop, val.$target || val);
           var value = proxy[prop];
           setValue(value, oldValue);
-          var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get("".concat(prop, "$"))]])]);
+          mq.publish(target, "set", [oldCache, caches.get("".concat(prop, "$"))]);
           return true;
         }
       };
@@ -812,6 +834,70 @@ var view = (function (exports) {
       return mq.subscribe(target, key, call[key]);
     });
     return target;
+  }
+
+  function array(object, cache) {
+    if (!Array.isArray(object)) return;
+    Reflect.setPrototypeOf(object, {
+      shift: function shift() {
+        var method = Array.prototype.shift;
+        var data = method.apply(this, arguments);
+        var index = this.length;
+        cacher(cache, index);
+        return data;
+      },
+      pop: function pop() {
+        var method = Array.prototype.pop;
+        var data = method.apply(this, arguments);
+        var index = this.length;
+        cacher(cache, index);
+        return data;
+      },
+      splice: function splice() {
+        var method = Array.prototype.splice;
+
+        if (this.length) {
+          var index = this.length;
+          var data = method.apply(this, arguments);
+          arguments.length > 2 ? this.$index = index : index = this.length;
+          cacher(cache, index, arguments.length - 2);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      unshift: function unshift() {
+        var method = Array.prototype.unshift;
+
+        if (arguments.length) {
+          var index = this.$index = this.length;
+          var data = method.apply(this, arguments);
+          cacher(cache, index, arguments.length);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      push: function push() {
+        var method = Array.prototype.push;
+
+        if (arguments.length) {
+          var index = this.$index = this.length;
+          var data = method.apply(this, arguments);
+          cacher(cache, index, arguments.length);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      reverse: function reverse() {
+        var method = Array.prototype.reverse;
+        var data = method.apply(this, arguments);
+        return data;
+      },
+      sort: function sort() {
+        var method = Array.prototype.sort;
+        var data = method.apply(this, arguments);
+        return data;
+      }
+    });
   }
 
   var Mess =
@@ -1196,8 +1282,6 @@ var view = (function (exports) {
           status = document.body.contains(node);
           return false;
         }
-
-        ;
         status = clearNode(child.childNodes);
       });
       return status;
@@ -1208,20 +1292,14 @@ var view = (function (exports) {
 
   function deepen(cache, newCache) {
     if (cache && newCache) {
-      cache.forEach(function (caches) {
-        if (!caches) return;
-        caches.forEach(function (nodes, we) {
-          slice(nodes).forEach(function (node) {
-            if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
-          });
+      cache.forEach(function (nodes, we) {
+        slice(nodes).forEach(function (node) {
+          if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
         });
       });
     } else if (cache && !newCache) {
-      cache.forEach(function (caches) {
-        if (!caches) return;
-        caches.forEach(function (nodes) {
-          clearNodes(nodes);
-        });
+      cache.forEach(function (nodes, we) {
+        clearNodes(nodes);
       });
     }
   }
