@@ -111,7 +111,6 @@ var view = (function (exports) {
   function code(_express, _scope) {
     try {
       global.$path = undefined;
-      global.$cache = new Map();
       _express = _express.replace($express, "$1");
       return Code(_express, _scope);
     } catch (error) {
@@ -119,40 +118,16 @@ var view = (function (exports) {
       return undefined;
     }
   }
-  function codex(_express, _scope, we) {
+  function codex(_express, _scope) {
     try {
       global.$path = undefined;
-      global.$cache = new Map();
       _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
-      return codec(_express, _scope, we);
+      return Code(_express, _scope);
     } catch (error) {
       console.warn(error);
       return undefined;
     }
   }
-  function codeo(_express, _scope, we) {
-    try {
-      global.$path = undefined;
-      global.$cache = new Map();
-      _express = _express.replace($express, "$1");
-      return codec(_express, _scope, we);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-
-  function codec(_express, _scope, we) {
-    try {
-      var filter = Reflect.getPrototypeOf(we.filter);
-      Reflect.setPrototypeOf(filter, _scope);
-      return Code(_express, we.filter);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-
   var codeCacher = new Map();
 
   function Code(_express, scope) {
@@ -175,6 +150,7 @@ var view = (function (exports) {
     return {
       get: function get(parent, prop) {
         if (field == prop) return Reflect.get(scope, key);
+        if ("".concat(field, "$") == prop) return Reflect.get(scope, "".concat(key, "$"));
         if (prop == "$target") return parent;
         if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
         return Reflect.get(proto, prop);
@@ -185,22 +161,6 @@ var view = (function (exports) {
         return Reflect.set(proto, prop, val);
       }
     };
-  }
-  function setScopes(we) {
-    var action = {
-      $view: we.view,
-      $model: we.model,
-      $action: we.action,
-      $watch: we.watch
-    };
-    we.action = we.action || {};
-    Reflect.setPrototypeOf(action, Function.prototype);
-    Object.values(we.action).forEach(function (method) {
-      return Reflect.setPrototypeOf(method, action);
-    });
-    var filter = Object.assign({}, action);
-    we.filter = we.filter || {};
-    Reflect.setPrototypeOf(we.filter, filter);
   }
 
   function Compiler(node, scopes, childNodes, content, we) {
@@ -215,7 +175,7 @@ var view = (function (exports) {
             var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.attrEach(null, scopes, clas, content, sources);
+            binding.attrEach(null, scopes, clas, content, source);
             forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
               if (id) scope[id.trim()] = index;
@@ -252,7 +212,7 @@ var view = (function (exports) {
             var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.each(null, scopes, clas, content, sources);
+            binding.each(null, scopes, clas, content, source);
             var children = slice(child.children);
             forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
@@ -263,12 +223,13 @@ var view = (function (exports) {
               compiler(node, scope, slice(children), clasNodes);
             });
           } else if ($when.test(child.clas.nodeValue)) {
-            var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+            var whex = child.clas.nodeValue.replace($when, "$2");
+            var when = code(whex, scopes);
             var clas = whenNode(null, node, child, content, scopes);
             clas.children.push(childNodes.shift());
 
             if (when) {
-              binding.when(null, scopes, clas, content);
+              binding.when(null, scopes, clas);
               whiles(childNodes, function (child, childNodes) {
                 if (!whem(child)) return true;
                 clas.children.push(childNodes.shift());
@@ -287,7 +248,7 @@ var view = (function (exports) {
                 childNodes.shift();
               });
             } else if (when == undefined) {
-              binding.when(null, scopes, clas, content);
+              binding.when(null, scopes, clas);
               whiles(slice(child.children), function (child, childNodes) {
                 if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                   compiler(node, scopes, childNodes, clas);
@@ -329,7 +290,7 @@ var view = (function (exports) {
         } else if (new RegExp($expres).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
           child.nodeValue = codex(child.nodeValue, scope, we);
-          binding.attrExpress(child, scope, clas);
+          binding.attrExpress(child, scope, clas, child.nodeValue);
         }
 
         bind(child, scope);
@@ -362,8 +323,8 @@ var view = (function (exports) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
       } else if (express = new RegExp($expres).exec(node.nodeValue)) {
-        node.nodeValue = codeo(express[1], scope, we);
-        binding.express(node, scope, clas);
+        node.nodeValue = code(express[1], scope);
+        binding.express(node, scope, clas, express[1]);
       }
     }
 
@@ -372,45 +333,40 @@ var view = (function (exports) {
     }
 
     var binding = {
-      attrEach: function attrEach(node, scope, clas, content) {
-        if (global.$cache == undefined) return;
+      attrEach: function attrEach(node, scope, clas, content, _express) {
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        setCache(clas, we, global.$cache);
+        setCache(clas, we, _express);
       },
-      each: function each(node, scope, clas, content) {
-        if (global.$cache == undefined) return;
+      each: function each(node, scope, clas, content, _express) {
         clas.resolver = "each";
         clas.content = content;
         clas.scope = scope;
         clas.node = node;
-        setCache(clas, we, global.$cache);
+        setCache(clas, we, _express);
       },
       when: function when(node, scope, clas) {
-        if (global.$cache == undefined) return;
-        var nodeValue = clas.clas.nodeValue;
-        var whens = new RegExp($when).exec(nodeValue);
+        var _express = clas.clas.nodeValue;
+        var whens = new RegExp($when).exec(_express);
         if (!whens) return;
         clas.resolver = "when";
         clas.scope = scope;
         clas.node = node;
-        setCache(clas, we, global.$cache);
+        setCache(clas, we, _express);
       },
-      express: function express(node, scope, clas) {
-        if (global.$cache == undefined) return;
+      express: function express(node, scope, clas, _express) {
         clas.resolver = "express";
         clas.scope = scope;
         clas.node = node;
-        setCache(clas, we, global.$cache);
+        setCache(clas, we, _express);
       },
-      attrExpress: function attrExpress(node, scope, clas) {
-        if (global.$cache == undefined) return;
+      attrExpress: function attrExpress(node, scope, clas, _express) {
         clas.resolver = "express";
         clas.scope = scope;
         clas.node = node;
-        setCache(clas, we, global.$cache);
+        setCache(clas, we, _express);
       }
     };
 
@@ -600,10 +556,8 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
-        global.$cache = new Map();
-        var app = codeo(node.clas.nodeValue, node.scope, we);
+        var app = code(node.clas.nodeValue, node.scope);
         app.model = app.model.$target || app.model;
-        var $cache = global.$cache;
         node.path = global.$path;
         if (blank(app)) return;
         Reflect.setPrototypeOf(app.model, node.scope);
@@ -617,7 +571,7 @@ var view = (function (exports) {
         });
         app.model = component.model;
         var clasNodes = compoNode(insert, node, component);
-        setCache(clasNodes, we, $cache);
+        setCache(clasNodes, we, node.clas.nodeValue);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
       } catch (error) {
@@ -677,7 +631,7 @@ var view = (function (exports) {
     express: function express(node, we, cache) {
       try {
         node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
-        setCache(node, we, cache);
+        setCache(node, we, node.clas.nodeValue);
         if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
       } catch (error) {
         console.error(error);
@@ -686,7 +640,7 @@ var view = (function (exports) {
     attribute: function attribute(node, we, cache) {
       try {
         var newNode = document.createAttribute(codex(node.clas.name, scope));
-        setCache(node, we, cache);
+        setCache(node, we, node.clas.name);
         newNode.nodeValue = node.clas.nodeValue;
         node.node.ownerElement.setAttributeNode(newNode);
         node.node.ownerElement.removeAttributeNode(node.node);
@@ -695,39 +649,19 @@ var view = (function (exports) {
       }
     }
   };
-  var cacher = function cacher(cache, index, add) {
-    cache.forEach(function (nodes, we) {
-      nodes.forEach(function (node) {
-        try {
-          if (arrayEach[node.resolver]) arrayEach[node.resolver](node, we, nodes, index, add);else resolver[node.resolver](node, we, cache);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    });
-  };
-  var arrayEach = {
-    each: function each(node, we, children, index, add) {
-      try {
-        if (add > 0) {
-          resolver.arrayEach(node, we, index, children);
-        } else {
-          var nodes = node.childNodes.splice(index + 1);
-          clearNodes(nodes);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-  function setCache(clas, we, $cache) {
-    $cache.forEach(function (value) {
-      var cache = value.get(we);
+  function setCache(clas, we, express) {
+    express.replace($word, function (word) {
+      if (!word.match(/["']/)) {
+        word = "scope.".concat(word);
+        var value = new Function('scope', "return ".concat(word, "$;"))(clas.scope);
+        if (value == undefined) return;
+        var cache = value.get(we);
 
-      if (cache) {
-        cache.ones(clas);
-      } else {
-        value.set(we, [clas]);
+        if (cache) {
+          cache.ones(clas);
+        } else {
+          value.set(we, [clas]);
+        }
       }
     });
   }
@@ -818,49 +752,38 @@ var view = (function (exports) {
 
     function handler(root) {
       var values = new Map(),
-          cache = new Map();
+          caches = new Map();
       return {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
-          var method = array(proxy, prop, root);
-          if (method) return method;
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          var value = getValue(values, cache, parent, prop, path);
-          global.$cache["delete"](root);
-          global.$cache.set(path, cache.get(prop));
           mq.publish(target, "get", [path]);
+          var value = values.get(prop);
+          if (value != undefined) return value;
+          var cache = caches.get(prop);
+          if (cache != undefined) return cache;
+          caches.set("".concat(prop, "$"), new Map());
+          value = Reflect.get(parent, prop);
+          if (value instanceof View) return value;
+          if (_typeof(value) == "object") value = new Proxy(value, handler(path));
+          values.set(prop, value);
           return value;
         },
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
           var oldValue = values.get(prop);
-          var oldCache = cache.get(prop);
+          var oldCache = caches.get("".concat(prop, "$"));
           values["delete"](prop);
-          cache["delete"](prop);
+          caches["delete"]("".concat(prop, "$"));
           Reflect.set(parent, prop, val.$target || val);
           var value = proxy[prop];
           setValue(value, oldValue);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
-          mq.publish(target, path, [value, oldValue]);
+          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get("".concat(prop, "$"))]])]);
           return true;
         }
       };
-    }
-
-    function getValue(values, cache, parent, prop, path) {
-      var value = values.get(prop);
-      if (value != undefined) return value;
-      cache.set(prop, new Map());
-      value = Reflect.get(parent, prop);
-
-      if (!(value instanceof View) && _typeof(value) == "object") {
-        value = new Proxy(value, handler(path));
-      }
-
-      values.set(prop, value);
-      return value;
     }
 
     function setValue(object, oldObject) {
@@ -868,96 +791,18 @@ var view = (function (exports) {
 
       if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
         Object.keys(oldObject).forEach(function (prop) {
-          global.$cache = new Map();
           var value = object[prop],
-              cache = global.$cache;
-          global.$cache = new Map();
+              cache = object["".concat(prop, "$")];
           var oldValue = oldObject[prop],
-              oldCache = global.$cache;
+              oldCache = oldObject["".concat(prop, "$")];
           if (_typeof(value) != "object" && _typeof(oldValue) != "object") mq.publish(target, "set", [oldCache, cache]);
           setValue(value, oldValue);
         });
       }
     }
 
-    function array(object, name, root) {
-      if (!Array.isArray(object)) return;
-      var meths = {
-        shift: function shift() {
-          var method = Array.prototype.shift;
-          var data = method.apply(this, arguments);
-          var index = this.length;
-          cacher(getCache(), index);
-          return data;
-        },
-        pop: function pop() {
-          var method = Array.prototype.pop;
-          var data = method.apply(this, arguments);
-          var index = this.length;
-          cacher(getCache(), index);
-          return data;
-        },
-        splice: function splice() {
-          var method = Array.prototype.splice;
-
-          if (this.length) {
-            var index = this.length;
-            var data = method.apply(this, arguments);
-            arguments.length > 2 ? this.$index = index : index = this.length;
-            cacher(getCache(), index, arguments.length - 2);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        unshift: function unshift() {
-          var method = Array.prototype.unshift;
-
-          if (arguments.length) {
-            var index = this.$index = this.length;
-            var data = method.apply(this, arguments);
-            cacher(getCache(), index, arguments.length);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        push: function push() {
-          var method = Array.prototype.push;
-
-          if (arguments.length) {
-            var index = this.$index = this.length;
-            var data = method.apply(this, arguments);
-            cacher(getCache(), index, arguments.length);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        reverse: function reverse() {
-          var method = Array.prototype.reverse;
-          var data = method.apply(this, arguments);
-          return data;
-        },
-        sort: function sort() {
-          var method = Array.prototype.sort;
-          var data = method.apply(this, arguments);
-          return data;
-        }
-      };
-      Reflect.setPrototypeOf(meths, object);
-
-      function getCache() {
-        global.$cache = new Map();
-        new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
-        return global.$cache.get(root);
-      }
-
-      return meths[name];
-    }
-
     Object.keys(call).forEach(function (key) {
       return mq.subscribe(target, key, call[key]);
-    });
-    Object.keys(watch || {}).forEach(function (key) {
-      return mq.subscribe(target, key, watch[key]);
     });
     return target;
   }
@@ -1315,13 +1160,12 @@ var view = (function (exports) {
           get: function get(path) {
             global.$path = path;
           }
-        }, app.watch);
+        });
         this.model = app.model;
         var view = query(app.view);
         var node = initCompiler(init(slice(view)))[0];
         this.node = node;
         this.view = view[0];
-        setScopes(this);
         resolver.view(this.view, node, app.model, this.content, this);
       }
     }, {

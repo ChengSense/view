@@ -1,7 +1,8 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
 import { global, View } from "./ViewIndex";
-import { codeo, codex } from "./ViewScope";
+import { code, codex } from "./ViewScope";
+import { $word } from "./ViewExpress";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -17,10 +18,8 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      global.$cache = new Map();
-      let app = codeo(node.clas.nodeValue, node.scope, we);
+      let app = code(node.clas.nodeValue, node.scope);
       app.model = app.model.$target || app.model;
-      let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
@@ -30,7 +29,7 @@ export var resolver = {
       let component = new View({ view: app.component, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
-      setCache(clasNodes, we, $cache);
+      setCache(clasNodes, we, node.clas.nodeValue);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -86,7 +85,7 @@ export var resolver = {
   express: function (node, we, cache) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
-      setCache(node, we, cache);
+      setCache(node, we, node.clas.nodeValue);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (error) {
@@ -96,7 +95,7 @@ export var resolver = {
   attribute: function (node, we, cache) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
-      setCache(node, we, cache);
+      setCache(node, we, node.clas.name);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -137,13 +136,18 @@ var arrayEach = {
   }
 };
 
-export function setCache(clas, we, $cache) {
-  $cache.forEach(value => {
-    let cache = value.get(we);
-    if (cache) {
-      cache.ones(clas);
-    } else {
-      value.set(we, [clas]);
+export function setCache(clas, we, express) {
+  express.replace($word, word => {
+    if (!word.match(/["']/)) {
+      word = "scope.".concat(word);
+      let value = new Function('scope', `return ${word}$;`)(clas.scope)
+      if (value == undefined) return;
+      let cache = value.get(we);
+      if (cache) {
+        cache.ones(clas);
+      } else {
+        value.set(we, [clas]);
+      }
     }
   });
 }

@@ -80,7 +80,6 @@ var $event = /^@(.*)/;
 function code(_express, _scope) {
   try {
     global.$path = undefined;
-    global.$cache = new Map();
     _express = _express.replace($express, "$1");
     return Code(_express, _scope);
   } catch (error) {
@@ -89,35 +88,11 @@ function code(_express, _scope) {
   }
 }
 
-function codex(_express, _scope, we) {
+function codex(_express, _scope) {
   try {
     global.$path = undefined;
-    global.$cache = new Map();
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return codec(_express, _scope, we);
-  } catch (error) {
-    console.warn(error);
-    return undefined;
-  }
-}
-
-function codeo(_express, _scope, we) {
-  try {
-    global.$path = undefined;
-    global.$cache = new Map();
-    _express = _express.replace($express, "$1");
-    return codec(_express, _scope, we);
-  } catch (error) {
-    console.warn(error);
-    return undefined;
-  }
-}
-
-function codec(_express, _scope, we) {
-  try {
-    let filter = Reflect.getPrototypeOf(we.filter);
-    Reflect.setPrototypeOf(filter, _scope);
-    return Code(_express, we.filter);
+    return Code(_express, _scope);
   } catch (error) {
     console.warn(error);
     return undefined;
@@ -151,6 +126,7 @@ function handler(proto, field, scope, key) {
   return {
     get(parent, prop) {
       if (field == prop) return Reflect.get(scope, key);
+      if (`${field}$` == prop) return Reflect.get(scope, `${key}$`);
       if (prop == "$target") return parent;
       if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
       return Reflect.get(proto, prop);
@@ -161,17 +137,6 @@ function handler(proto, field, scope, key) {
       return Reflect.set(proto, prop, val);
     }
   }
-}
-
-function setScopes(we) {
-  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
-  we.action = we.action || {};
-  Reflect.setPrototypeOf(action, Function.prototype);
-  Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
-
-  let filter = Object.assign({}, action);
-  we.filter = we.filter || {};
-  Reflect.setPrototypeOf(we.filter, filter);
 }
 
 function Compiler(node, scopes, childNodes, content, we) {
@@ -187,7 +152,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content, sources);
+          binding.attrEach(null, scopes, clas, content, source);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);
             if (id) scope[id.trim()] = index;
@@ -227,7 +192,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content, sources);
+          binding.each(null, scopes, clas, content, source);
           let children = slice(child.children);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);
@@ -239,11 +204,12 @@ function Compiler(node, scopes, childNodes, content, we) {
           });
         }
         else if ($when.test(child.clas.nodeValue)) {
-          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+          let whex = child.clas.nodeValue.replace($when, "$2");
+          var when = code(whex, scopes);
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
-            binding.when(null, scopes, clas, content);
+            binding.when(null, scopes, clas);
             whiles(childNodes, function (child, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
@@ -263,7 +229,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             });
           }
           else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
+            binding.when(null, scopes, clas);
             whiles(slice(child.children), function (child, childNodes) {
               if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 compiler(node, scopes, childNodes, clas);
@@ -305,7 +271,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
         child.nodeValue = codex(child.nodeValue, scope, we);
-        binding.attrExpress(child, scope, clas);
+        binding.attrExpress(child, scope, clas, child.nodeValue);
       }
       bind(child, scope);
     });
@@ -336,8 +302,8 @@ function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = codeo(express[1], scope, we);
-      binding.express(node, scope, clas);
+      node.nodeValue = code(express[1], scope);
+      binding.express(node, scope, clas, express[1]);
     }
   }
 
@@ -346,45 +312,40 @@ function Compiler(node, scopes, childNodes, content, we) {
   }
 
   let binding = {
-    attrEach(node, scope, clas, content) {
-      if (global.$cache == undefined) return;
+    attrEach(node, scope, clas, content, _express) {
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    each(node, scope, clas, content) {
-      if (global.$cache == undefined) return;
+    each(node, scope, clas, content, _express) {
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
     when(node, scope, clas) {
-      if (global.$cache == undefined) return;
-      var nodeValue = clas.clas.nodeValue;
-      let whens = new RegExp($when).exec(nodeValue);
+      var _express = clas.clas.nodeValue;
+      let whens = new RegExp($when).exec(_express);
       if (!whens) return;
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    express(node, scope, clas) {
-      if (global.$cache == undefined) return;
+    express(node, scope, clas, _express) {
       clas.resolver = "express";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    attrExpress(node, scope, clas) {
-      if (global.$cache == undefined) return;
+    attrExpress(node, scope, clas, _express) {
       clas.resolver = "express";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     }
   };
 
@@ -567,10 +528,8 @@ var resolver = {
   },
   component: function (node, we) {
     try {
-      global.$cache = new Map();
-      let app = codeo(node.clas.nodeValue, node.scope, we);
+      let app = code(node.clas.nodeValue, node.scope);
       app.model = app.model.$target || app.model;
-      let $cache = global.$cache;
       node.path = global.$path;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
@@ -580,7 +539,7 @@ var resolver = {
       let component = new View$1({ view: app.component, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
-      setCache(clasNodes, we, $cache);
+      setCache(clasNodes, we, node.clas.nodeValue);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode)
         insert.parentNode.replaceChild(component.view, insert);
@@ -636,7 +595,7 @@ var resolver = {
   express: function (node, we, cache) {
     try {
       node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
-      setCache(node, we, cache);
+      setCache(node, we, node.clas.nodeValue);
       if (node.node.name == "value")
         node.node.ownerElement.value = node.node.nodeValue;
     } catch (error) {
@@ -646,7 +605,7 @@ var resolver = {
   attribute: function (node, we, cache) {
     try {
       var newNode = document.createAttribute(codex(node.clas.name, scope));
-      setCache(node, we, cache);
+      setCache(node, we, node.clas.name);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
       node.node.ownerElement.removeAttributeNode(node.node);
@@ -656,44 +615,18 @@ var resolver = {
   }
 };
 
-var cacher = function (cache, index, add) {
-  cache.forEach((nodes, we) => {
-    nodes.forEach(node => {
-      try {
-        if (arrayEach[node.resolver])
-          arrayEach[node.resolver](node, we, nodes, index, add);
-        else
-          resolver[node.resolver](node, we, cache);
-      } catch (error) {
-        console.error(error);
+function setCache(clas, we, express) {
+  express.replace($word, word => {
+    if (!word.match(/["']/)) {
+      word = "scope.".concat(word);
+      let value = new Function('scope', `return ${word}$;`)(clas.scope);
+      if (value == undefined) return;
+      let cache = value.get(we);
+      if (cache) {
+        cache.ones(clas);
+      } else {
+        value.set(we, [clas]);
       }
-    });
-  });
-};
-
-var arrayEach = {
-  each: function (node, we, children, index, add) {
-    try {
-      if (add > 0) {
-        resolver.arrayEach(node, we, index, children);
-      }
-      else {
-        var nodes = node.childNodes.splice(index + 1);
-        clearNodes(nodes);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-};
-
-function setCache(clas, we, $cache) {
-  $cache.forEach(value => {
-    let cache = value.get(we);
-    if (cache) {
-      cache.ones(clas);
-    } else {
-      value.set(we, [clas]);
     }
   });
 }
@@ -780,138 +713,53 @@ function observer(target, call, watch) {
   target = new Proxy(target, handler());
 
   function handler(root) {
-    let values = new Map(), cache = new Map();
+    let values = new Map(), caches = new Map();
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
-        let method = array(proxy, prop, root);
-        if (method) return method;
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
         let path = root ? `${root}.${prop}` : prop;
-        let value = getValue(values, cache, parent, prop, path);
-        global.$cache.delete(root);
-        global.$cache.set(path, cache.get(prop));
         mq.publish(target, "get", [path]);
+        let value = values.get(prop);
+        if (value != undefined) return value;
+        let cache = caches.get(prop);
+        if (cache != undefined) return cache;
+        caches.set(`${prop}$`, new Map());
+        value = Reflect.get(parent, prop);
+        if (value instanceof View) return value;
+        if (typeof value == "object") value = new Proxy(value, handler(path));
+        values.set(prop, value);
         return value;
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
         let oldValue = values.get(prop);
-        let oldCache = cache.get(prop);
+        let oldCache = caches.get(`${prop}$`);
         values.delete(prop);
-        cache.delete(prop);
+        caches.delete(`${prop}$`);
         Reflect.set(parent, prop, val.$target || val);
         let value = proxy[prop];
         setValue(value, oldValue);
         let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
-        mq.publish(target, path, [value, oldValue]);
+        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(`${prop}$`)]])]);
         return true;
       }
     }
-  }
-
-  function getValue(values, cache, parent, prop, path) {
-    let value = values.get(prop);
-    if (value != undefined) return value;
-    cache.set(prop, new Map());
-    value = Reflect.get(parent, prop);
-    if (!(value instanceof View) && typeof value == "object") {
-      value = new Proxy(value, handler(path));
-    }
-    values.set(prop, value);
-    return value;
   }
 
   function setValue(object, oldObject) {
     if (object instanceof View) return;
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
-        global.$cache = new Map();
-        let value = object[prop], cache = global.$cache;
-        global.$cache = new Map();
-        let oldValue = oldObject[prop], oldCache = global.$cache;
+        let value = object[prop], cache = object[`${prop}$`];
+        let oldValue = oldObject[prop], oldCache = oldObject[`${prop}$`];
         if (typeof value != "object" && typeof oldValue != "object") mq.publish(target, "set", [oldCache, cache]);
         setValue(value, oldValue);
       });
     }
   }
 
-  function array(object, name, root) {
-    if (!Array.isArray(object)) return;
-    const meths = {
-      shift() {
-        var method = Array.prototype.shift;
-        let data = method.apply(this, arguments);
-        let index = this.length;
-        cacher(getCache(), index);
-        return data;
-      },
-      pop() {
-        var method = Array.prototype.pop;
-        let data = method.apply(this, arguments);
-        let index = this.length;
-        cacher(getCache(), index);
-        return data;
-      },
-      splice() {
-        var method = Array.prototype.splice;
-        if (this.length) {
-          let index = this.length;
-          let data = method.apply(this, arguments);
-          arguments.length > 2 ? this.$index = index : index = this.length;
-          cacher(getCache(), index, arguments.length - 2);
-          Reflect.deleteProperty(this, "$index");
-          return data;
-        }
-      },
-      unshift() {
-        var method = Array.prototype.unshift;
-        if (arguments.length) {
-          let index = this.$index = this.length;
-          let data = method.apply(this, arguments);
-          cacher(getCache(), index, arguments.length);
-          Reflect.deleteProperty(this, "$index");
-          return data;
-        }
-      },
-      push() {
-        var method = Array.prototype.push;
-        if (arguments.length) {
-          let index = this.$index = this.length;
-          let data = method.apply(this, arguments);
-          cacher(getCache(), index, arguments.length);
-          Reflect.deleteProperty(this, "$index");
-          return data;
-        }
-      },
-      reverse() {
-        var method = Array.prototype.reverse;
-        let data = method.apply(this, arguments);
-        return data;
-      },
-      sort() {
-        var method = Array.prototype.sort;
-        let data = method.apply(this, arguments);
-        return data;
-      }
-    };
-    Reflect.setPrototypeOf(meths, object);
-    function getCache() {
-      global.$cache = new Map();
-      new Function('scope',
-        `
-        return scope${Path(root)};
-        `
-      )(target);
-      return global.$cache.get(root);
-    }
-    return meths[name];
-  }
-
   Object.keys(call).forEach(key => mq.subscribe(target, key, call[key]));
-  Object.keys(watch || {}).forEach(key => mq.subscribe(target, key, watch[key]));
-
   return target;
 }
 
@@ -1214,14 +1062,13 @@ class View$1 {
     app.model = observer(app.model, {
       set(cache, newCache) { deepen(cache, newCache); },
       get(path) { global.$path = path; }
-    }, app.watch);
+    });
 
     this.model = app.model;
     var view = query(app.view);
     var node = initCompiler(init(slice(view)))[0];
     this.node = node;
     this.view = view[0];
-    setScopes(this);
     resolver.view(this.view, node, app.model, this.content, this);
   }
   component(app) {

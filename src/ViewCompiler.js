@@ -1,7 +1,7 @@
 import { global } from "./ViewIndex";
 import { blank, forEach, slice, whiles } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
-import { code, codeo, codex, Path, setVariable, handler } from "./ViewScope";
+import { code, codex, Path, handler } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
@@ -17,7 +17,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content, sources);
+          binding.attrEach(null, scopes, clas, content, source);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);
             if (id) scope[id.trim()] = index;
@@ -57,7 +57,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content, sources);
+          binding.each(null, scopes, clas, content, source);
           let children = slice(child.children);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);
@@ -69,11 +69,12 @@ export function Compiler(node, scopes, childNodes, content, we) {
           });
         }
         else if ($when.test(child.clas.nodeValue)) {
-          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+          let whex = child.clas.nodeValue.replace($when, "$2");
+          var when = code(whex, scopes);
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
-            binding.when(null, scopes, clas, content);
+            binding.when(null, scopes, clas);
             whiles(childNodes, function (child, childNodes) {
               if (!whem(child)) return true;
               clas.children.push(childNodes.shift());
@@ -93,7 +94,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
             });
           }
           else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
+            binding.when(null, scopes, clas);
             whiles(slice(child.children), function (child, childNodes) {
               if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
                 compiler(node, scopes, childNodes, clas);
@@ -135,7 +136,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
         child.nodeValue = codex(child.nodeValue, scope, we);
-        binding.attrExpress(child, scope, clas);
+        binding.attrExpress(child, scope, clas, child.nodeValue);
       }
       bind(child, scope);
     });
@@ -166,8 +167,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = codeo(express[1], scope, we);
-      binding.express(node, scope, clas);
+      node.nodeValue = code(express[1], scope);
+      binding.express(node, scope, clas, express[1]);
     }
   }
 
@@ -176,45 +177,40 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   let binding = {
-    attrEach(node, scope, clas, content) {
-      if (global.$cache == undefined) return;
+    attrEach(node, scope, clas, content, _express) {
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    each(node, scope, clas, content) {
-      if (global.$cache == undefined) return;
+    each(node, scope, clas, content, _express) {
       clas.resolver = "each";
       clas.content = content;
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
     when(node, scope, clas) {
-      if (global.$cache == undefined) return;
-      var nodeValue = clas.clas.nodeValue;
-      let whens = new RegExp($when).exec(nodeValue);
+      var _express = clas.clas.nodeValue;
+      let whens = new RegExp($when).exec(_express);
       if (!whens) return;
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    express(node, scope, clas) {
-      if (global.$cache == undefined) return;
+    express(node, scope, clas, _express) {
       clas.resolver = "express";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     },
-    attrExpress(node, scope, clas) {
-      if (global.$cache == undefined) return;
+    attrExpress(node, scope, clas, _express) {
       clas.resolver = "express";
       clas.scope = scope;
       clas.node = node;
-      setCache(clas, we, global.$cache);
+      setCache(clas, we, _express);
     }
   }
 
