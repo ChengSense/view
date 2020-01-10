@@ -290,7 +290,7 @@ var view = (function (exports) {
         } else if (new RegExp($expres).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
           binding.attrExpress(child, scope, clas, child.nodeValue);
-          child.nodeValue = codex(child.nodeValue, scope, we);
+          child.nodeValue = codex(child.nodeValue, scope);
         }
 
         bind(child, scope);
@@ -698,6 +698,8 @@ var view = (function (exports) {
           child.node = null;
           return node;
         }
+
+        ;
         node = insertion(child.childNodes);
       });
       return node;
@@ -1282,6 +1284,8 @@ var view = (function (exports) {
           status = document.body.contains(node);
           return false;
         }
+
+        ;
         status = clearNode(child.childNodes);
       });
       return status;

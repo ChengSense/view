@@ -271,7 +271,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
         binding.attrExpress(child, scope, clas, child.nodeValue);
-        child.nodeValue = codex(child.nodeValue, scope, we);
+        child.nodeValue = codex(child.nodeValue, scope);
       }
       bind(child, scope);
     });
@@ -668,7 +668,8 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      }      node = insertion(child.childNodes);
+      };
+      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -1181,7 +1182,8 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      }      status = clearNode(child.childNodes);
+      };
+      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {
