@@ -21,8 +21,8 @@ export function observer(target, call) {
           if (value != undefined) return value;
           value = Reflect.get(parent, prop);
           if (check(value)) value = new Proxy(value, handler(path));
-          caches.set(`${prop}$`, new Map());
           values.set(prop, value);
+          caches.set(`${prop}$`, new Map());
           array(value, caches.get(`${prop}$`));
           return value;
         }

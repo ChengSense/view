@@ -800,8 +800,8 @@ var view = (function (exports) {
             if (value != undefined) return value;
             value = Reflect.get(parent, prop);
             if (check(value)) value = new Proxy(value, handler(path));
-            caches.set("".concat(prop, "$"), new Map());
             values.set(prop, value);
+            caches.set("".concat(prop, "$"), new Map());
             array(value, caches.get("".concat(prop, "$")));
             return value;
           }
