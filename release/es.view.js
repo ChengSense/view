@@ -77,6 +77,8 @@ var $close = /^\}$/;
 var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 var $event = /^@(.*)/;
 
+let codeCacher = new Map();
+
 function code(_express, _scope) {
   try {
     global.$path = undefined;
@@ -88,20 +90,30 @@ function code(_express, _scope) {
   }
 }
 
+function Code(_express, scope) {
+  var express = codeCacher.get(_express);
+  if (express == undefined)
+    codeCacher.set(_express, express = _express.replace($word, word =>
+      "scope.".concat(word)
+    ));
+
+  return new Function('scope',
+    `return ${express};`
+  )(scope);
+}
+
 function codex(_express, _scope) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Code(_express, _scope);
+    return Codex(_express, _scope);
   } catch (error) {
     console.warn(error);
     return undefined;
   }
 }
 
-let codeCacher = new Map();
-
-function Code(_express, scope) {
+function Codex(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>
@@ -302,8 +314,8 @@ function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = code(express[1], scope);
       binding.express(node, scope, clas, express[1]);
+      node.nodeValue = code(express[1], scope);
     }
   }
 
@@ -649,13 +661,10 @@ var arrayEach = {
 function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      let value = new Function('scope', `return scope.${word}$;`)(clas.scope);
-      if (value == undefined) return;
-      let cache = value.get(we);
-      if (cache) {
-        cache.ones(clas);
-      } else {
-        value.set(we, [clas]);
+      let caches = new Function('scope', `return scope.${word}$;`)(clas.scope);
+      if (caches != undefined) {
+        let cache = caches.get(we);
+        cache ? cache.ones(clas) : caches.set(we, [clas]);
       }
     }
   });

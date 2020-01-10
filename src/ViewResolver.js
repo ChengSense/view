@@ -139,13 +139,10 @@ var arrayEach = {
 export function setCache(clas, we, express) {
   express.replace($word, word => {
     if (!word.match(/["']/)) {
-      let value = new Function('scope', `return scope.${word}$;`)(clas.scope)
-      if (value == undefined) return;
-      let cache = value.get(we);
-      if (cache) {
-        cache.ones(clas);
-      } else {
-        value.set(we, [clas]);
+      let caches = new Function('scope', `return scope.${word}$;`)(clas.scope)
+      if (caches != undefined) {
+        let cache = caches.get(we);
+        cache ? cache.ones(clas) : caches.set(we, [clas]);
       }
     }
   });

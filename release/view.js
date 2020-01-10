@@ -108,6 +108,7 @@ var view = (function (exports) {
   var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $event = /^@(.*)/;
 
+  var codeCacher = new Map();
   function code(_express, _scope) {
     try {
       global.$path = undefined;
@@ -118,19 +119,27 @@ var view = (function (exports) {
       return undefined;
     }
   }
+
+  function Code(_express, scope) {
+    var express = codeCacher.get(_express);
+    if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
+      return "scope.".concat(word);
+    }));
+    return new Function('scope', "return ".concat(express, ";"))(scope);
+  }
+
   function codex(_express, _scope) {
     try {
       global.$path = undefined;
       _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
-      return Code(_express, _scope);
+      return Codex(_express, _scope);
     } catch (error) {
       console.warn(error);
       return undefined;
     }
   }
-  var codeCacher = new Map();
 
-  function Code(_express, scope) {
+  function Codex(_express, scope) {
     var express = codeCacher.get(_express);
     if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
       return word.match(/["']/) ? word : "scope.".concat(word);
@@ -323,8 +332,8 @@ var view = (function (exports) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
       } else if (express = new RegExp($expres).exec(node.nodeValue)) {
-        node.nodeValue = code(express[1], scope);
         binding.express(node, scope, clas, express[1]);
+        node.nodeValue = code(express[1], scope);
       }
     }
 
@@ -677,14 +686,11 @@ var view = (function (exports) {
   function setCache(clas, we, express) {
     express.replace($word, function (word) {
       if (!word.match(/["']/)) {
-        var value = new Function('scope', "return scope.".concat(word, "$;"))(clas.scope);
-        if (value == undefined) return;
-        var cache = value.get(we);
+        var caches = new Function('scope', "return scope.".concat(word, "$;"))(clas.scope);
 
-        if (cache) {
-          cache.ones(clas);
-        } else {
-          value.set(we, [clas]);
+        if (caches != undefined) {
+          var cache = caches.get(we);
+          cache ? cache.ones(clas) : caches.set(we, [clas]);
         }
       }
     });

@@ -1,6 +1,8 @@
 import { $expres, $express, $word } from "./ViewExpress";
 import { global } from "./ViewIndex";
 
+let codeCacher = new Map();
+
 export function code(_express, _scope) {
   try {
     global.$path = undefined;
@@ -12,20 +14,30 @@ export function code(_express, _scope) {
   }
 }
 
+function Code(_express, scope) {
+  var express = codeCacher.get(_express);
+  if (express == undefined)
+    codeCacher.set(_express, express = _express.replace($word, word =>
+      "scope.".concat(word)
+    ));
+
+  return new Function('scope',
+    `return ${express};`
+  )(scope);
+}
+
 export function codex(_express, _scope) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Code(_express, _scope);
+    return Codex(_express, _scope);
   } catch (error) {
     console.warn(error)
     return undefined;
   }
 }
 
-let codeCacher = new Map();
-
-function Code(_express, scope) {
+function Codex(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>

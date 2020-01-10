@@ -167,8 +167,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = code(express[1], scope);
       binding.express(node, scope, clas, express[1]);
+      node.nodeValue = code(express[1], scope);
     }
   }
 
