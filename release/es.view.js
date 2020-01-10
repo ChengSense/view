@@ -282,8 +282,9 @@ function Compiler(node, scopes, childNodes, content, we) {
       }
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
-        binding.attrExpress(child, scope, clas, child.nodeValue);
-        child.nodeValue = codex(child.nodeValue, scope);
+        let nodeValue = child.nodeValue;
+        child.nodeValue = codex(nodeValue, scope, we);
+        binding.attrExpress(child, scope, clas, nodeValue);
       }
       bind(child, scope);
     });
@@ -314,8 +315,8 @@ function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      binding.express(node, scope, clas, express[1]);
       node.nodeValue = code(express[1], scope);
+      binding.express(node, scope, clas, express[1]);
     }
   }
 
@@ -677,8 +678,7 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      };
-      node = insertion(child.childNodes);
+      }      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -767,10 +767,9 @@ function observer(target, call) {
           mq.publish(target, "get", [path]);
           let value = values.get(prop);
           if (value != undefined) return value;
-          caches.set(`${prop}$`, new Map());
           value = Reflect.get(parent, prop);
-          if (value instanceof View) return value;
-          if (typeof value == "object") value = new Proxy(value, handler(path));
+          caches.set(`${prop}$`, new Map());
+          if (check(value)) value = new Proxy(value, handler(path));
           array(value, caches.get(`${prop}$`));
           values.set(prop, value);
           return value;
@@ -801,6 +800,12 @@ function observer(target, call) {
         setValue(value, oldValue);
       });
     }
+  }
+
+  function check(value) {
+    if (value instanceof View) return;
+    if (value instanceof Date) return;
+    if (typeof value == "object") return value;
   }
 
   Object.keys(call).forEach(key => mq.subscribe(target, key, call[key]));
@@ -1191,8 +1196,7 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      };
-      status = clearNode(child.childNodes);
+      }      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {

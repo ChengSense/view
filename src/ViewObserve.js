@@ -19,10 +19,9 @@ export function observer(target, call) {
           mq.publish(target, "get", [path]);
           let value = values.get(prop);
           if (value != undefined) return value;
-          caches.set(`${prop}$`, new Map());
           value = Reflect.get(parent, prop);
-          if (value instanceof View) return value;
-          if (typeof value == "object") value = new Proxy(value, handler(path));
+          caches.set(`${prop}$`, new Map());
+          if (check(value)) value = new Proxy(value, handler(path));
           array(value, caches.get(`${prop}$`));
           values.set(prop, value);
           return value;
@@ -53,6 +52,12 @@ export function observer(target, call) {
         setValue(value, oldValue);
       });
     }
+  }
+
+  function check(value) {
+    if (value instanceof View) return;
+    if (value instanceof Date) return;
+    if (typeof value == "object") return value;
   }
 
   Object.keys(call).forEach(key => mq.subscribe(target, key, call[key]));

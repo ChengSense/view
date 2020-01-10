@@ -298,8 +298,9 @@ var view = (function (exports) {
           model(child, scope);
         } else if (new RegExp($expres).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
-          binding.attrExpress(child, scope, clas, child.nodeValue);
-          child.nodeValue = codex(child.nodeValue, scope);
+          var nodeValue = child.nodeValue;
+          child.nodeValue = codex(nodeValue, scope, we);
+          binding.attrExpress(child, scope, clas, nodeValue);
         }
 
         bind(child, scope);
@@ -332,8 +333,8 @@ var view = (function (exports) {
         comNode(node, scope, clas, content);
         resolver["component"](clas, we);
       } else if (express = new RegExp($expres).exec(node.nodeValue)) {
-        binding.express(node, scope, clas, express[1]);
         node.nodeValue = code(express[1], scope);
+        binding.express(node, scope, clas, express[1]);
       }
     }
 
@@ -704,8 +705,6 @@ var view = (function (exports) {
           child.node = null;
           return node;
         }
-
-        ;
         node = insertion(child.childNodes);
       });
       return node;
@@ -799,10 +798,9 @@ var view = (function (exports) {
             mq.publish(target, "get", [path]);
             var value = values.get(prop);
             if (value != undefined) return value;
-            caches.set("".concat(prop, "$"), new Map());
             value = Reflect.get(parent, prop);
-            if (value instanceof View) return value;
-            if (_typeof(value) == "object") value = new Proxy(value, handler(path));
+            caches.set("".concat(prop, "$"), new Map());
+            if (check(value)) value = new Proxy(value, handler(path));
             array(value, caches.get("".concat(prop, "$")));
             values.set(prop, value);
             return value;
@@ -836,6 +834,12 @@ var view = (function (exports) {
           setValue(value, oldValue);
         });
       }
+    }
+
+    function check(value) {
+      if (value instanceof View) return;
+      if (value instanceof Date) return;
+      if (_typeof(value) == "object") return value;
     }
 
     Object.keys(call).forEach(function (key) {
@@ -1290,8 +1294,6 @@ var view = (function (exports) {
           status = document.body.contains(node);
           return false;
         }
-
-        ;
         status = clearNode(child.childNodes);
       });
       return status;

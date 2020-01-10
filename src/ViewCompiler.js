@@ -135,8 +135,9 @@ export function Compiler(node, scopes, childNodes, content, we) {
       }
       else if (new RegExp($expres).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
-        binding.attrExpress(child, scope, clas, child.nodeValue);
-        child.nodeValue = codex(child.nodeValue, scope, we);
+        let nodeValue = child.nodeValue;
+        child.nodeValue = codex(nodeValue, scope, we);
+        binding.attrExpress(child, scope, clas, nodeValue);
       }
       bind(child, scope);
     });
@@ -167,8 +168,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      binding.express(node, scope, clas, express[1]);
       node.nodeValue = code(express[1], scope);
+      binding.express(node, scope, clas, express[1]);
     }
   }
 
