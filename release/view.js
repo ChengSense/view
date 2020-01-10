@@ -799,10 +799,10 @@ var view = (function (exports) {
             var value = values.get(prop);
             if (value != undefined) return value;
             value = Reflect.get(parent, prop);
-            caches.set("".concat(prop, "$"), new Map());
             if (check(value)) value = new Proxy(value, handler(path));
-            array(value, caches.get("".concat(prop, "$")));
+            caches.set("".concat(prop, "$"), new Map());
             values.set(prop, value);
+            array(value, caches.get("".concat(prop, "$")));
             return value;
           }
         },

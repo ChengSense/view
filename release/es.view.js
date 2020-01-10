@@ -768,10 +768,10 @@ function observer(target, call) {
           let value = values.get(prop);
           if (value != undefined) return value;
           value = Reflect.get(parent, prop);
-          caches.set(`${prop}$`, new Map());
           if (check(value)) value = new Proxy(value, handler(path));
-          array(value, caches.get(`${prop}$`));
+          caches.set(`${prop}$`, new Map());
           values.set(prop, value);
+          array(value, caches.get(`${prop}$`));
           return value;
         }
       },
