@@ -41,7 +41,7 @@
   });
 
   function Code(_express) {
-    $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;;
+    $word = /(["'][^"']*["'])|(([_\$A-z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;;
     console.log(_express);
     _express = _express.replace($word, word =>
       word.match(/'/) ? word : "_scope.".concat(word)
@@ -58,6 +58,12 @@
     "'' + (list.id % 2 ? 'k-alt' : '') + ''"
   ].forEach(_express => {
     Code(_express);
+  });
+  [
+    "list.id.0",
+  ].forEach(_express => {
+    _express = _express.replace(/\.(\d)+/g, "[$1]");
+    console.log(_express);
   });
 </script>
 </body>

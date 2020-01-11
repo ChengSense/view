@@ -90,30 +90,18 @@ function code(_express, _scope) {
   }
 }
 
-function Code(_express, scope) {
-  var express = codeCacher.get(_express);
-  if (express == undefined)
-    codeCacher.set(_express, express = _express.replace($word, word =>
-      "scope.".concat(word)
-    ));
-
-  return new Function('scope',
-    `return ${express};`
-  )(scope);
-}
-
 function codex(_express, _scope) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Codex(_express, _scope);
+    return Code(_express, _scope);
   } catch (error) {
     console.warn(error);
     return undefined;
   }
 }
 
-function Codex(_express, scope) {
+function Code(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>
@@ -123,15 +111,6 @@ function Codex(_express, scope) {
   return new Function('scope',
     `return ${express};`
   )(scope);
-}
-
-function Path(path) {
-  try {
-    return path.replace(/(\w+)\.?/g, "['$1']");
-  } catch (error) {
-    console.warn(error);
-    return undefined;
-  }
 }
 
 function handler(proto, field, scope, key) {
@@ -365,7 +344,7 @@ function Compiler(node, scopes, childNodes, content, we) {
   function model(node, scope) {
     let owner = node.ownerElement;
     owner._express = node.nodeValue.replace($express, "$1");
-    let _express = `scope${Path(owner._express)}`;
+    let _express = `scope.${owner._express}`;
     let method = (input[owner.type] || input[owner.localName] || input.other);
     method(node, scope, _express);
   }
@@ -376,8 +355,8 @@ function Compiler(node, scopes, childNodes, content, we) {
         var owner = node.ownerElement;
         owner.on("change", function () {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
-          let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
-          new Function('scope', express)(scope);
+          let value = code(owner._express, scope);
+          owner.checked ? value.ones(_value) : value.remove(_value);
         }, scope);
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
@@ -814,7 +793,7 @@ function observer(target, call) {
 
 function array(object, cache) {
   if (!Array.isArray(object)) return;
-  Reflect.setPrototypeOf(object, {
+  let methods = {
     shift() {
       var method = Array.prototype.shift;
       let data = method.apply(this, arguments);
@@ -870,7 +849,9 @@ function array(object, cache) {
       let data = method.apply(this, arguments);
       return data;
     }
-  });
+  };
+  Reflect.setPrototypeOf(methods, Array.prototype);
+  Reflect.setPrototypeOf(object, methods);
 }
 
 class Mess {

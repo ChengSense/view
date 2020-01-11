@@ -119,41 +119,23 @@ var view = (function (exports) {
       return undefined;
     }
   }
-
-  function Code(_express, scope) {
-    var express = codeCacher.get(_express);
-    if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
-      return "scope.".concat(word);
-    }));
-    return new Function('scope', "return ".concat(express, ";"))(scope);
-  }
-
   function codex(_express, _scope) {
     try {
       global.$path = undefined;
       _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
-      return Codex(_express, _scope);
+      return Code(_express, _scope);
     } catch (error) {
       console.warn(error);
       return undefined;
     }
   }
 
-  function Codex(_express, scope) {
+  function Code(_express, scope) {
     var express = codeCacher.get(_express);
     if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
       return word.match(/["']/) ? word : "scope.".concat(word);
     }));
     return new Function('scope', "return ".concat(express, ";"))(scope);
-  }
-
-  function Path(path) {
-    try {
-      return path.replace(/(\w+)\.?/g, "['$1']");
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
   }
   function handler(proto, field, scope, key) {
     return {
@@ -384,7 +366,7 @@ var view = (function (exports) {
       var owner = node.ownerElement;
       owner._express = node.nodeValue.replace($express, "$1");
 
-      var _express = "scope".concat(Path(owner._express));
+      var _express = "scope.".concat(owner._express);
 
       var method = input[owner.type] || input[owner.localName] || input.other;
       method(node, scope, _express);
@@ -397,8 +379,8 @@ var view = (function (exports) {
           owner.on("change", function () {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
 
-            var express = "".concat(_express, ".").concat(owner.checked ? "ones" : "remove", "('").concat(_value, "');");
-            new Function('scope', express)(scope);
+            var value = code(owner._express, scope);
+            owner.checked ? value.ones(_value) : value.remove(_value);
           }, scope);
           var value = code(owner._express, scope);
           if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
@@ -850,7 +832,7 @@ var view = (function (exports) {
 
   function array(object, cache) {
     if (!Array.isArray(object)) return;
-    Reflect.setPrototypeOf(object, {
+    var methods = {
       shift: function shift() {
         var method = Array.prototype.shift;
         var data = method.apply(this, arguments);
@@ -909,7 +891,9 @@ var view = (function (exports) {
         var data = method.apply(this, arguments);
         return data;
       }
-    });
+    };
+    Reflect.setPrototypeOf(methods, Array.prototype);
+    Reflect.setPrototypeOf(object, methods);
   }
 
   var Mess =

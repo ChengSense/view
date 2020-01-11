@@ -14,30 +14,18 @@ export function code(_express, _scope) {
   }
 }
 
-function Code(_express, scope) {
-  var express = codeCacher.get(_express);
-  if (express == undefined)
-    codeCacher.set(_express, express = _express.replace($word, word =>
-      "scope.".concat(word)
-    ));
-
-  return new Function('scope',
-    `return ${express};`
-  )(scope);
-}
-
 export function codex(_express, _scope) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Codex(_express, _scope);
+    return Code(_express, _scope);
   } catch (error) {
     console.warn(error)
     return undefined;
   }
 }
 
-function Codex(_express, scope) {
+function Code(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>
@@ -51,7 +39,7 @@ function Codex(_express, scope) {
 
 export function Path(path) {
   try {
-    return path.replace(/(\w+)\.?/g, "['$1']");
+    return path.replace(/\.(\d)+/g, "[$1]");
   } catch (error) {
     console.warn(error)
     return undefined;

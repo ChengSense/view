@@ -1,7 +1,7 @@
 import { global } from "./ViewIndex";
 import { blank, forEach, slice, whiles } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
-import { code, codex, Path, handler } from "./ViewScope";
+import { code, codex, handler } from "./ViewScope";
 import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
@@ -218,7 +218,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   function model(node, scope) {
     let owner = node.ownerElement;
     owner._express = node.nodeValue.replace($express, "$1");
-    let _express = `scope${Path(owner._express)}`;
+    let _express = `scope.${owner._express}`;
     let method = (input[owner.type] || input[owner.localName] || input.other);
     method(node, scope, _express);
   }
@@ -229,8 +229,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
         var owner = node.ownerElement;
         owner.on("change", function () {
           let _value = owner.value.replace(/(\'|\")/g, "\\$1");
-          let express = `${_express}.${owner.checked ? "ones" : "remove"}('${_value}');`;
-          new Function('scope', express)(scope);
+          let value = code(owner._express, scope);
+          owner.checked ? value.ones(_value) : value.remove(_value);
         }, scope);
         let value = code(owner._express, scope);
         if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;

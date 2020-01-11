@@ -66,7 +66,7 @@ export function observer(target, call) {
 
 function array(object, cache) {
   if (!Array.isArray(object)) return;
-  Reflect.setPrototypeOf(object, {
+  let methods = {
     shift() {
       var method = Array.prototype.shift;
       let data = method.apply(this, arguments);
@@ -122,7 +122,9 @@ function array(object, cache) {
       let data = method.apply(this, arguments);
       return data;
     }
-  });
+  }
+  Reflect.setPrototypeOf(methods, Array.prototype);
+  Reflect.setPrototypeOf(object, methods);
 }
 
 class Mess {
