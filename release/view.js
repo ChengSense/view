@@ -206,7 +206,7 @@ var view = (function (exports) {
             var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.attrEach(null, scopes, clas, content, sources);
+            binding.attrEach(null, scopes, clas, content);
             forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
               if (id) scope[id.trim()] = index;
@@ -243,7 +243,7 @@ var view = (function (exports) {
             var sources = code(source, scopes);
             var clas = eachNode(null, node, child);
             content.childNodes.push(clas);
-            binding.each(null, scopes, clas, content, sources);
+            binding.each(null, scopes, clas, content);
             var children = slice(child.children);
             forEach(sources, function (item, index) {
               var scope = Object.create(scopes.$target);
@@ -590,7 +590,6 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
-        global.$cache = new Map();
         var app = codeo(node.clas.nodeValue, node.scope, we);
         app.model = app.model.$target || app.model;
         var $cache = global.$cache;

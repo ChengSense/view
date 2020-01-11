@@ -17,7 +17,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content, sources);
+          binding.attrEach(null, scopes, clas, content);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);
             if (id) scope[id.trim()] = index;
@@ -57,7 +57,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content, sources);
+          binding.each(null, scopes, clas, content);
           let children = slice(child.children);
           forEach(sources, function (item, index) {
             var scope = Object.create(scopes.$target);

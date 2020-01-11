@@ -17,7 +17,6 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      global.$cache = new Map();
       let app = codeo(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       let $cache = global.$cache;
