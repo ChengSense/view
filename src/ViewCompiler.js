@@ -14,7 +14,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes, we);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, source);
@@ -54,7 +54,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes, we);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.each(null, scopes, clas, content, source);

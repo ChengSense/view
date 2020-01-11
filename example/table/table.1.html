@@ -52,12 +52,12 @@
         <tbody>
           <tr @each="item:id:list" class="{id%2?'k-alt':''}">
             <td @each="col:i:item" data-field="{i}" data-row="{id}">
-              
+              {@editing(item,edit)}
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add">添加</span>
               <span class="k-button k-button-icontext k-grid-edit" @click="edit(item)">
-                {editTitle(item)}
+                {editTitle(item,edit)}
               </span>
               <span class="k-button k-button-icontext k-grid-delete" @click="del(id)">删除</span>
             </td>

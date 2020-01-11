@@ -18,7 +18,7 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = code(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);

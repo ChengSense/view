@@ -163,7 +163,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes, we);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, source);
@@ -203,7 +203,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes, we);
+          var sources = code(source, scopes);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.each(null, scopes, clas, content, source);
@@ -542,7 +542,7 @@ var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = code(node.clas.nodeValue, node.scope);
+      let app = code(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
