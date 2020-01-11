@@ -14,7 +14,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes);
+          var sources = code(source, scopes, we);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, source);
@@ -54,7 +54,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes);
+          var sources = code(source, scopes, we);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.each(null, scopes, clas, content, source);
@@ -70,7 +70,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         }
         else if ($when.test(child.clas.nodeValue)) {
           let whex = child.clas.nodeValue.replace($when, "$2");
-          var when = code(whex, scopes);
+          var when = code(whex, scopes, we);
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
@@ -168,7 +168,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = code(express[1], scope);
+      node.nodeValue = code(express[1], scope, we);
       binding.express(node, scope, clas, express[1]);
     }
   }

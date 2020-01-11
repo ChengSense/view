@@ -79,22 +79,34 @@ var $event = /^@(.*)/;
 
 let codeCacher = new Map();
 
-function code(_express, _scope) {
+function code(_express, _scope, we) {
   try {
     global.$path = undefined;
     _express = _express.replace($express, "$1");
-    return Code(_express, _scope);
+    return codec(_express, _scope, we);
   } catch (error) {
     console.warn(error);
     return undefined;
   }
 }
 
-function codex(_express, _scope) {
+function codex(_express, _scope, we) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Code(_express, _scope);
+    return codec(_express, _scope, we);
+  } catch (error) {
+    console.warn(error);
+    return undefined;
+  }
+}
+
+function codec(_express, _scope, we) {
+  try {
+    if (!we) return Code(_express, _scope);
+    let filter = Reflect.getPrototypeOf(we.filter);
+    Reflect.setPrototypeOf(filter, _scope);
+    return Code(_express, we.filter);
   } catch (error) {
     console.warn(error);
     return undefined;
@@ -130,6 +142,17 @@ function handler(proto, field, scope, key) {
   }
 }
 
+function setScopes(we) {
+  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
+  we.action = we.action || {};
+  Reflect.setPrototypeOf(action, Function.prototype);
+  Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
+
+  let filter = Object.assign({}, action);
+  we.filter = we.filter || {};
+  Reflect.setPrototypeOf(we.filter, filter);
+}
+
 function Compiler(node, scopes, childNodes, content, we) {
 
   function compiler(node, scopes, childNodes, content) {
@@ -140,7 +163,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes);
+          var sources = code(source, scopes, we);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.attrEach(null, scopes, clas, content, source);
@@ -180,7 +203,7 @@ function Compiler(node, scopes, childNodes, content, we) {
           var field = expreses.shift().trim();
           var source = expreses.pop().trim();
           var id = expreses.shift();
-          var sources = code(source, scopes);
+          var sources = code(source, scopes, we);
           var clas = eachNode(null, node, child);
           content.childNodes.push(clas);
           binding.each(null, scopes, clas, content, source);
@@ -196,7 +219,7 @@ function Compiler(node, scopes, childNodes, content, we) {
         }
         else if ($when.test(child.clas.nodeValue)) {
           let whex = child.clas.nodeValue.replace($when, "$2");
-          var when = code(whex, scopes);
+          var when = code(whex, scopes, we);
           var clas = whenNode(null, node, child, content, scopes);
           clas.children.push(childNodes.shift());
           if (when) {
@@ -294,7 +317,7 @@ function Compiler(node, scopes, childNodes, content, we) {
       resolver["component"](clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
-      node.nodeValue = code(express[1], scope);
+      node.nodeValue = code(express[1], scope, we);
       binding.express(node, scope, clas, express[1]);
     }
   }
@@ -594,7 +617,7 @@ var resolver = {
   },
   attribute: function (node, we) {
     try {
-      var newNode = document.createAttribute(codex(node.clas.name, scope));
+      var newNode = document.createAttribute(codex(node.clas.name, scope, we));
       setCache(node, we, node.clas.name);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);
@@ -1150,6 +1173,7 @@ class View {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
     let node = initCompiler(init([this.view]))[0];
+    setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
   }
 }

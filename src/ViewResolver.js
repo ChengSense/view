@@ -1,6 +1,6 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
-import { global, View } from "./ViewIndex";
+import { View } from "./ViewIndex";
 import { code, codex } from "./ViewScope";
 import { $word } from "./ViewExpress";
 
@@ -93,7 +93,7 @@ export var resolver = {
   },
   attribute: function (node, we) {
     try {
-      var newNode = document.createAttribute(codex(node.clas.name, scope));
+      var newNode = document.createAttribute(codex(node.clas.name, scope, we));
       setCache(node, we, node.clas.name);
       newNode.nodeValue = node.clas.nodeValue;
       node.node.ownerElement.setAttributeNode(newNode);

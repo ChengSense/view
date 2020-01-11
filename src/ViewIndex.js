@@ -4,6 +4,7 @@ import { observer } from "./ViewObserve";
 import { Router } from "./ViewRouter";
 import { query } from "./ViewElmemt";
 import { slice } from "./ViewLang";
+import { setScopes } from "./ViewScope";
 
 export let global = { $path: undefined };
 
@@ -19,6 +20,7 @@ export class View {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
     let node = initCompiler(init([this.view]))[0];
+    setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
   }
 }

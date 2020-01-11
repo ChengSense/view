@@ -3,22 +3,34 @@ import { global } from "./ViewIndex";
 
 let codeCacher = new Map();
 
-export function code(_express, _scope) {
+export function code(_express, _scope, we) {
   try {
     global.$path = undefined;
     _express = _express.replace($express, "$1");
-    return Code(_express, _scope);
+    return codec(_express, _scope, we);
   } catch (error) {
     console.warn(error)
     return undefined;
   }
 }
 
-export function codex(_express, _scope) {
+export function codex(_express, _scope, we) {
   try {
     global.$path = undefined;
     _express = `'${_express.replace($expres, "'+($1)+'")}'`;
-    return Code(_express, _scope);
+    return codec(_express, _scope, we);
+  } catch (error) {
+    console.warn(error)
+    return undefined;
+  }
+}
+
+function codec(_express, _scope, we) {
+  try {
+    if (!we) return Code(_express, _scope);
+    let filter = Reflect.getPrototypeOf(we.filter);
+    Reflect.setPrototypeOf(filter, _scope);
+    return Code(_express, we.filter);
   } catch (error) {
     console.warn(error)
     return undefined;
@@ -61,4 +73,15 @@ export function handler(proto, field, scope, key) {
       return Reflect.set(proto, prop, val);
     }
   }
+}
+
+export function setScopes(we) {
+  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
+  we.action = we.action || {};
+  Reflect.setPrototypeOf(action, Function.prototype);
+  Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));
+
+  let filter = Object.assign({}, action);
+  we.filter = we.filter || {};
+  Reflect.setPrototypeOf(we.filter, filter);
 }

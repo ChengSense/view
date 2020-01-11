@@ -52,7 +52,7 @@
         <tbody>
           <tr @each="item:id:list" class="{id%2?'k-alt':''}">
             <td @each="col:i:item" data-field="{i}" data-row="{id}">
-              {@editing(item)}
+              
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add">添加</span>
@@ -69,12 +69,12 @@
 </body>
 <script type="text/javascript">
   var input = new Component({
-    component: "<div><input value='{col}'></div>",
+    view: "<div><input value='{col}'></div>",
     model: {}
   });
 
   var text = new Component({
-    component: "<div>{col}</div>",
+    view: "<div>{col}</div>",
     model: {}
   });
 
@@ -82,7 +82,6 @@
     view: "#grid",
     model: {
       edit: false,
-      text: text,
       columns: {
         id: "档案编号",
         age: "门店名称",
