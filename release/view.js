@@ -162,15 +162,6 @@ var view = (function (exports) {
     }));
     return new Function('scope', "return ".concat(express, ";"))(scope);
   }
-
-  function Path(path) {
-    try {
-      return path.replace(/(\w+)\.?/g, "['$1']");
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
   function handler(proto, field, scope, key) {
     return {
       get: function get(parent, prop) {
@@ -418,7 +409,7 @@ var view = (function (exports) {
       var owner = node.ownerElement;
       owner._express = node.nodeValue.replace($express, "$1");
 
-      var _express = "scope".concat(Path(owner._express));
+      var _express = "scope.".concat(owner._express);
 
       var method = input[owner.type] || input[owner.localName] || input.other;
       method(node, scope, _express);
@@ -431,8 +422,8 @@ var view = (function (exports) {
           owner.on("change", function () {
             var _value = owner.value.replace(/(\'|\")/g, "\\$1");
 
-            var express = "".concat(_express, ".").concat(owner.checked ? "ones" : "remove", "('").concat(_value, "');");
-            new Function('scope', express)(scope);
+            var value = code(owner._express, scope);
+            owner.checked ? value.ones(_value) : value.remove(_value);
           }, scope);
           var value = code(owner._express, scope);
           if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
@@ -567,7 +558,6 @@ var view = (function (exports) {
   }
   function compoNode(node, child, component) {
     var comment = document.createComment("component:" + child.path);
-    Reflect.deleteProperty(child, "path");
     node.before(comment);
     component.content.node = component.view;
     return {
@@ -604,14 +594,13 @@ var view = (function (exports) {
         var app = codeo(node.clas.nodeValue, node.scope, we);
         app.model = app.model.$target || app.model;
         var $cache = global.$cache;
-        node.path = global.$path;
         if (blank(app)) return;
         Reflect.setPrototypeOf(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        var component = new View$1({
-          view: app.component,
+        var component = new View({
+          view: app.view,
           model: app.model,
           action: app.action
         });
@@ -818,53 +807,45 @@ var view = (function (exports) {
 
     function handler(root) {
       var values = new Map(),
-          cache = new Map();
+          caches = new Map();
       return {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
-          var method = array(proxy, prop, root);
-          if (method) return method;
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          var value = getValue(values, cache, parent, prop, path);
           global.$cache["delete"](root);
-          global.$cache.set(path, cache.get(prop));
+          global.$cache.set(path, caches.get(prop));
           mq.publish(target, "get", [path]);
+          var value = values.get(prop);
+          if (value != undefined) return value;
+          value = Reflect.get(parent, prop);
+          if (check(value)) value = new Proxy(value, handler(path));
+          values.set(prop, value);
+          caches.set(prop, new Map());
+          global.$cache["delete"](root);
+          global.$cache.set(path, caches.get(prop));
+          array(value, caches.get(prop));
           return value;
         },
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
           var oldValue = values.get(prop);
-          var oldCache = cache.get(prop);
+          var oldCache = caches.get(prop);
           values["delete"](prop);
-          cache["delete"](prop);
+          caches["delete"](prop);
           Reflect.set(parent, prop, val.$target || val);
           var value = proxy[prop];
           setValue(value, oldValue);
           var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, cache.get(prop)]])]);
+          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
           mq.publish(target, path, [value, oldValue]);
           return true;
         }
       };
     }
 
-    function getValue(values, cache, parent, prop, path) {
-      var value = values.get(prop);
-      if (value != undefined) return value;
-      cache.set(prop, new Map());
-      value = Reflect.get(parent, prop);
-
-      if (!(value instanceof View) && _typeof(value) == "object") {
-        value = new Proxy(value, handler(path));
-      }
-
-      values.set(prop, value);
-      return value;
-    }
-
     function setValue(object, oldObject) {
-      if (object instanceof View) return;
+      if (object instanceof Component) return;
 
       if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
         Object.keys(oldObject).forEach(function (prop) {
@@ -880,77 +861,10 @@ var view = (function (exports) {
       }
     }
 
-    function array(object, name, root) {
-      if (!Array.isArray(object)) return;
-      var meths = {
-        shift: function shift() {
-          var method = Array.prototype.shift;
-          var data = method.apply(this, arguments);
-          var index = this.length;
-          cacher(getCache(), index);
-          return data;
-        },
-        pop: function pop() {
-          var method = Array.prototype.pop;
-          var data = method.apply(this, arguments);
-          var index = this.length;
-          cacher(getCache(), index);
-          return data;
-        },
-        splice: function splice() {
-          var method = Array.prototype.splice;
-
-          if (this.length) {
-            var index = this.length;
-            var data = method.apply(this, arguments);
-            arguments.length > 2 ? this.$index = index : index = this.length;
-            cacher(getCache(), index, arguments.length - 2);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        unshift: function unshift() {
-          var method = Array.prototype.unshift;
-
-          if (arguments.length) {
-            var index = this.$index = this.length;
-            var data = method.apply(this, arguments);
-            cacher(getCache(), index, arguments.length);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        push: function push() {
-          var method = Array.prototype.push;
-
-          if (arguments.length) {
-            var index = this.$index = this.length;
-            var data = method.apply(this, arguments);
-            cacher(getCache(), index, arguments.length);
-            Reflect.deleteProperty(this, "$index");
-            return data;
-          }
-        },
-        reverse: function reverse() {
-          var method = Array.prototype.reverse;
-          var data = method.apply(this, arguments);
-          return data;
-        },
-        sort: function sort() {
-          var method = Array.prototype.sort;
-          var data = method.apply(this, arguments);
-          return data;
-        }
-      };
-      Reflect.setPrototypeOf(meths, object);
-
-      function getCache() {
-        global.$cache = new Map();
-        new Function('scope', "\n        return scope".concat(Path(root), ";\n        "))(target);
-        return global.$cache.get(root);
-      }
-
-      return meths[name];
+    function check(value) {
+      if (value instanceof Component) return;
+      if (value instanceof Date) return;
+      if (_typeof(value) == "object") return value;
     }
 
     Object.keys(call).forEach(function (key) {
@@ -960,6 +874,72 @@ var view = (function (exports) {
       return mq.subscribe(target, key, watch[key]);
     });
     return target;
+  }
+
+  function array(object, cache) {
+    if (!Array.isArray(object)) return;
+    var methods = {
+      shift: function shift() {
+        var method = Array.prototype.shift;
+        var data = method.apply(this, arguments);
+        var index = this.length;
+        cacher(cache, index);
+        return data;
+      },
+      pop: function pop() {
+        var method = Array.prototype.pop;
+        var data = method.apply(this, arguments);
+        var index = this.length;
+        cacher(cache, index);
+        return data;
+      },
+      splice: function splice() {
+        var method = Array.prototype.splice;
+
+        if (this.length) {
+          var index = this.length;
+          var data = method.apply(this, arguments);
+          arguments.length > 2 ? this.$index = index : index = this.length;
+          cacher(cache, index, arguments.length - 2);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      unshift: function unshift() {
+        var method = Array.prototype.unshift;
+
+        if (arguments.length) {
+          var index = this.$index = this.length;
+          var data = method.apply(this, arguments);
+          cacher(cache, index, arguments.length);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      push: function push() {
+        var method = Array.prototype.push;
+
+        if (arguments.length) {
+          var index = this.$index = this.length;
+          var data = method.apply(this, arguments);
+          cacher(cache, index, arguments.length);
+          Reflect.deleteProperty(this, "$index");
+          return data;
+        }
+      },
+      reverse: function reverse() {
+        var method = Array.prototype.reverse;
+        var data = method.apply(this, arguments);
+        return data;
+      },
+      sort: function sort() {
+        var method = Array.prototype.sort;
+        var data = method.apply(this, arguments);
+        return data;
+      }
+    };
+    Reflect.setPrototypeOf(methods, Array.prototype);
+    Reflect.setPrototypeOf(object, methods);
   }
 
   var Mess =
@@ -1288,53 +1268,70 @@ var view = (function (exports) {
   var global = {
     $path: undefined
   };
-  var View$1 =
+  var View =
   /*#__PURE__*/
   function () {
     function View(app) {
       _classCallCheck(this, View);
 
-      this.content = {
-        childNodes: [],
-        children: []
-      };
-      this.model = app.model;
+      this.model = observer(app.model, watcher);
       this.action = app.action;
       this.watch = app.watch;
       this.filter = app.filter;
-      app.view ? this.view(app) : this.component(app);
+      this.creater(app);
     }
 
     _createClass(View, [{
-      key: "view",
-      value: function view(app) {
-        app.model = observer(app.model, {
-          set: function set(cache, newCache) {
-            deepen(cache, newCache);
-          },
-          get: function get(path) {
-            global.$path = path;
-          }
-        }, app.watch);
-        this.model = app.model;
-        var view = query(app.view);
-        var node = initCompiler(init(slice(view)))[0];
-        this.node = node;
-        this.view = view[0];
+      key: "creater",
+      value: function creater(app) {
+        this.content = {
+          childNodes: [],
+          children: []
+        };
+        this.view = query(app.view)[0];
+        var node = initCompiler(init([this.view]))[0];
         setScopes(this);
-        resolver.view(this.view, node, app.model, this.content, this);
-      }
-    }, {
-      key: "component",
-      value: function component(app) {
-        var view = query(app.component);
-        this.view = view[0];
-        this.view.parentNode.removeChild(this.view);
-        this.component = this.view.outerHTML;
+        resolver.view(this.view, node, this.model, this.content, this);
       }
     }]);
 
     return View;
+  }();
+  var watcher = {
+    set: function set(cache, newCache) {
+      deepen(cache, newCache);
+    },
+    get: function get(path) {
+      global.$path = path;
+    }
+  };
+  var Component$1 =
+  /*#__PURE__*/
+  function () {
+    function Component(app) {
+      _classCallCheck(this, Component);
+
+      this.model = app.model;
+      this.action = app.action;
+      this.watch = app.watch;
+      this.filter = app.filter;
+      this.creater(app);
+    }
+
+    _createClass(Component, [{
+      key: "creater",
+      value: function creater(app) {
+        this.content = {
+          childNodes: [],
+          children: []
+        };
+        var view = query(app.view)[0];
+        view.parentNode.removeChild(view);
+        this.view = view.outerHTML;
+      }
+    }]);
+
+    return Component;
   }();
 
   function clearNode(nodes, status) {
@@ -1373,11 +1370,13 @@ var view = (function (exports) {
     }
   }
 
-  window.View = View$1;
+  window.View = View;
+  window.Component = Component$1;
   window.Router = Router;
   window.query = query;
 
-  exports.View = View$1;
+  exports.Component = Component$1;
+  exports.View = View;
   exports.global = global;
 
   return exports;

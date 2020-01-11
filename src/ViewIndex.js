@@ -10,32 +10,43 @@ export let global = { $path: undefined };
 
 export class View {
   constructor(app) {
+    this.model = observer(app.model, watcher);
+    this.action = app.action;
+    this.watch = app.watch;
+    this.filter = app.filter;
+    this.creater(app);
+  }
+  creater(app) {
     this.content = { childNodes: [], children: [] };
+    this.view = query(app.view)[0];
+    let node = initCompiler(init([this.view]))[0];
+    setScopes(this);
+    resolver.view(this.view, node, this.model, this.content, this);
+  }
+}
+
+let watcher = {
+  set(cache, newCache) {
+    deepen(cache, newCache);
+  },
+  get(path) {
+    global.$path = path;
+  }
+};
+
+export class Component {
+  constructor(app) {
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
-    app.view ? this.view(app) : this.component(app)
+    this.creater(app);
   }
-  view(app) {
-    app.model = observer(app.model, {
-      set(cache, newCache) { deepen(cache, newCache); },
-      get(path) { global.$path = path; }
-    }, app.watch);
-
-    this.model = app.model;
-    var view = query(app.view);
-    var node = initCompiler(init(slice(view)))[0];
-    this.node = node;
-    this.view = view[0];
-    setScopes(this);
-    resolver.view(this.view, node, app.model, this.content, this);
-  }
-  component(app) {
-    var view = query(app.component);
-    this.view = view[0];
-    this.view.parentNode.removeChild(this.view);
-    this.component = this.view.outerHTML;
+  creater(app) {
+    this.content = { childNodes: [], children: [] };
+    let view = query(app.view)[0];
+    view.parentNode.removeChild(view);
+    this.view = view.outerHTML;
   }
 }
 
@@ -79,5 +90,6 @@ function deepen(cache, newCache) {
 }
 
 window.View = View;
+window.Component = Component;
 window.Router = Router;
 window.query = query;

@@ -64,7 +64,7 @@ function Code(_express, scope) {
 
 export function Path(path) {
   try {
-    return path.replace(/(\w+)\.?/g, "['$1']");
+    return path.replace(/\.(\d)+/g, "[$1]");;
   } catch (error) {
     console.warn(error)
     return undefined;
