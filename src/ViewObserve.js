@@ -43,7 +43,7 @@ export function observer(target, call) {
   }
 
   function setValue(object, oldObject) {
-    if (object instanceof View) return;
+    if (object instanceof Component) return;
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
         let value = object[prop], cache = object[`${prop}$`];
@@ -55,7 +55,7 @@ export function observer(target, call) {
   }
 
   function check(value) {
-    if (value instanceof View) return;
+    if (value instanceof Component) return;
     if (value instanceof Date) return;
     if (typeof value == "object") return value;
   }

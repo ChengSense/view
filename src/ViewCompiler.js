@@ -362,7 +362,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
 export function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
-  Reflect.deleteProperty(child, "path");
   node.before(comment);
   component.content.node = component.view;
   return {

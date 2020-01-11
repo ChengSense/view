@@ -193,8 +193,8 @@
   window.api = api;
 })()
 
-var home = new View({
-  component: "#home",
+var home = new Component({
+  view: "#home",
   model: {
     ifaces: api.api.getList(),
     groups: api.group.getList(),
@@ -202,8 +202,8 @@ var home = new View({
   }
 });
 
-var iface = new View({
-  component: "#iface",
+var iface = new Component({
+  view: "#iface",
   model: {
     ifaces: api.api.getList()
   },
@@ -215,15 +215,15 @@ var iface = new View({
   }
 });
 
-var iface_detail = new View({
-  component: "#iface-detail",
+var iface_detail = new Component({
+  view: "#iface-detail",
   model: {
     hosts: api.setting.getList()
   }
 });
 
-var iface_save = new View({
-  component: "#iface-save",
+var iface_save = new Component({
+  view: "#iface-save",
   model: {
     groups: api.group.getList()
   },
@@ -258,8 +258,8 @@ var iface_save = new View({
   }
 });
 
-var group = new View({
-  component: "#group",
+var group = new Component({
+  view: "#group",
   model: {
     list: api.group.getList()
   },
@@ -270,8 +270,8 @@ var group = new View({
   }
 });
 
-var group_save = new View({
-  component: "#group-save",
+var group_save = new Component({
+  view: "#group-save",
   model: {
     add: "add",
     group_name: "",
@@ -298,8 +298,8 @@ var group_save = new View({
   }
 });
 
-var setting = new View({
-  component: "#setting",
+var setting = new Component({
+  view: "#setting",
   model: {
     list: api.setting.getList()
   },
@@ -310,8 +310,8 @@ var setting = new View({
   }
 });
 
-var setting_save = new View({
-  component: "#setting-save",
+var setting_save = new Component({
+  view: "#setting-save",
   model: {
     add: "add",
     id: "",

@@ -515,7 +515,6 @@ var view = (function (exports) {
   }
   function compoNode(node, child, component) {
     var comment = document.createComment("component:" + child.path);
-    Reflect.deleteProperty(child, "path");
     node.before(comment);
     component.content.node = component.view;
     return {
@@ -550,14 +549,13 @@ var view = (function (exports) {
       try {
         var app = code(node.clas.nodeValue, node.scope);
         app.model = app.model.$target || app.model;
-        node.path = global.$path;
         if (blank(app)) return;
         Reflect.setPrototypeOf(app.model, node.scope);
         var insert = insertion(node.childNodes);
         var childNodes = node.content.childNodes;
         clearNodes(node.childNodes);
-        var component = new View$1({
-          view: app.component,
+        var component = new View({
+          view: app.view,
           model: app.model,
           action: app.action
         });
@@ -804,7 +802,7 @@ var view = (function (exports) {
     }
 
     function setValue(object, oldObject) {
-      if (object instanceof View) return;
+      if (object instanceof Component) return;
 
       if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
         Object.keys(oldObject).forEach(function (prop) {
@@ -819,7 +817,7 @@ var view = (function (exports) {
     }
 
     function check(value) {
-      if (value instanceof View) return;
+      if (value instanceof Component) return;
       if (value instanceof Date) return;
       if (_typeof(value) == "object") return value;
     }
@@ -1222,52 +1220,69 @@ var view = (function (exports) {
   var global = {
     $path: undefined
   };
-  var View$1 =
+  var View =
   /*#__PURE__*/
   function () {
     function View(app) {
       _classCallCheck(this, View);
 
-      this.content = {
-        childNodes: [],
-        children: []
-      };
-      this.model = app.model;
+      this.model = observer(app.model, watcher);
       this.action = app.action;
       this.watch = app.watch;
       this.filter = app.filter;
-      app.view ? this.view(app) : this.component(app);
+      this.creater(app);
     }
 
     _createClass(View, [{
-      key: "view",
-      value: function view(app) {
-        app.model = observer(app.model, {
-          set: function set(cache, newCache) {
-            deepen(cache, newCache);
-          },
-          get: function get(path) {
-            global.$path = path;
-          }
-        });
-        this.model = app.model;
-        var view = query(app.view);
-        var node = initCompiler(init(slice(view)))[0];
-        this.node = node;
-        this.view = view[0];
-        resolver.view(this.view, node, app.model, this.content, this);
-      }
-    }, {
-      key: "component",
-      value: function component(app) {
-        var view = query(app.component);
-        this.view = view[0];
-        this.view.parentNode.removeChild(this.view);
-        this.component = this.view.outerHTML;
+      key: "creater",
+      value: function creater(app) {
+        this.content = {
+          childNodes: [],
+          children: []
+        };
+        this.view = query(app.view)[0];
+        var node = initCompiler(init([this.view]))[0];
+        resolver.view(this.view, node, this.model, this.content, this);
       }
     }]);
 
     return View;
+  }();
+  var watcher = {
+    set: function set(cache, newCache) {
+      deepen(cache, newCache);
+    },
+    get: function get(path) {
+      global.$path = path;
+    }
+  };
+  var Component$1 =
+  /*#__PURE__*/
+  function () {
+    function Component(app) {
+      _classCallCheck(this, Component);
+
+      this.model = app.model;
+      this.action = app.action;
+      this.watch = app.watch;
+      this.filter = app.filter;
+      this.creater(app);
+    }
+
+    _createClass(Component, [{
+      key: "creater",
+      value: function creater(app) {
+        this.content = {
+          childNodes: [],
+          children: []
+        };
+        var view = query(app.view)[0];
+        view.parentNode.removeChild(view);
+        this.view = view.outerHTML;
+      }
+    }]);
+
+    return Component;
   }();
 
   function clearNode(nodes, status) {
@@ -1300,11 +1315,13 @@ var view = (function (exports) {
     }
   }
 
-  window.View = View$1;
-  window.Router = Router;
   window.query = query;
+  window.Router = Router;
+  window.View = View;
+  window.Component = Component$1;
 
-  exports.View = View$1;
+  exports.Component = Component$1;
+  exports.View = View;
   exports.global = global;
 
   return exports;

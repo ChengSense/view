@@ -20,13 +20,12 @@ export var resolver = {
     try {
       let app = code(node.clas.nodeValue, node.scope);
       app.model = app.model.$target || app.model;
-      node.path = global.$path;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.view, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, node.clas.nodeValue);

@@ -488,7 +488,6 @@ function Compiler(node, scopes, childNodes, content, we) {
 
 function compoNode(node, child, component) {
   var comment = document.createComment("component:" + child.path);
-  Reflect.deleteProperty(child, "path");
   node.before(comment);
   component.content.node = component.view;
   return {
@@ -522,13 +521,12 @@ var resolver = {
     try {
       let app = code(node.clas.nodeValue, node.scope);
       app.model = app.model.$target || app.model;
-      node.path = global.$path;
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      let component = new View$1({ view: app.component, model: app.model, action: app.action });
+      let component = new View({ view: app.view, model: app.model, action: app.action });
       app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
       setCache(clasNodes, we, node.clas.nodeValue);
@@ -770,7 +768,7 @@ function observer(target, call) {
   }
 
   function setValue(object, oldObject) {
-    if (object instanceof View) return;
+    if (object instanceof Component) return;
     if (typeof object == "object" && typeof oldObject == "object") {
       Object.keys(oldObject).forEach(prop => {
         let value = object[prop], cache = object[`${prop}$`];
@@ -782,7 +780,7 @@ function observer(target, call) {
   }
 
   function check(value) {
-    if (value instanceof View) return;
+    if (value instanceof Component) return;
     if (value instanceof Date) return;
     if (typeof value == "object") return value;
   }
@@ -1140,33 +1138,44 @@ Object.assign(NodeList.prototype, {
 
 let global = { $path: undefined };
 
-class View$1 {
+class View {
   constructor(app) {
+    this.model = observer(app.model, watcher);
+    this.action = app.action;
+    this.watch = app.watch;
+    this.filter = app.filter;
+    this.creater(app);
+  }
+  creater(app) {
     this.content = { childNodes: [], children: [] };
+    this.view = query(app.view)[0];
+    let node = initCompiler(init([this.view]))[0];
+    resolver.view(this.view, node, this.model, this.content, this);
+  }
+}
+
+let watcher = {
+  set(cache, newCache) {
+    deepen(cache, newCache);
+  },
+  get(path) {
+    global.$path = path;
+  }
+};
+
+class Component$1 {
+  constructor(app) {
     this.model = app.model;
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
-    app.view ? this.view(app) : this.component(app);
+    this.creater(app);
   }
-  view(app) {
-    app.model = observer(app.model, {
-      set(cache, newCache) { deepen(cache, newCache); },
-      get(path) { global.$path = path; }
-    });
-
-    this.model = app.model;
-    var view = query(app.view);
-    var node = initCompiler(init(slice(view)))[0];
-    this.node = node;
-    this.view = view[0];
-    resolver.view(this.view, node, app.model, this.content, this);
-  }
-  component(app) {
-    var view = query(app.component);
-    this.view = view[0];
-    this.view.parentNode.removeChild(this.view);
-    this.component = this.view.outerHTML;
+  creater(app) {
+    this.content = { childNodes: [], children: [] };
+    let view = query(app.view)[0];
+    view.parentNode.removeChild(view);
+    this.view = view.outerHTML;
   }
 }
 
@@ -1202,8 +1211,9 @@ function deepen(cache, newCache) {
   }
 }
 
-window.View = View$1;
-window.Router = Router;
 window.query = query;
+window.Router = Router;
+window.View = View;
+window.Component = Component$1;
 
-export { View$1 as View, global };
+export { Component$1 as Component, View, global };
