@@ -6,7 +6,7 @@ export function observer(target, call, watch) {
   target = new Proxy(target, handler());
 
   function handler(root) {
-    let values = new Map(), caches = new Map();
+    let values = new Map(), caches = new Map(), compos = new Map();
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
@@ -17,7 +17,9 @@ export function observer(target, call, watch) {
         mq.publish(target, "get", [path]);
         let value = values.get(prop);
         if (value != undefined) return value;
-        
+        value = compos.get(prop);
+        if (value != undefined) return value;
+
         value = Reflect.get(parent, prop);
         if (check(value)) value = new Proxy(value, handler(path));
         values.set(prop, value);
@@ -30,10 +32,11 @@ export function observer(target, call, watch) {
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
         if (val instanceof Component) {
-          let oldValue = values.get(prop)
+          let oldValue = compos.get(prop)
           let oldCache = caches.get(prop);
-          values.set(prop, val);
+          compos.set(prop, val);
           caches.set(prop, new Map());
+          values.delete(prop);
           let path = root ? `${root}.${prop}` : prop;
           mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
           mq.publish(target, path, [val, oldValue]);

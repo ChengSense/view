@@ -831,7 +831,8 @@ var view = (function (exports) {
 
     function handler(root) {
       var values = new Map(),
-          caches = new Map();
+          caches = new Map(),
+          compos = new Map();
       return {
         get: function get(parent, prop, proxy) {
           if (prop == "$target") return parent;
@@ -841,6 +842,8 @@ var view = (function (exports) {
           global.$cache.set(path, caches.get(prop));
           mq.publish(target, "get", [path]);
           var value = values.get(prop);
+          if (value != undefined) return value;
+          value = compos.get(prop);
           if (value != undefined) return value;
           value = Reflect.get(parent, prop);
           if (check(value)) value = new Proxy(value, handler(path));
@@ -855,10 +858,11 @@ var view = (function (exports) {
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
 
           if (val instanceof Component) {
-            var oldValue = values.get(prop);
+            var oldValue = compos.get(prop);
             var oldCache = caches.get(prop);
-            values.set(prop, val);
+            compos.set(prop, val);
             caches.set(prop, new Map());
+            values["delete"](prop);
             var path = root ? "".concat(root, ".").concat(prop) : prop;
             mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
             mq.publish(target, path, [val, oldValue]);
