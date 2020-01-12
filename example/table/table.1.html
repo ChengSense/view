@@ -52,7 +52,7 @@
         <tbody>
           <tr @each="item:id:list" class="{id%2?'k-alt':''}">
             <td @each="col:i:item" data-field="{i}" data-row="{id}">
-              {@editing(item)}
+              {@col:edit:text}
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add">添加</span>
@@ -66,15 +66,25 @@
       </table>
     </div>
   </div>
+
+  <div id="input">
+    <input value='{col}'>
+  </div>
+
+  <div id="text">
+    {col}
+  </div>
+
 </body>
+
 <script type="text/javascript">
   var input = new Component({
-    view: "<div><input value='{col}'></div>",
+    view: "#input",
     model: {}
   });
 
   var text = new Component({
-    view: "<div>{col}</div>",
+    view: "#text",
     model: {}
   });
 
@@ -82,7 +92,6 @@
     view: "#grid",
     model: {
       edit: false,
-      text: text,
       columns: {
         id: "档案编号",
         age: "门店名称",
@@ -91,7 +100,7 @@
       },
       list: (function data() {
         var data = [];
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           data.push({
             id: 10000 + data.length,
             age: "西湖店" + data.length,
@@ -113,12 +122,14 @@
         });
       },
       edit(item) {
-        this.$action.node = item;
         if (this.edit == false) {
           this.edit = true;
+          Object.keys(item).forEach(i => item[`${i}edit`] = input);
         } else {
           this.edit = false;
+          Object.keys(item).forEach(i => item[`${i}edit`] = text);
         }
+        this.$action.node = item;
       },
       del(id) {
         this.list.splice(id, 1);

@@ -1,7 +1,7 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
 import { global, View } from "./ViewIndex";
-import { codeo, codex } from "./ViewScope";
+import { codex, codea } from "./ViewScope";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -17,7 +17,7 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codeo(node.clas.nodeValue, node.scope, we);
+      let app = codea(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       if (blank(app)) return;

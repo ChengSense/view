@@ -141,6 +141,29 @@ var view = (function (exports) {
       return undefined;
     }
   }
+  function codea(_express, _scope, we) {
+    try {
+      global.$path = undefined;
+      global.$cache = new Map();
+      _express = _express.replace($express, "$1").split(":");
+      var value = new Function('scope', "return scope.".concat(_express[0], ";"))(_scope);
+      if (value && value instanceof Component) return value;
+      global.$path = undefined;
+      global.$cache = new Map();
+      var express = "scope.".concat(_express[0]).concat(_express[1]);
+      value = new Function('scope', "return ".concat(express, ";"))(_scope);
+      if (value && value instanceof Component) return value;
+      value = new Function('scope', "return ".concat(_express[2], ";"))(_scope);
+      new Function('scope', 'value', "".concat(express, "=value;"))(_scope, value);
+      global.$path = undefined;
+      global.$cache = new Map();
+      value = new Function('scope', "return ".concat(express, ";"))(_scope);
+      return value;
+    } catch (error) {
+      console.warn(error);
+      return undefined;
+    }
+  }
 
   function codec(_express, _scope, we) {
     try {
@@ -166,12 +189,14 @@ var view = (function (exports) {
     return {
       get: function get(parent, prop) {
         if (field == prop) return Reflect.get(scope, key);
+        if (prop.startsWith(field)) return Reflect.get(scope, prop.replace(field, key));
         if (prop == "$target") return parent;
         if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
         return Reflect.get(proto, prop);
       },
       set: function set(parent, prop, val) {
         if (field == prop) return Reflect.set(scope, key, val);
+        if (prop.startsWith(field)) return Reflect.set(scope, prop.replace(field, key), val);
         if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
         return Reflect.set(proto, prop, val);
       }
@@ -590,7 +615,7 @@ var view = (function (exports) {
     },
     component: function component(node, we) {
       try {
-        var app = codeo(node.clas.nodeValue, node.scope, we);
+        var app = codea(node.clas.nodeValue, node.scope, we);
         app.model = app.model.$target || app.model;
         var $cache = global.$cache;
         if (blank(app)) return;
@@ -828,17 +853,33 @@ var view = (function (exports) {
         },
         set: function set(parent, prop, val, proxy) {
           if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
-          var oldValue = values.get(prop);
-          var oldCache = caches.get(prop);
-          values["delete"](prop);
-          caches["delete"](prop);
-          Reflect.set(parent, prop, val.$target || val);
-          var value = proxy[prop];
-          setValue(value, oldValue);
-          var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [value, oldValue]);
-          return true;
+
+          if (val instanceof Component) {
+            var oldValue = values.get(prop);
+            var oldCache = caches.get(prop);
+            values.set(prop, val);
+            caches.set(prop, new Map());
+            var path = root ? "".concat(root, ".").concat(prop) : prop;
+            mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
+            mq.publish(target, path, [val, oldValue]);
+            return true;
+          } else {
+            var _oldValue = values.get(prop);
+
+            var _oldCache = caches.get(prop);
+
+            values["delete"](prop);
+            caches["delete"](prop);
+            Reflect.set(parent, prop, val.$target || val);
+            var value = proxy[prop];
+            setValue(value, _oldValue);
+
+            var _path = root ? "".concat(root, ".").concat(prop) : prop;
+
+            mq.publish(target, "set", [new Map([[_path, _oldCache]]), new Map([[_path, caches.get(prop)]])]);
+            mq.publish(target, _path, [value, _oldValue]);
+            return true;
+          }
         }
       };
     }

@@ -113,6 +113,36 @@ function codeo(_express, _scope, we) {
   }
 }
 
+function codea(_express, _scope, we) {
+  try {
+    global.$path = undefined;
+    global.$cache = new Map();
+    _express = _express.replace($express, "$1").split(":");
+
+    let value = new Function('scope', `return scope.${_express[0]};`)(_scope);
+    if (value && value instanceof Component) return value;
+
+    global.$path = undefined;
+    global.$cache = new Map();
+    let express = `scope.${_express[0]}${_express[1]}`;
+
+    value = new Function('scope', `return ${express};`)(_scope);
+    if (value && value instanceof Component) return value;
+
+    value = new Function('scope', `return ${_express[2]};`)(_scope);
+    new Function('scope', 'value', `${express}=value;`)(_scope, value);
+
+    global.$path = undefined;
+    global.$cache = new Map();
+    value = new Function('scope', `return ${express};`)(_scope);
+    
+    return value;
+  } catch (error) {
+    console.warn(error);
+    return undefined;
+  }
+}
+
 function codec(_express, _scope, we) {
   try {
     let filter = Reflect.getPrototypeOf(we.filter);
@@ -142,12 +172,14 @@ function handler(proto, field, scope, key) {
   return {
     get(parent, prop) {
       if (field == prop) return Reflect.get(scope, key);
+      if (prop.startsWith(field)) return Reflect.get(scope, prop.replace(field, key));
       if (prop == "$target") return parent;
       if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
       return Reflect.get(proto, prop);
     },
     set(parent, prop, val) {
       if (field == prop) return Reflect.set(scope, key, val);
+      if (prop.startsWith(field)) return Reflect.set(scope, prop.replace(field, key), val);
       if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
       return Reflect.set(proto, prop, val);
     }
@@ -557,7 +589,7 @@ var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codeo(node.clas.nodeValue, node.scope, we);
+      let app = codea(node.clas.nodeValue, node.scope, we);
       app.model = app.model.$target || app.model;
       let $cache = global.$cache;
       if (blank(app)) return;
@@ -791,17 +823,28 @@ function observer(target, call, watch) {
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
-        let oldValue = values.get(prop);
-        let oldCache = caches.get(prop);
-        values.delete(prop);
-        caches.delete(prop);
-        Reflect.set(parent, prop, val.$target || val);
-        let value = proxy[prop];
-        setValue(value, oldValue);
-        let path = root ? `${root}.${prop}` : prop;
-        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-        mq.publish(target, path, [value, oldValue]);
-        return true;
+        if (val instanceof Component) {
+          let oldValue = values.get(prop);
+          let oldCache = caches.get(prop);
+          values.set(prop, val);
+          caches.set(prop, new Map());
+          let path = root ? `${root}.${prop}` : prop;
+          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
+          mq.publish(target, path, [val, oldValue]);
+          return true;
+        } else {
+          let oldValue = values.get(prop);
+          let oldCache = caches.get(prop);
+          values.delete(prop);
+          caches.delete(prop);
+          Reflect.set(parent, prop, val.$target || val);
+          let value = proxy[prop];
+          setValue(value, oldValue);
+          let path = root ? `${root}.${prop}` : prop;
+          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
+          mq.publish(target, path, [value, oldValue]);
+          return true;
+        }
       }
     }
   }
