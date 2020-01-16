@@ -113,36 +113,6 @@ function codeo(_express, _scope, we) {
   }
 }
 
-function codea(_express, _scope, we) {
-  try {
-    global.$path = undefined;
-    global.$cache = new Map();
-    _express = _express.replace($express, "$1").split(":");
-
-    let value = new Function('scope', `return scope.${_express[0]};`)(_scope);
-    if (value && value instanceof Component) return value;
-
-    global.$path = undefined;
-    global.$cache = new Map();
-    let express = `scope.${_express[0]}${_express[1]}`;
-
-    value = new Function('scope', `return ${express};`)(_scope);
-    if (value && value instanceof Component) return value;
-
-    value = new Function('scope', `return ${_express[2]};`)(_scope);
-    new Function('scope', 'value', `${express}=value;`)(_scope, value);
-
-    global.$path = undefined;
-    global.$cache = new Map();
-    value = new Function('scope', `return ${express};`)(_scope);
-    
-    return value;
-  } catch (error) {
-    console.warn(error);
-    return undefined;
-  }
-}
-
 function codec(_express, _scope, we) {
   try {
     let filter = Reflect.getPrototypeOf(we.filter);
@@ -172,14 +142,12 @@ function handler(proto, field, scope, key) {
   return {
     get(parent, prop) {
       if (field == prop) return Reflect.get(scope, key);
-      if (prop.startsWith(field)) return Reflect.get(scope, prop.replace(field, key));
       if (prop == "$target") return parent;
       if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
       return Reflect.get(proto, prop);
     },
     set(parent, prop, val) {
       if (field == prop) return Reflect.set(scope, key, val);
-      if (prop.startsWith(field)) return Reflect.set(scope, prop.replace(field, key), val);
       if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
       return Reflect.set(proto, prop, val);
     }
@@ -236,6 +204,7 @@ function Compiler(node, scopes, childNodes, content, we) {
             node.appendChild(newNode);
             var clasNodes = classNode(newNode, child);
             content.childNodes.push(clasNodes);
+            component(newNode, scopes, clasNodes, content);
             compiler(newNode, scopes, slice(child.children), clasNodes);
             commom(newNode, scopes, clasNodes, content);
           }
@@ -348,6 +317,13 @@ function Compiler(node, scopes, childNodes, content, we) {
           owner.on(key, method, scope);
         }
       });
+    }
+  }
+
+  function component(node, scope, clas, content) {
+    if (Reflect.has(we.component, node.localName)) {
+      comNode(node, scope, clas, content);
+      resolver["component"](clas, we);
     }
   }
 
@@ -589,21 +565,22 @@ var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codea(node.clas.nodeValue, node.scope, we);
-      app.model = app.model.$target || app.model;
-      let $cache = global.$cache;
+      let app = new we.component[node.clas.localName]();
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
       let component = new View({ view: app.view, model: app.model, action: app.action });
-      app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
-      setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
-      if (insert.parentNode)
-        insert.parentNode.replaceChild(component.view, insert);
+      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      if (!node.clas.hasAttribute("@id")) return;
+      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
+      let idNode = node.clas.getAttributeNode("@id").cloneNode();
+      idNode.nodeValue = id;
+      component.view.setAttributeNode(idNode);
+      Reflect.set(component.view, `@${id}`, component);
     } catch (error) {
       console.error(error);
     }
@@ -725,7 +702,8 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      }      node = insertion(child.childNodes);
+      };
+      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -800,7 +778,7 @@ function observer(target, call, watch) {
   target = new Proxy(target, handler());
 
   function handler(root) {
-    let values = new Map(), caches = new Map(), compos = new Map();
+    let values = new Map(), caches = new Map();
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
@@ -810,8 +788,6 @@ function observer(target, call, watch) {
         global.$cache.set(path, caches.get(prop));
         mq.publish(target, "get", [path]);
         let value = values.get(prop);
-        if (value != undefined) return value;
-        value = compos.get(prop);
         if (value != undefined) return value;
 
         value = Reflect.get(parent, prop);
@@ -825,29 +801,17 @@ function observer(target, call, watch) {
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
-        if (val instanceof Component) {
-          let oldValue = compos.get(prop);
-          let oldCache = caches.get(prop);
-          compos.set(prop, val);
-          caches.set(prop, new Map());
-          values.delete(prop);
-          let path = root ? `${root}.${prop}` : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [val, oldValue]);
-          return true;
-        } else {
-          let oldValue = values.get(prop);
-          let oldCache = caches.get(prop);
-          values.delete(prop);
-          caches.delete(prop);
-          Reflect.set(parent, prop, val.$target || val);
-          let value = proxy[prop];
-          setValue(value, oldValue);
-          let path = root ? `${root}.${prop}` : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [value, oldValue]);
-          return true;
-        }
+        let oldValue = values.get(prop);
+        let oldCache = caches.get(prop);
+        values.delete(prop);
+        caches.delete(prop);
+        Reflect.set(parent, prop, val.$target || val);
+        let value = proxy[prop];
+        setValue(value, oldValue);
+        let path = root ? `${root}.${prop}` : prop;
+        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
+        mq.publish(target, path, [value, oldValue]);
+        return true;
       }
     }
   }
@@ -1233,6 +1197,8 @@ class View {
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
+    this.component = {};
+    this.componenter(app.component);
     this.creater(app);
   }
   creater(app) {
@@ -1241,6 +1207,13 @@ class View {
     let node = initCompiler(init([this.view]))[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
+  }
+  componenter(a) {
+    let list = Object.values(a || {});
+    list.forEach(o => {
+      let name = o.name.toLowerCase();
+      Reflect.set(this.component, name, o);
+    });
   }
 }
 
@@ -1276,7 +1249,8 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      }      status = clearNode(child.childNodes);
+      };
+      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {

@@ -52,7 +52,7 @@
         <tbody>
           <tr @each="item:id:list" class="{id%2?'k-alt':''}">
             <td @each="col:i:item" data-field="{i}" data-row="{id}">
-              {@col:edit:text}
+              <AppInput @id="id{id}{i}" />
             </td>
             <td>
               <span class="k-button k-button-icontext k-grid-add" @click="add">添加</span>
@@ -66,30 +66,28 @@
       </table>
     </div>
   </div>
-
-  <div id="input">
-    <input value='{col}'>
-  </div>
-
-  <div id="text">
-    {col}
-  </div>
-
 </body>
-
 <script type="text/javascript">
-  var input = new Component({
-    view: "#input",
-    model: {}
-  });
 
-  var text = new Component({
-    view: "#text",
-    model: {}
-  });
+  class AppInput {
+    constructor() {
+      this.view = "<AppInput><input value='{col}'></AppInput>";
+      this.model = {};
+    }
+  }
+
+  class AppText {
+    constructor() {
+      this.view = "<AppText>{col}</AppText>";
+      this.model = {};
+    }
+  }
 
   var grid = new View({
     view: "#grid",
+    component: {
+      AppInput, AppText
+    },
     model: {
       edit: false,
       columns: {
@@ -122,14 +120,12 @@
         });
       },
       edit(item) {
+        this.$action.node = item;
         if (this.edit == false) {
           this.edit = true;
-          Object.keys(item).forEach(i => item[`${i}edit`] = input);
         } else {
           this.edit = false;
-          Object.keys(item).forEach(i => item[`${i}edit`] = text);
         }
-        this.$action.node = item;
       },
       del(id) {
         this.list.splice(id, 1);

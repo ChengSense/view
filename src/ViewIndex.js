@@ -14,6 +14,8 @@ export class View {
     this.action = app.action;
     this.watch = app.watch;
     this.filter = app.filter;
+    this.component = {};
+    this.componenter(app.component);
     this.creater(app);
   }
   creater(app) {
@@ -22,6 +24,13 @@ export class View {
     let node = initCompiler(init([this.view]))[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
+  }
+  componenter(a) {
+    let list = Object.values(a || {});
+    list.forEach(o => {
+      let name = o.name.toLowerCase();
+      Reflect.set(this.component, name, o);
+    });
   }
 }
 

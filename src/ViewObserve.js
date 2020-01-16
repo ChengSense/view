@@ -6,7 +6,7 @@ export function observer(target, call, watch) {
   target = new Proxy(target, handler());
 
   function handler(root) {
-    let values = new Map(), caches = new Map(), compos = new Map();
+    let values = new Map(), caches = new Map();
     return {
       get(parent, prop, proxy) {
         if (prop == "$target") return parent;
@@ -16,8 +16,6 @@ export function observer(target, call, watch) {
         global.$cache.set(path, caches.get(prop));
         mq.publish(target, "get", [path]);
         let value = values.get(prop);
-        if (value != undefined) return value;
-        value = compos.get(prop);
         if (value != undefined) return value;
 
         value = Reflect.get(parent, prop);
@@ -31,29 +29,17 @@ export function observer(target, call, watch) {
       },
       set(parent, prop, val, proxy) {
         if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
-        if (val instanceof Component) {
-          let oldValue = compos.get(prop)
-          let oldCache = caches.get(prop);
-          compos.set(prop, val);
-          caches.set(prop, new Map());
-          values.delete(prop);
-          let path = root ? `${root}.${prop}` : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [val, oldValue]);
-          return true;
-        } else {
-          let oldValue = values.get(prop)
-          let oldCache = caches.get(prop);
-          values.delete(prop);
-          caches.delete(prop);
-          Reflect.set(parent, prop, val.$target || val);
-          let value = proxy[prop];
-          setValue(value, oldValue);
-          let path = root ? `${root}.${prop}` : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [value, oldValue]);
-          return true;
-        }
+        let oldValue = values.get(prop)
+        let oldCache = caches.get(prop);
+        values.delete(prop);
+        caches.delete(prop);
+        Reflect.set(parent, prop, val.$target || val);
+        let value = proxy[prop];
+        setValue(value, oldValue);
+        let path = root ? `${root}.${prop}` : prop;
+        mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
+        mq.publish(target, path, [value, oldValue]);
+        return true;
       }
     }
   }

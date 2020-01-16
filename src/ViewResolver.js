@@ -1,7 +1,7 @@
 import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
-import { global, View } from "./ViewIndex";
-import { codex, codea } from "./ViewScope";
+import { View } from "./ViewIndex";
+import { codex } from "./ViewScope";
 
 export var resolver = {
   view: function (view, node, scope, content, we) {
@@ -17,21 +17,22 @@ export var resolver = {
   },
   component: function (node, we) {
     try {
-      let app = codea(node.clas.nodeValue, node.scope, we);
-      app.model = app.model.$target || app.model;
-      let $cache = global.$cache;
+      let app = new we.component[node.clas.localName]();
       if (blank(app)) return;
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
       let component = new View({ view: app.view, model: app.model, action: app.action });
-      app.model = component.model;
       let clasNodes = compoNode(insert, node, component);
-      setCache(clasNodes, we, $cache);
       childNodes.replace(node, clasNodes);
-      if (insert.parentNode)
-        insert.parentNode.replaceChild(component.view, insert);
+      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      if (!node.clas.hasAttribute("@id")) return;
+      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
+      let idNode = node.clas.getAttributeNode("@id").cloneNode();
+      idNode.nodeValue = id;
+      component.view.setAttributeNode(idNode);
+      Reflect.set(component.view, `@${id}`, component);
     } catch (error) {
       console.error(error)
     }

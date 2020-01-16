@@ -43,6 +43,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
             node.appendChild(newNode);
             var clasNodes = classNode(newNode, child);
             content.childNodes.push(clasNodes);
+            component(newNode, scopes, clasNodes, content);
             compiler(newNode, scopes, slice(child.children), clasNodes);
             commom(newNode, scopes, clasNodes, content);
           }
@@ -155,6 +156,13 @@ export function Compiler(node, scopes, childNodes, content, we) {
           owner.on(key, method, scope);
         }
       });
+    }
+  }
+
+  function component(node, scope, clas, content) {
+    if (Reflect.has(we.component, node.localName)) {
+      comNode(node, scope, clas, content);
+      resolver["component"](clas, we);
     }
   }
 
