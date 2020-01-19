@@ -182,7 +182,8 @@ var view = (function (exports) {
       $view: we.view,
       $model: we.model,
       $action: we.action,
-      $watch: we.watch
+      $watch: we.watch,
+      $ref: we.ref
     };
     we.action = we.action || {};
     Reflect.setPrototypeOf(action, Function.prototype);
@@ -1302,19 +1303,20 @@ var view = (function (exports) {
           children: []
         };
         this.view = query(app.view)[0];
+        this.ref = setRef(this.content);
         var node = initCompiler(init([this.view]))[0];
         setScopes(this);
         resolver.view(this.view, node, this.model, this.content, this);
       }
     }, {
       key: "componenter",
-      value: function componenter(a) {
+      value: function componenter(coms) {
         var _this = this;
 
-        var list = Object.values(a || {});
-        list.forEach(function (o) {
-          var name = o.name.toLowerCase();
-          Reflect.set(_this.component, name, o);
+        var list = Object.values(coms || {});
+        list.forEach(function (com) {
+          var name = com.name.toLowerCase();
+          Reflect.set(_this.component, name, com);
         });
       }
     }]);
@@ -1329,6 +1331,34 @@ var view = (function (exports) {
       global.$path = path;
     }
   };
+
+  function setRef(content) {
+    return new Proxy({}, {
+      get: function get(parent, prop) {
+        var childNodes = content.childNodes;
+        var list = getRef(childNodes, prop, []);
+        return list.shift();
+      }
+    });
+  }
+
+  function getRef(nodes, id, list) {
+    nodes.every(function (child) {
+      if (child.node && child.node.parentNode) {
+        var node = child.node["@".concat(id)];
+
+        if (node) {
+          list.push(node);
+          return false;
+        }
+      }
+
+      if (child.childNodes) getRef(child.childNodes, id, list);
+      return !list.length;
+    });
+    return list;
+  }
+
   var Component$1 =
   /*#__PURE__*/
   function () {

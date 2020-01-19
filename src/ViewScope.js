@@ -88,7 +88,7 @@ export function handler(proto, field, scope, key) {
 }
 
 export function setScopes(we) {
-  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch };
+  let action = { $view: we.view, $model: we.model, $action: we.action, $watch: we.watch, $ref: we.ref };
   we.action = we.action || {};
   Reflect.setPrototypeOf(action, Function.prototype);
   Object.values(we.action).forEach(method => Reflect.setPrototypeOf(method, action));

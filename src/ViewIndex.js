@@ -21,15 +21,16 @@ export class View {
   creater(app) {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
+    this.ref = setRef(this.content);
     let node = initCompiler(init([this.view]))[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
   }
-  componenter(a) {
-    let list = Object.values(a || {});
-    list.forEach(o => {
-      let name = o.name.toLowerCase();
-      Reflect.set(this.component, name, o);
+  componenter(coms) {
+    let list = Object.values(coms || {});
+    list.forEach(com => {
+      let name = com.name.toLowerCase();
+      Reflect.set(this.component, name, com);
     });
   }
 }
@@ -42,6 +43,32 @@ let watcher = {
     global.$path = path;
   }
 };
+
+function setRef(content) {
+  return new Proxy({}, {
+    get(parent, prop) {
+      let childNodes = content.childNodes
+      let list = getRef(childNodes, prop, []);
+      return list.shift();
+    }
+  })
+}
+
+function getRef(nodes, id, list) {
+  nodes.every(function (child) {
+    if (child.node && child.node.parentNode) {
+      let node = child.node["@".concat(id)]
+      if (node) {
+        list.push(node);
+        return false;
+      }
+    }
+    if (child.childNodes)
+      getRef(child.childNodes, id, list);
+    return !list.length;
+  });
+  return list;
+}
 
 export class Component {
   constructor(app) {
