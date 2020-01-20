@@ -59,7 +59,7 @@ export function Router(app, params) {
     let router = resolver(hash);
     if (router) {
       router.action(router.params);
-      app.model[router.router] = router.component;
+      app.ref[router.router] = router.component;
       if (router.after) {
         router.after();
       }

@@ -1143,7 +1143,7 @@ var view = (function (exports) {
 
       if (router) {
         router.action(router.params);
-        app.model[router.router] = router.component;
+        app.ref[router.router] = router.component;
 
         if (router.after) {
           router.after();
@@ -1369,6 +1369,7 @@ var view = (function (exports) {
         var list = getRef(childNodes, prop, []);
         var node = list.shift();
         resolver.compo(new app(), node, we);
+        return true;
       }
     });
   }
