@@ -491,8 +491,8 @@ var view = (function (exports) {
       return {
         node: newNode,
         clas: child.clas,
-        children: child.children,
         scope: child.scope,
+        children: child.children,
         childNodes: []
       };
     }
@@ -503,8 +503,8 @@ var view = (function (exports) {
       return {
         node: newNode,
         clas: child.clas,
-        children: child.children,
         scope: child.scope,
+        children: child.children,
         childNodes: [{
           node: comment,
           clas: child.clas,
@@ -522,9 +522,9 @@ var view = (function (exports) {
         content.childNodes.push(content = {
           node: newNode,
           clas: child.clas,
-          children: [],
           scope: child.scope,
           content: content,
+          children: [],
           childNodes: [{
             node: comment,
             clas: child.clas,
@@ -571,10 +571,10 @@ var view = (function (exports) {
     component.content.node = component.view;
     return {
       clas: child.clas,
-      children: [component.node],
       scope: child.scope,
       resolver: child.resolver,
       content: child.content,
+      children: [component.node],
       childNodes: [{
         node: comment,
         scope: child.scope,

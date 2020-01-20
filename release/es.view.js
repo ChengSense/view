@@ -457,8 +457,8 @@ function Compiler(node, scopes, childNodes, content, we) {
     return {
       node: newNode,
       clas: child.clas,
-      children: child.children,
       scope: child.scope,
+      children: child.children,
       childNodes: []
     };
   }
@@ -469,8 +469,8 @@ function Compiler(node, scopes, childNodes, content, we) {
     return {
       node: newNode,
       clas: child.clas,
-      children: child.children,
       scope: child.scope,
+      children: child.children,
       childNodes: [{
         node: comment,
         clas: child.clas,
@@ -488,9 +488,9 @@ function Compiler(node, scopes, childNodes, content, we) {
       content.childNodes.push(content = {
         node: newNode,
         clas: child.clas,
-        children: [],
         scope: child.scope,
         content: content,
+        children: [],
         childNodes: [{
           node: comment,
           clas: child.clas,
@@ -538,10 +538,10 @@ function compoNode(node, child, component) {
   component.content.node = component.view;
   return {
     clas: child.clas,
-    children: [component.node],
     scope: child.scope,
     resolver: child.resolver,
     content: child.content,
+    children: [component.node],
     childNodes: [{
       node: comment,
       scope: child.scope,
