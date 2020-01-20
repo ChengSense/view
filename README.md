@@ -83,53 +83,64 @@
       <input value="{param1}" /> + <input value="{param2}" />
     </li>
     <li>
-      {@router}
+      <home @id="router"></home>
     </li>
   </ul>
-  <home>
-    {name} => {param1+param2}
-    <br>
-    <input value="{name}" />
-  </home>
-  <detail>
-    {name} => {param1+param2}
-    <br>
-    <input value="{name}" />
-  </detail>
-  <edit>
-    {name} => {param1+param2}
-    <br>
-    <input value="{name}" />
-  </edit>
 </body>
 
 </html>
 <script type="text/javascript">
-  var home = new View({
-    component: "home",
-    model: {
-      name: "home"
+  class Home {
+    constructor() {
+      this.view = 
+      `<home>
+        {name} => {param1+param2}
+        <br>
+        <input value="{name}" />
+       </home>
+      `;
+      this.model = {
+        name: "home"
+      }
     }
-  });
+  }
 
-  var detail = new View({
-    component: "detail",
-    model: {
-      name: "detail"
+  class Detail {
+    constructor() {
+      this.view = 
+      `<detail>
+        {name} => {param1+param2}
+        <br>
+        <input value="{name}" />
+       </detail>
+      `;
+      this.model = {
+        name: "detail"
+      }
     }
-  });
+  }
 
-  var edit = new View({
-    component: "edit",
-    model: {
-      name: "edit"
+  class Edit {
+    constructor() {
+      this.view = 
+      `<edit>
+        {name} => {param1+param2}
+        <br>
+        <input value="{name}" />
+       </edit>
+      `;
+      this.model = {
+        name: "edit"
+      }
     }
-  });
+  }
 
   var app = new View({
     view: "body",
+    component: {
+      Home, Detail, Edit
+    },
     model: {
-      router: detail,
       param1: "",
       param2: ""
     }
@@ -137,20 +148,23 @@
 
   new Router(app, {
     "home": {
-      component: home,
-      action(params) {
+      component: Home,
+      router: "router",
+      action: function (params) {
 
       }
     },
     "detail/:name/:id": {
-      component: detail,
-      action(params) {
+      component: Detail,
+      router: "router",
+      action: function (params) {
 
       }
     },
     "edit/:name/:id": {
-      component: edit,
-      action(params) {
+      component: Edit,
+      router: "router",
+      action: function (params) {
 
       }
     }
