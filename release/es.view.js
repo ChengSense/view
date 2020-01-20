@@ -75,7 +75,7 @@ var $expres = /\{([^\{\}]*)\}/g;
 var $component = /\{\s*@([^\{\}]*)\}/;
 var $close = /^\}$/;
 var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
-var $event = /^@(.*)/;
+var $event = /^@([^id].*)/;
 
 function code(_express, _scope) {
   try {
@@ -580,7 +580,27 @@ var resolver = {
       let idNode = node.clas.getAttributeNode("@id").cloneNode();
       idNode.nodeValue = id;
       component.view.setAttributeNode(idNode);
-      Reflect.set(component.view, `@${id}`, component);
+      Reflect.set(clasNodes, `@${id}`, component);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  compo: function (app, node, we) {
+    try {
+      Reflect.setPrototypeOf(app.model, node.scope);
+      var insert = insertion(node.childNodes);
+      var childNodes = node.content.childNodes;
+      clearNodes(node.childNodes);
+      let component = new View({ view: app.view, model: app.model, action: app.action });
+      let clasNodes = compoNode(insert, node, component);
+      childNodes.replace(node, clasNodes);
+      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      if (!node.clas.hasAttribute("@id")) return;
+      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
+      let idNode = node.clas.getAttributeNode("@id").cloneNode();
+      idNode.nodeValue = id;
+      component.view.setAttributeNode(idNode);
+      Reflect.set(clasNodes, `@${id}`, component);
     } catch (error) {
       console.error(error);
     }
@@ -1204,7 +1224,7 @@ class View {
   creater(app) {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
-    this.ref = setRef(this.content);
+    this.ref = setRef(this.content, this);
     let node = initCompiler(init([this.view]))[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
@@ -1227,24 +1247,28 @@ let watcher = {
   }
 };
 
-function setRef(content) {
+function setRef(content, we) {
   return new Proxy({}, {
     get(parent, prop) {
       let childNodes = content.childNodes;
       let list = getRef(childNodes, prop, []);
-      return list.shift();
+      let node = list.shift();
+      return node.childNodes[1];
+    },
+    set(parent, prop, app) {
+      let childNodes = content.childNodes;
+      let list = getRef(childNodes, prop, []);
+      let node = list.shift();
+      resolver.compo(new app(), node, we);
     }
   })
 }
 
 function getRef(nodes, id, list) {
   nodes.every(function (child) {
-    if (child.node && child.node.parentNode) {
-      let node = child.node["@".concat(id)];
-      if (node) {
-        list.push(node);
-        return false;
-      }
+    if (child["@".concat(id)]) {
+      list.push(child);
+      return false;
     }
     if (child.childNodes)
       getRef(child.childNodes, id, list);

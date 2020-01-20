@@ -9,4 +9,4 @@ export var $expres = /\{([^\{\}]*)\}/g;
 export var $component = /\{\s*@([^\{\}]*)\}/;
 export var $close = /^\}$/;
 export var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
-export var $event = /^@(.*)/;
+export var $event = /^@([^id].*)/;

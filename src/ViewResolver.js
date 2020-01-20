@@ -32,7 +32,27 @@ export var resolver = {
       let idNode = node.clas.getAttributeNode("@id").cloneNode();
       idNode.nodeValue = id;
       component.view.setAttributeNode(idNode);
-      Reflect.set(component.view, `@${id}`, component);
+      Reflect.set(clasNodes, `@${id}`, component);
+    } catch (error) {
+      console.error(error)
+    }
+  },
+  compo: function (app, node, we) {
+    try {
+      Reflect.setPrototypeOf(app.model, node.scope);
+      var insert = insertion(node.childNodes);
+      var childNodes = node.content.childNodes;
+      clearNodes(node.childNodes);
+      let component = new View({ view: app.view, model: app.model, action: app.action });
+      let clasNodes = compoNode(insert, node, component);
+      childNodes.replace(node, clasNodes);
+      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      if (!node.clas.hasAttribute("@id")) return;
+      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
+      let idNode = node.clas.getAttributeNode("@id").cloneNode();
+      idNode.nodeValue = id;
+      component.view.setAttributeNode(idNode);
+      Reflect.set(clasNodes, `@${id}`, component);
     } catch (error) {
       console.error(error)
     }

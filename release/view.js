@@ -106,7 +106,7 @@ var view = (function (exports) {
   var $component = /\{\s*@([^\{\}]*)\}/;
   var $close = /^\}$/;
   var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
-  var $event = /^@(.*)/;
+  var $event = /^@([^id].*)/;
 
   function code(_express, _scope) {
     try {
@@ -618,7 +618,31 @@ var view = (function (exports) {
         var idNode = node.clas.getAttributeNode("@id").cloneNode();
         idNode.nodeValue = id;
         component.view.setAttributeNode(idNode);
-        Reflect.set(component.view, "@".concat(id), component);
+        Reflect.set(clasNodes, "@".concat(id), component);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    compo: function compo(app, node, we) {
+      try {
+        Reflect.setPrototypeOf(app.model, node.scope);
+        var insert = insertion(node.childNodes);
+        var childNodes = node.content.childNodes;
+        clearNodes(node.childNodes);
+        var component = new View({
+          view: app.view,
+          model: app.model,
+          action: app.action
+        });
+        var clasNodes = compoNode(insert, node, component);
+        childNodes.replace(node, clasNodes);
+        if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+        if (!node.clas.hasAttribute("@id")) return;
+        var id = codex(node.clas.getAttribute("@id"), node.scope, we);
+        var idNode = node.clas.getAttributeNode("@id").cloneNode();
+        idNode.nodeValue = id;
+        component.view.setAttributeNode(idNode);
+        Reflect.set(clasNodes, "@".concat(id), component);
       } catch (error) {
         console.error(error);
       }
@@ -1303,7 +1327,7 @@ var view = (function (exports) {
           children: []
         };
         this.view = query(app.view)[0];
-        this.ref = setRef(this.content);
+        this.ref = setRef(this.content, this);
         var node = initCompiler(init([this.view]))[0];
         setScopes(this);
         resolver.view(this.view, node, this.model, this.content, this);
@@ -1332,25 +1356,28 @@ var view = (function (exports) {
     }
   };
 
-  function setRef(content) {
+  function setRef(content, we) {
     return new Proxy({}, {
       get: function get(parent, prop) {
         var childNodes = content.childNodes;
         var list = getRef(childNodes, prop, []);
-        return list.shift();
+        var node = list.shift();
+        return node.childNodes[1];
+      },
+      set: function set(parent, prop, app) {
+        var childNodes = content.childNodes;
+        var list = getRef(childNodes, prop, []);
+        var node = list.shift();
+        resolver.compo(new app(), node, we);
       }
     });
   }
 
   function getRef(nodes, id, list) {
     nodes.every(function (child) {
-      if (child.node && child.node.parentNode) {
-        var node = child.node["@".concat(id)];
-
-        if (node) {
-          list.push(node);
-          return false;
-        }
+      if (child["@".concat(id)]) {
+        list.push(child);
+        return false;
       }
 
       if (child.childNodes) getRef(child.childNodes, id, list);
