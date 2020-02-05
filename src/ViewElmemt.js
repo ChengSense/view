@@ -1,6 +1,6 @@
 import { each, slice } from "./ViewLang";
 import { code } from "./ViewScope";
-import { $attr } from "./ViewExpress";
+import { $attr, $html } from "./ViewExpress";
 
 export function query(express) {
   try {
@@ -14,7 +14,7 @@ export function query(express) {
 }
 
 export function createNode(template) {
-  if (new RegExp(/<.*>/).test(template)) {
+  if (new RegExp($html).test(template)) {
     let list = template.match($attr);
     let element = document.createElement(list.shift());
     list.forEach(attr => {

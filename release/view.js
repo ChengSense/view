@@ -102,7 +102,7 @@ var view = (function (exports) {
   var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
   var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
-  var $eash = /@each=("([^"]*)"|'([^']*)')/;
+  var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
@@ -747,7 +747,7 @@ var view = (function (exports) {
     }
   }
   function createNode(template) {
-    if (new RegExp(/<.*>/).test(template)) {
+    if (new RegExp($html).test(template)) {
       var list = template.match($attr);
 
       var _element = document.createElement(list.shift());
@@ -928,7 +928,7 @@ var view = (function (exports) {
 
         if (new RegExp($eash).test(child)) {
           item.clas = createNode(child.replace($eash, function (child) {
-            child = child.replace($eash, "@each($2){");
+            child = child.replace($eash, "@each($3){");
             var index = children.indexOf(item);
             var each = {
               clas: createNode(child),

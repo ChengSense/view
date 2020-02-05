@@ -22,7 +22,7 @@ export function initCompiler(list, children) {
       }
       if (new RegExp($eash).test(child)) {
         item.clas = createNode(child.replace($eash, child => {
-          child = child.replace($eash, "@each($2){");
+          child = child.replace($eash, "@each($3){");
           let index = children.indexOf(item);
           let each = { clas: createNode(child), children: [item] };
           children.splice(index, 1, each);

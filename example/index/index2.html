@@ -10,15 +10,15 @@
   <app>
     <div @each="item:i:list">
       @each(l:item){
-      <div @click="alert(param1)">
-        @when(i==1){
-        <div id="{i}">{param1}</div>
-        }.when(i==2){
-        <div>{param2}</div>
-        }.when{
-        <div>{l}</div>
-        }
-      </div>
+        <div @click="alert(param1)">
+          @when(i==1){
+            <div id="{i}">{param1}</div>
+          }.when(i==2){
+            <div>{param2}</div>
+          }.when{
+            <div>{l}</div>
+          }
+        </div>
       }
     </div>
   </app>
@@ -28,7 +28,8 @@
 <script type="text/javascript">
   let $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
   let $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
-  let $each = /@each=("([^"]*)"|'([^']*)')/;
+  let $html = /<.*>/;
+  let $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
   let $whea = /@when/;
   let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/;
   let $close = /^\}$|<\s*\/.*>/;
@@ -37,33 +38,38 @@
   text = text.replace($lang, tag => "###########".concat(tag.trim(), "###########"));
   let list = text.split("###########");
 
-  function each(list, method, me) {
+  function whiles(list, method, me) {
     while (list.length) {
       if (method(list.shift(), list))
         break;
     }
   }
 
-  function preCompiler(list, children) {
-    each(list, child => {
+  function initCompiler(list, children) {
+    whiles(list, child => {
       if (child.trim() == "") return;
       if (new RegExp($close).test(child)) return true;
-      let item = { clas: child, children: [], childNodes: [] };
+      let item = { clas: createNode(child), children: [] };
       children.push(item);
-      if (new RegExp($chen).test(child)) {
-        preCompiler(list, item.children);
-        if (new RegExp($each).test(child)) {
-          item.clas = child.replace($each, child => {
-            child = child.replace($each, "@each($2){");
+      if (new RegExp($html).test(child)) {
+        if (new RegExp($close).test(item.clas.outerHTML)) {
+          initCompiler(list, item.children);
+        }
+        if (new RegExp($eash).test(child)) {
+          item.clas = createNode(child.replace($eash, child => {
+            child = child.replace($eash, "@each($3){");
             let index = children.indexOf(item);
-            let each = { clas: child, children: [item], childNodes: [] };
+            let each = { clas: createNode(child), children: [item] };
             children.splice(index, 1, each);
             return "";
-          });
+          }));
         }
-        else if (new RegExp($whea).test(child)) {
+      }
+      else if (new RegExp($chen).test(child)) {
+        initCompiler(list, item.children);
+        if (new RegExp($whea).test(child)) {
           let index = children.indexOf(item);
-          let when = { clas: "@when{", children: [item], childNodes: [] };
+          let when = { clas: createNode("@when{"), children: [item] };
           children.splice(index, 1, when);
         } else if (new RegExp($whec).test(child)) {
           let when = children[children.length - 2];
@@ -75,7 +81,7 @@
   }
 
   function createNode(template) {
-    if (new RegExp(/<.*>/).test(template)) {
+    if (new RegExp($html).test(template)) {
       let list = template.match($attr);
       let element = document.createElement(list.shift());
       list.forEach(attr => {
@@ -89,11 +95,13 @@
       });
       return element;
     } else {
-      return document.createTextNode(template);
+      let range = document.createRange();
+      let element = range.createContextualFragment(template)
+      return element.firstChild;
     }
   }
 
-  let apps = preCompiler(list, []);
+  let apps = initCompiler(list, []);
   console.log(apps);
   console.log(createNode(`<div @each="item:i:list">`));
 

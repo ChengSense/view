@@ -72,7 +72,7 @@ Object.assign(Array.prototype, {
 var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
 var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
-var $eash = /@each=("([^"]*)"|'([^']*)')/;
+var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
 var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
@@ -704,7 +704,7 @@ function query(express) {
 }
 
 function createNode(template) {
-  if (new RegExp(/<.*>/).test(template)) {
+  if (new RegExp($html).test(template)) {
     let list = template.match($attr);
     let element = document.createElement(list.shift());
     list.forEach(attr => {
@@ -872,7 +872,7 @@ function initCompiler(list, children) {
       }
       if (new RegExp($eash).test(child)) {
         item.clas = createNode(child.replace($eash, child => {
-          child = child.replace($eash, "@each($2){");
+          child = child.replace($eash, "@each($3){");
           let index = children.indexOf(item);
           let each = { clas: createNode(child), children: [item] };
           children.splice(index, 1, each);

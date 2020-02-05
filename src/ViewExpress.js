@@ -1,7 +1,7 @@
 export var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
 export var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 export var $each = /(@each)\s*\((.*)\)\s*\{/g;
-export var $eash = /@each=("([^"]*)"|'([^']*)')/;
+export var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
 export var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whea = /@when/g;
