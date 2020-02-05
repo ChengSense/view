@@ -28,7 +28,9 @@ export function createNode(template) {
     });
     return element;
   } else {
-    return document.createTextNode(template);
+    let range = document.createRange();
+    let element = range.createContextualFragment(template)
+    return element.firstChild;
   }
 }
 

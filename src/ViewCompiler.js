@@ -27,19 +27,15 @@ export function Compiler(node, scopes, childNodes, content, we) {
       }
       else if ($each.test(child.clas.nodeValue)) {
         var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-        var field = expreses.shift().trim();
-        var source = expreses.pop().trim();
-        var id = expreses.shift();
-        var sources = code(source, scopes);
-        var clas = eachNode(null, node, child);
+        var field = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
+        var sources = code(source, scopes), clas = eachNode(null, node, child);
         content.childNodes.push(clas);
         binding.each(null, scopes, clas, content);
-        let children = child.children;
         forEach(sources, function (item, index) {
           var scope = Object.create(scopes.$target);
           if (id) scope[id.trim()] = index;
           scope = new Proxy(scope, handler(scopes, field, sources, index));
-          compiler(node, scope, children, clas);
+          compiler(node, scope, child.children, clas);
         });
       }
       else if ($whea.test(child.clas.nodeValue)) {
