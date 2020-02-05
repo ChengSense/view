@@ -100,19 +100,20 @@ var view = (function (exports) {
   });
 
   var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-  var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+  var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $eash = /@each=("([^"]*)"|'([^']*)')/;
-  var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
+  var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
   var $express = /\{\s*@?([^\{\}]*)\}/;
   var $expres = /\{([^\{\}]*)\}/g;
   var $component = /\{\s*@([^\{\}]*)\}/;
   var $close = /^\}$|<\s*\/.*>/;
   var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $event = /^@([^id].*)/;
+  var $html = /<.*>/;
 
   function code(_express, _scope) {
     try {
@@ -913,13 +914,14 @@ var view = (function (exports) {
       if (new RegExp($close).test(child)) return true;
       var item = {
         clas: createNode(child),
-        children: [],
-        childNodes: []
+        children: []
       };
       children.push(item);
 
-      if (new RegExp($chen).test(child)) {
-        initCompiler(list, item.children);
+      if (new RegExp($html).test(child)) {
+        if (new RegExp($close).test(item.clas.outerHTML)) {
+          initCompiler(list, item.children);
+        }
 
         if (new RegExp($eash).test(child)) {
           item.clas = createNode(child.replace($eash, function (child) {
@@ -927,18 +929,20 @@ var view = (function (exports) {
             var index = children.indexOf(item);
             var each = {
               clas: createNode(child),
-              children: [item],
-              childNodes: []
+              children: [item]
             };
             children.splice(index, 1, each);
             return "";
           }));
-        } else if (new RegExp($whea).test(child)) {
+        }
+      } else if (new RegExp($chen).test(child)) {
+        initCompiler(list, item.children);
+
+        if (new RegExp($whea).test(child)) {
           var index = children.indexOf(item);
           var when = {
             clas: createNode("@when{"),
-            children: [item],
-            childNodes: []
+            children: [item]
           };
           children.splice(index, 1, when);
         } else if (new RegExp($whec).test(child)) {
@@ -1303,7 +1307,6 @@ var view = (function (exports) {
         var node = initCompiler(init(this.view), [])[0];
         setScopes(this);
         resolver.view(this.view, node, this.model, this.content, this);
-        console.log(this.content);
       }
     }, {
       key: "componenter",

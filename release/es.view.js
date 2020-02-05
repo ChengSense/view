@@ -70,19 +70,20 @@ Object.assign(Array.prototype, {
 });
 
 var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
 var $eash = /@each=("([^"]*)"|'([^']*)')/;
-let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
 var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
+let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
 var $express = /\{\s*@?([^\{\}]*)\}/;
 var $expres = /\{([^\{\}]*)\}/g;
 var $component = /\{\s*@([^\{\}]*)\}/;
 var $close = /^\}$|<\s*\/.*>/;
 var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 var $event = /^@([^id].*)/;
+var $html = /<.*>/;
 
 function code(_express, _scope) {
   try {
@@ -865,22 +866,27 @@ function initCompiler(list, children) {
   whiles(list, child => {
     if (child.trim() == "") return;
     if (new RegExp($close).test(child)) return true;
-    let item = { clas: createNode(child), children: [], childNodes: [] };
+    let item = { clas: createNode(child), children: [] };
     children.push(item);
-    if (new RegExp($chen).test(child)) {
-      initCompiler(list, item.children);
+    if (new RegExp($html).test(child)) {
+      if (new RegExp($close).test(item.clas.outerHTML)) {
+        initCompiler(list, item.children);
+      }
       if (new RegExp($eash).test(child)) {
         item.clas = createNode(child.replace($eash, child => {
           child = child.replace($eash, "@each($2){");
           let index = children.indexOf(item);
-          let each = { clas: createNode(child), children: [item], childNodes: [] };
+          let each = { clas: createNode(child), children: [item] };
           children.splice(index, 1, each);
           return "";
         }));
       }
-      else if (new RegExp($whea).test(child)) {
+    }
+    else if (new RegExp($chen).test(child)) {
+      initCompiler(list, item.children);
+      if (new RegExp($whea).test(child)) {
         let index = children.indexOf(item);
-        let when = { clas: createNode("@when{"), children: [item], childNodes: [] };
+        let when = { clas: createNode("@when{"), children: [item] };
         children.splice(index, 1, when);
       } else if (new RegExp($whec).test(child)) {
         let when = children[children.length - 2];
@@ -1183,10 +1189,9 @@ class View {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
     this.ref = setRef(this.content, this);
-    let node = initCompiler(init(this.view),[])[0];
+    let node = initCompiler(init(this.view), [])[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
-    console.log(this.content);
   }
   componenter(coms) {
     let list = Object.values(coms || {});
