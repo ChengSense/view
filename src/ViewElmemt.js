@@ -12,6 +12,15 @@ export function query(express) {
   }
 }
 
+export function createNode(express) {
+  if (express.trim() == "") return;
+  let newNode = document.createElement("div");
+  newNode.innerHTML = express.trim();
+  let node = newNode.childNodes[0];
+  newNode.removeChild(node);
+  return node;
+}
+
 function addListener(type, methods, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {

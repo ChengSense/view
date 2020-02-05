@@ -1,5 +1,5 @@
 import { resolver, clearNodes } from "./ViewResolver";
-import { init, initCompiler } from "./ViewInit";
+import { init, initCompiler } from "./ViewInit1";
 import { observer } from "./ViewObserve";
 import { setScopes } from "./ViewScope";
 import { Router } from "./ViewRouter";
@@ -22,9 +22,10 @@ export class View {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
     this.ref = setRef(this.content, this);
-    let node = initCompiler(init([this.view]))[0];
+    let node = initCompiler(init(this.view),[])[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
+    console.log(this.content);
   }
   componenter(coms) {
     let list = Object.values(coms || {});

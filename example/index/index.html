@@ -8,25 +8,27 @@
 </head>
 
 <body>
-  <div @each="item:i:list">
-    @each(l:item){
-      <div @click="alert(param1)">
-        @when(i==1){
-          <div id="{i}">{param1}</div>
-        }.when(i==2){
-          <div>{param2}</div>
-        }.when{
-          <div>{l}</div>
-        }
-      </div>
-    }
-  </div>
+  <app>
+    <div @each="item:i:list">
+      @each(l:item){
+        <div @click="alert(param1)">
+          @when(i==1){
+            <div id="{i}">{param1}</div>
+          }.when(i==2){
+            <div>{param2}</div>
+          }.when{
+            <div>{l}</div>
+          }
+        </div>
+      }
+    </div>
+  </app>
 </body>
 
 </html>
 <script type="text/javascript">
   var app = new View({
-    view: "body",
+    view: "app",
     model: {
       router: "",
       list: [[1, 2], [3, 4], [5, 6]],
@@ -38,26 +40,6 @@
         this.param1 = "click alert!";
       }
     }
-  });
-
-  function Code(_express) {
-    $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;;
-    console.log(_express);
-    _express = _express.replace($word, word =>
-      word.match(/'/) ? word : "_scope.".concat(word)
-    );
-    console.log(_express);
-  }
-
-  [
-    "del",
-    "[del]",
-    "[_$del]",
-    "editTitle(item)",
-    "'' + (id) + ''",
-    "'' + (list.id % 2 ? 'k-alt' : '') + ''"
-  ].forEach(_express => {
-    Code(_express);
   });
 </script>
 </body>

@@ -1,4 +1,4 @@
-import { Compiler, compoNode } from "./ViewCompiler";
+import { Compiler, compoNode } from "./ViewCompiler1";
 import { blank, each, slice } from "./ViewLang";
 import { View } from "./ViewIndex";
 import { codex } from "./ViewScope";
@@ -63,7 +63,7 @@ export var resolver = {
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      new Compiler(doc, node.scope, slice(node.children), node.content, we);
+      new Compiler(doc, node.scope, [node], node.content, we);
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);

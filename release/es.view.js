@@ -29,6 +29,12 @@ function forEach(obj, method, me) {
   }
 }
 
+function farEach(obj, method, me) {
+  Object.keys(obj).every(i => {
+    return !method.call(me, obj[i], obj);
+  });
+}
+
 function slice(obj) {
   return [].slice.call(obj);
 }
@@ -64,16 +70,17 @@ Object.assign(Array.prototype, {
   }
 });
 
-var $lang = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
+var $eash = /@each=("([^"]*)"|'([^']*)')/;
 var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
 var $express = /\{\s*@?([^\{\}]*)\}/;
 var $expres = /\{([^\{\}]*)\}/g;
 var $component = /\{\s*@([^\{\}]*)\}/;
-var $close = /^\}$/;
+var $close = /^\}$|<\s*\/.*>/;
 var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 var $event = /^@([^id].*)/;
 
@@ -168,122 +175,60 @@ function setScopes(we) {
 function Compiler(node, scopes, childNodes, content, we) {
 
   function compiler(node, scopes, childNodes, content) {
-    whiles(childNodes, function (child, childNodes) {
+    farEach(childNodes, function (child) {
       if (child.clas.nodeType == 1) {
-        if (child.clas.hasAttribute("@each")) {
-          var expreses = child.clas.getAttribute("@each").split(":");
-          var field = expreses.shift().trim();
-          var source = expreses.pop().trim();
-          var id = expreses.shift();
-          var sources = code(source, scopes);
-          var clas = eachNode(null, node, child);
-          content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content);
-          forEach(sources, function (item, index) {
-            var scope = Object.create(scopes.$target);
-            if (id) scope[id.trim()] = index;
-            scope = new Proxy(scope, handler(scopes, field, sources, index));
-            var newNode = child.clas.cloneNode();
-            newNode.removeAttribute("@each");
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            clas.childNodes.push(clasNodes);
-            compiler(newNode, scope, slice(child.children), clasNodes);
-            commom(newNode, scope, clasNodes, content);
-          });
-        }
-        else {
-          if ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
-            var newNode = child.clas.cloneNode(true);
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-          }
-          else {
-            var newNode = child.clas.cloneNode();
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-            component(newNode, scopes, clasNodes, content);
-            compiler(newNode, scopes, slice(child.children), clasNodes);
-            commom(newNode, scopes, clasNodes, content);
-          }
-        }
-      }
-      else {
-        if ($each.test(child.clas.nodeValue)) {
-          var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-          var field = expreses.shift().trim();
-          var source = expreses.pop().trim();
-          var id = expreses.shift();
-          var sources = code(source, scopes);
-          var clas = eachNode(null, node, child);
-          content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content);
-          let children = slice(child.children);
-          forEach(sources, function (item, index) {
-            var scope = Object.create(scopes.$target);
-            if (id) scope[id.trim()] = index;
-            scope = new Proxy(scope, handler(scopes, field, sources, index));
-            var clasNodes = classNode(null, child);
-            clas.childNodes.push(clasNodes);
-            compiler(node, scope, slice(children), clasNodes);
-          });
-        }
-        else if ($when.test(child.clas.nodeValue)) {
-          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
-          var clas = whenNode(null, node, child, content, scopes);
-          clas.children.push(childNodes.shift());
-          if (when) {
-            binding.when(null, scopes, clas, content);
-            whiles(childNodes, function (child, childNodes) {
-              if (!whem(child)) return true;
-              clas.children.push(childNodes.shift());
-            });
-            whiles(slice(child.children), function (child, childNodes) {
-              if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
-                compiler(node, scopes, childNodes, clas);
-              }
-              else {
-                var newNode = child.clas.cloneNode();
-                node.appendChild(newNode);
-                var clasNodes = classNode(newNode, child);
-                clas.childNodes.push(clasNodes);
-                commom(newNode, scopes, clasNodes, clas);
-              }
-              childNodes.shift();
-            });
-          }
-          else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
-            whiles(slice(child.children), function (child, childNodes) {
-              if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
-                compiler(node, scopes, childNodes, clas);
-              }
-              else {
-                var newNode = child.clas.cloneNode();
-                node.appendChild(newNode);
-                var clasNodes = classNode(newNode, child);
-                clas.childNodes.push(clasNodes);
-                commom(newNode, scopes, clasNodes, clas);
-              }
-              childNodes.shift();
-            });
-          }
-          else if (whem(childNodes[0])) {
-            compiler(node, scopes, childNodes, clas);
-          }
-          return whem(child);
+        if ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
+          var newNode = child.clas.cloneNode(true);
+          node.appendChild(newNode);
+          var clasNodes = classNode(newNode, child);
+          content.childNodes.push(clasNodes);
         }
         else {
           var newNode = child.clas.cloneNode();
           node.appendChild(newNode);
           var clasNodes = classNode(newNode, child);
           content.childNodes.push(clasNodes);
+          component(newNode, scopes, clasNodes, content);
+          compiler(newNode, scopes, child.children, clasNodes);
           commom(newNode, scopes, clasNodes, content);
         }
       }
-      childNodes.shift();
+      else if ($each.test(child.clas.nodeValue)) {
+        var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
+        var field = expreses.shift().trim();
+        var source = expreses.pop().trim();
+        var id = expreses.shift();
+        var sources = code(source, scopes);
+        var clas = eachNode(null, node, child);
+        content.childNodes.push(clas);
+        binding.each(null, scopes, clas, content);
+        let children = child.children;
+        forEach(sources, function (item, index) {
+          var scope = Object.create(scopes.$target);
+          if (id) scope[id.trim()] = index;
+          scope = new Proxy(scope, handler(scopes, field, sources, index));
+          compiler(node, scope, children, clas);
+        });
+      }
+      else if ($whea.test(child.clas.nodeValue)) {
+        var clas = whenNode(null, node, child, content);
+        content.childNodes.push(clas);
+        farEach(child.children, function (child) {
+          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+          binding.when(null, scopes, clas, content);
+          if (when || when == undefined) {
+            compiler(node, scopes, child.children, clas);
+            return true;
+          }
+        });
+      }
+      else {
+        var newNode = child.clas.cloneNode();
+        node.appendChild(newNode);
+        var clasNodes = classNode(newNode, child);
+        content.childNodes.push(clasNodes);
+        commom(newNode, scopes, clasNodes, content);
+      }
     });
   }
 
@@ -323,7 +268,7 @@ function Compiler(node, scopes, childNodes, content, we) {
   function component(node, scope, clas, content) {
     if (Reflect.has(we.component, node.localName)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas, we);
+      resolver.component(clas, we);
     }
   }
 
@@ -332,16 +277,12 @@ function Compiler(node, scopes, childNodes, content, we) {
     attrExpress(node, scope);
     if (new RegExp($component).test(node.nodeValue)) {
       comNode(node, scope, clas, content);
-      resolver["component"](clas, we);
+      resolver.component(clas, we);
     }
     else if (express = new RegExp($expres).exec(node.nodeValue)) {
       node.nodeValue = codeo(express[1], scope, we);
       binding.express(node, scope, clas);
     }
-  }
-
-  function whem(child) {
-    if (child) return new RegExp($whec).test(child.clas.nodeValue);
   }
 
   let binding = {
@@ -363,9 +304,6 @@ function Compiler(node, scopes, childNodes, content, we) {
     },
     when(node, scope, clas) {
       if (global.$cache == undefined) return;
-      var nodeValue = clas.clas.nodeValue;
-      let whens = new RegExp($when).exec(nodeValue);
-      if (!whens) return;
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
@@ -481,27 +419,23 @@ function Compiler(node, scopes, childNodes, content, we) {
     };
   }
 
-  function whenNode(newNode, node, child, content, scopes) {
-    if (new RegExp($whea).test(child.clas.nodeValue)) {
-      var comment = document.createComment("when:" + global.$path);
-      node.appendChild(comment);
-      content.childNodes.push(content = {
-        node: newNode,
+  function whenNode(newNode, node, child, content) {
+    var comment = document.createComment("when:" + global.$path);
+    node.appendChild(comment);
+    return {
+      node: newNode,
+      clas: child.clas,
+      scope: child.scope,
+      content: content,
+      children: child.children,
+      childNodes: [{
+        node: comment,
         clas: child.clas,
         scope: child.scope,
-        content: content,
         children: [],
-        childNodes: [{
-          node: comment,
-          clas: child.clas,
-          scope: child.scope,
-          children: [],
-          childNodes: []
-        }]
-      });
-      binding.when(null, scopes, content);
-    }
-    return content;
+        childNodes: []
+      }]
+    };
   }
 
   function comNode(node, scope, clas, content) {
@@ -611,7 +545,7 @@ var resolver = {
       var doc = document.createDocumentFragment();
       var childNodes = node.content.childNodes;
       clearNodes(node.childNodes);
-      new Compiler(doc, node.scope, slice(node.children), node.content, we);
+      new Compiler(doc, node.scope, [node], node.content, we);
       childNodes.replace(node, childNodes.pop());
       if (insert.parentNode)
         insert.parentNode.replaceChild(doc, insert);
@@ -722,8 +656,7 @@ function insertion(nodes, node) {
         node = child.node;
         child.node = null;
         return node;
-      };
-      node = insertion(child.childNodes);
+      }      node = insertion(child.childNodes);
     });
     return node;
   } catch (error) {
@@ -762,35 +695,191 @@ function clearNodes(nodes) {
   });
 }
 
-function init(dom) {
-  each(dom, function (node) {
-    if (node.childNodes[0] && !(/(CODE|SCRIPT)/).test(node.nodeName))
-      init(slice(node.childNodes));
-    if (node.nodeType == 3)
-      node.nodeValue.replace($lang, function (tag) {
-        var nodes = node.nodeValue.split(tag);
-        node.parentNode.insertBefore(document.createTextNode(nodes[0]), node);
-        node.parentNode.insertBefore(document.createTextNode(tag.trim()), node);
-        node.nodeValue = node.nodeValue.replace(nodes[0], "").replace(tag, "");
-      });
-  });
-  return dom;
+function query(express) {
+  try {
+    var doc = document.querySelectorAll(express);
+    return doc;
+  } catch (error) {
+    var newNode = document.createElement("div");
+    newNode.innerHTML = express.trim();
+    return newNode.childNodes;
+  }
 }
 
-function initCompiler(node, children) {
-  let list = children || [];
-  whiles(node, function (child) {
-    node.shift();
-    if (new RegExp($close).test(child.nodeValue)) return true;
-    var item = { clas: child.cloneNode(true), children: [] };
-    if (!(child.nodeType == 3 && child.nodeValue.trim() == "")) list.push(item);
-    if (child.nodeType == 1) {
-      initCompiler(slice(child.childNodes), item.children);
+function createNode(express) {
+  if (express.trim() == "") return;
+  let newNode = document.createElement("div");
+  newNode.innerHTML = express.trim();
+  let node = newNode.childNodes[0];
+  newNode.removeChild(node);
+  return node;
+}
+
+function addListener(type, methods, scope) {
+  if (this.addEventListener) {
+    this.addEventListener(type, function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        });
+      });
+    }, false);
+  }
+  else if (this.attachEvent) {
+    this.attachEvent('on' + type, function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        });
+      });
+    });
+  }
+  else {
+    element['on' + type] = function (event) {
+      methods.forEach((params, method) => {
+        params.forEach(param => {
+          let args = param ? code(`[${param}]`, scope) : [];
+          args.push(event);
+          let proto = Reflect.getPrototypeOf(method);
+          let action = Object.assign({}, proto);
+          Reflect.setPrototypeOf(action, scope || method.$model);
+          method.apply(action, args);
+        });
+      });
+    };
+  }
+}
+
+function removeListener(type, handler) {
+  if (this.addEventListener) {
+    this.removeEventListener(type, handler, false);
+  }
+  else if (this.detachEvent) {
+    this.detachEvent('on' + type, handler);
+  }
+  else {
+    element['on' + type] = null;
+  }
+}
+
+Object.assign(Node.prototype, {
+  on: function (type, handler, scope, params) {
+    if (this._manager) {
+      if (this._manager.get(type)) {
+        let methods = this._manager.get(type);
+        if (methods.get(handler)) {
+          methods.get(handler).ones(params);
+        }
+        else {
+          methods.set(handler, [params]);
+        }
+      }
+      else {
+        let methods = new Map();
+        methods.set(handler, [params]);
+        this._manager.set(type, methods);
+        addListener.call(this, type, methods, scope);
+      }
     }
-    else if (new RegExp($chen).test(child.nodeValue)) {
-      initCompiler(node, item.children);
-    }  });
+    else {
+      let methods = new Map();
+      methods.set(handler, [params]);
+      this._manager = new Map();
+      this._manager.set(type, methods);
+      addListener.call(this, type, methods, scope);
+    }
+    return this;
+  },
+  off: function (type, handler) {
+    if (this._manager) {
+      let methods = this._manager.get(type);
+      if (methods == undefined) return;
+      methods.delete(handler);
+      if (methods.size) return;
+      this._manager.delete(type);
+      removeListener.call(this, type, handler);
+    }
+    return this;
+  },
+  reappend(node) {
+    each(slice(this.childNodes), function (child) {
+      child.parentNode.removeChild(child);
+    });
+    this.appendChild(node);
+    return this;
+  },
+  before(node) {
+    this.parentNode.insertBefore(node, this);
+  },
+  after(node) {
+    if (this.nextSibling)
+      this.parentNode.insertBefore(node, this.nextSibling);
+    else
+      this.parentNode.appendChild(node);
+  }
+});
+
+Object.assign(NodeList.prototype, {
+  on(type, call) {
+    each(this, function (node) {
+      node.on(type, call);
+    });
+    return this;
+  },
+  off(type, call) {
+    each(this, function (node) {
+      node.off(type, call);
+    });
+    return this;
+  }
+});
+
+function init(dom) {
+  let text = dom.outerHTML;
+  text = text.replace($lang, tag => "######".concat(tag.trim(), "######"));
+  let list = text.split("######");
   return list;
+}
+
+function initCompiler(list, children) {
+  whiles(list, child => {
+    list.shift();
+    if (child.trim() == "") return;
+    if (new RegExp($close).test(child)) return true;
+    let item = { clas: createNode(child), children: [], childNodes: [] };
+    children.push(item);
+    if (new RegExp($chen).test(child)) {
+      initCompiler(list, item.children);
+      if (new RegExp($eash).test(child)) {
+        item.clas = createNode(child.replace($eash, child => {
+          child = child.replace($eash, "@each($2){");
+          let index = children.indexOf(item);
+          let each = { clas: createNode(child), children: [item], childNodes: [] };
+          children.splice(index, 1, each);
+          return "";
+        }));
+      }
+      else if (new RegExp($whea).test(child)) {
+        let index = children.indexOf(item);
+        let when = { clas: createNode("@when{"), children: [item], childNodes: [] };
+        children.splice(index, 1, when);
+      } else if (new RegExp($whec).test(child)) {
+        let when = children[children.length - 2];
+        when.children.push(children.pop());
+      }
+    }
+  });
+  return children;
 }
 
 function observer(target, call, watch) {
@@ -1069,146 +1158,6 @@ function Router(app, params) {
 
 }
 
-function query(express) {
-  try {
-    var doc = document.querySelectorAll(express);
-    return doc;
-  } catch (error) {
-    var newNode = document.createElement("div");
-    newNode.innerHTML = express.trim();
-    return newNode.childNodes;
-  }
-}
-
-function addListener(type, methods, scope) {
-  if (this.addEventListener) {
-    this.addEventListener(type, function (event) {
-      methods.forEach((params, method) => {
-        params.forEach(param => {
-          let args = param ? code(`[${param}]`, scope) : [];
-          args.push(event);
-          let proto = Reflect.getPrototypeOf(method);
-          let action = Object.assign({}, proto);
-          Reflect.setPrototypeOf(action, scope || method.$model);
-          method.apply(action, args);
-        });
-      });
-    }, false);
-  }
-  else if (this.attachEvent) {
-    this.attachEvent('on' + type, function (event) {
-      methods.forEach((params, method) => {
-        params.forEach(param => {
-          let args = param ? code(`[${param}]`, scope) : [];
-          args.push(event);
-          let proto = Reflect.getPrototypeOf(method);
-          let action = Object.assign({}, proto);
-          Reflect.setPrototypeOf(action, scope || method.$model);
-          method.apply(action, args);
-        });
-      });
-    });
-  }
-  else {
-    element['on' + type] = function (event) {
-      methods.forEach((params, method) => {
-        params.forEach(param => {
-          let args = param ? code(`[${param}]`, scope) : [];
-          args.push(event);
-          let proto = Reflect.getPrototypeOf(method);
-          let action = Object.assign({}, proto);
-          Reflect.setPrototypeOf(action, scope || method.$model);
-          method.apply(action, args);
-        });
-      });
-    };
-  }
-}
-
-function removeListener(type, handler) {
-  if (this.addEventListener) {
-    this.removeEventListener(type, handler, false);
-  }
-  else if (this.detachEvent) {
-    this.detachEvent('on' + type, handler);
-  }
-  else {
-    element['on' + type] = null;
-  }
-}
-
-Object.assign(Node.prototype, {
-  on: function (type, handler, scope, params) {
-    if (this._manager) {
-      if (this._manager.get(type)) {
-        let methods = this._manager.get(type);
-        if (methods.get(handler)) {
-          methods.get(handler).ones(params);
-        }
-        else {
-          methods.set(handler, [params]);
-        }
-      }
-      else {
-        let methods = new Map();
-        methods.set(handler, [params]);
-        this._manager.set(type, methods);
-        addListener.call(this, type, methods, scope);
-      }
-    }
-    else {
-      let methods = new Map();
-      methods.set(handler, [params]);
-      this._manager = new Map();
-      this._manager.set(type, methods);
-      addListener.call(this, type, methods, scope);
-    }
-    return this;
-  },
-  off: function (type, handler) {
-    if (this._manager) {
-      let methods = this._manager.get(type);
-      if (methods == undefined) return;
-      methods.delete(handler);
-      if (methods.size) return;
-      this._manager.delete(type);
-      removeListener.call(this, type, handler);
-    }
-    return this;
-  },
-  reappend(node) {
-    each(slice(this.childNodes), function (child) {
-      child.parentNode.removeChild(child);
-    });
-    this.appendChild(node);
-    return this;
-  },
-  before(node) {
-    this.parentNode.insertBefore(node, this);
-  },
-  after(node) {
-    if (this.nextSibling)
-      this.parentNode.insertBefore(node, this.nextSibling);
-    else
-      this.parentNode.appendChild(node);
-  }
-});
-
-Object.assign(NodeList.prototype, {
-  on(type, call) {
-    each(this, function (node) {
-      node.on(type, call);
-    });
-    return this;
-  },
-  off(type, call) {
-    each(this, function (node) {
-      node.off(type, call);
-    });
-    return this;
-  }
-});
-
 let global = { $path: undefined };
 
 class View {
@@ -1225,9 +1174,10 @@ class View {
     this.content = { childNodes: [], children: [] };
     this.view = query(app.view)[0];
     this.ref = setRef(this.content, this);
-    let node = initCompiler(init([this.view]))[0];
+    let node = initCompiler(init(this.view),[])[0];
     setScopes(this);
     resolver.view(this.view, node, this.model, this.content, this);
+    console.log(this.content);
   }
   componenter(coms) {
     let list = Object.values(coms || {});
@@ -1301,8 +1251,7 @@ function clearNode(nodes, status) {
         let node = child.node.ownerElement || child.node;
         status = document.body.contains(node);
         return false;
-      };
-      status = clearNode(child.childNodes);
+      }      status = clearNode(child.childNodes);
     });
     return status;
   } catch (error) {

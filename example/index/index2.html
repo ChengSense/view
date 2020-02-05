@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>index</title>
+</head>
+
+<body>
+  <app>
+    <div @each="item:i:list">
+      @each(l:item){
+      <div @click="alert(param1)">
+        @when(i==1){
+        <div id="{i}">{param1}</div>
+        }.when(i==2){
+        <div>{param2}</div>
+        }.when{
+        <div>{l}</div>
+        }
+      </div>
+      }
+    </div>
+  </app>
+</body>
+
+</html>
+<script type="text/javascript">
+  let $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+  let $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+  let $each = /@each=("([^"]*)"|'([^']*)')/;
+  let $whea = /@when/;
+  let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/;
+  let $close = /^\}$|<\s*\/.*>/;
+  let text = document.querySelector("app").outerHTML;
+  text = text.replace($lang, tag => "###########".concat(tag.trim(), "###########"));
+  let list = text.split("###########");
+
+  function each(list, method, me) {
+    while (list.length) {
+      if (method(list.shift(), list))
+        break;
+    }
+  }
+
+  function preCompiler(list, children) {
+    each(list, child => {
+      if (child.trim() == "") return;
+      if (new RegExp($close).test(child)) return true;
+      let item = { clas: child, children: [], childNodes: [] };
+      children.push(item);
+      if (new RegExp($chen).test(child)) {
+        preCompiler(list, item.children);
+        if (new RegExp($each).test(child)) {
+          item.clas = child.replace($each, child => {
+            child = child.replace($each, "@each($2){");
+            let index = children.indexOf(item);
+            let each = { clas: child, children: [item], childNodes: [] };
+            children.splice(index, 1, each);
+            return "";
+          });
+        }
+        else if (new RegExp($whea).test(child)) {
+          let index = children.indexOf(item);
+          let when = { clas: "@when{", children: [item], childNodes: [] };
+          children.splice(index, 1, when);
+        } else if (new RegExp($whec).test(child)) {
+          let when = children[children.length - 2];
+          when.children.push(children.pop());
+        }
+      }
+    });
+    return children;
+  }
+
+  function html(express) {
+    if (express.trim() == "") return;
+    let newNode = document.createElement("div");
+    newNode.innerHTML = express.trim();
+    let node = newNode.childNodes[0];
+    newNode.removeChild(node);
+    return node;
+  }
+
+  let children = [];
+  let apps = preCompiler(list, children);
+  console.log(apps);
+
+</script>

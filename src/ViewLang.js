@@ -29,6 +29,12 @@ export function forEach(obj, method, me) {
   }
 }
 
+export function farEach(obj, method, me) {
+  Object.keys(obj).every(i => {
+    return !method.call(me, obj[i], obj);
+  })
+}
+
 export function slice(obj) {
   return [].slice.call(obj);
 }

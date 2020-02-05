@@ -1,12 +1,13 @@
-export var $lang = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-export var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+export var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+export var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 export var $each = /(@each)\s*\((.*)\)\s*\{/g;
+export var $eash = /@each=("([^"]*)"|'([^']*)')/;
 export var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whea = /@when/g;
 export var $express = /\{\s*@?([^\{\}]*)\}/;
 export var $expres = /\{([^\{\}]*)\}/g;
 export var $component = /\{\s*@([^\{\}]*)\}/;
-export var $close = /^\}$/;
+export var $close = /^\}$|<\s*\/.*>/;
 export var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 export var $event = /^@([^id].*)/;

@@ -1,128 +1,66 @@
 import { global } from "./ViewIndex";
-import { blank, forEach, slice, whiles } from "./ViewLang";
+import { blank, forEach, farEach } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
 import { code, codeo, codex, handler } from "./ViewScope";
-import { $chen, $component, $each, $event, $expres, $express, $whea, $whec, $when, } from "./ViewExpress";
+import { $component, $each, $event, $expres, $express, $whea, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
   function compiler(node, scopes, childNodes, content) {
-    whiles(childNodes, function (child, childNodes) {
+    farEach(childNodes, function (child) {
       if (child.clas.nodeType == 1) {
-        if (child.clas.hasAttribute("@each")) {
-          var expreses = child.clas.getAttribute("@each").split(":");
-          var field = expreses.shift().trim();
-          var source = expreses.pop().trim();
-          var id = expreses.shift();
-          var sources = code(source, scopes);
-          var clas = eachNode(null, node, child);
-          content.childNodes.push(clas);
-          binding.attrEach(null, scopes, clas, content);
-          forEach(sources, function (item, index) {
-            var scope = Object.create(scopes.$target);
-            if (id) scope[id.trim()] = index;
-            scope = new Proxy(scope, handler(scopes, field, sources, index));
-            var newNode = child.clas.cloneNode();
-            newNode.removeAttribute("@each");
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            clas.childNodes.push(clasNodes);
-            compiler(newNode, scope, slice(child.children), clasNodes);
-            commom(newNode, scope, clasNodes, content);
-          });
-        }
-        else {
-          if ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
-            var newNode = child.clas.cloneNode(true);
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-          }
-          else {
-            var newNode = child.clas.cloneNode();
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-            component(newNode, scopes, clasNodes, content);
-            compiler(newNode, scopes, slice(child.children), clasNodes);
-            commom(newNode, scopes, clasNodes, content);
-          }
-        }
-      }
-      else {
-        if ($each.test(child.clas.nodeValue)) {
-          var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-          var field = expreses.shift().trim();
-          var source = expreses.pop().trim();
-          var id = expreses.shift();
-          var sources = code(source, scopes);
-          var clas = eachNode(null, node, child);
-          content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content);
-          let children = slice(child.children);
-          forEach(sources, function (item, index) {
-            var scope = Object.create(scopes.$target);
-            if (id) scope[id.trim()] = index;
-            scope = new Proxy(scope, handler(scopes, field, sources, index));
-            var clasNodes = classNode(null, child);
-            clas.childNodes.push(clasNodes);
-            compiler(node, scope, slice(children), clasNodes);
-          });
-        }
-        else if ($when.test(child.clas.nodeValue)) {
-          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
-          var clas = whenNode(null, node, child, content, scopes);
-          clas.children.push(childNodes.shift());
-          if (when) {
-            binding.when(null, scopes, clas, content);
-            whiles(childNodes, function (child, childNodes) {
-              if (!whem(child)) return true;
-              clas.children.push(childNodes.shift());
-            });
-            whiles(slice(child.children), function (child, childNodes) {
-              if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
-                compiler(node, scopes, childNodes, clas);
-              }
-              else {
-                var newNode = child.clas.cloneNode();
-                node.appendChild(newNode);
-                var clasNodes = classNode(newNode, child);
-                clas.childNodes.push(clasNodes);
-                commom(newNode, scopes, clasNodes, clas);
-              }
-              childNodes.shift();
-            });
-          }
-          else if (when == undefined) {
-            binding.when(null, scopes, clas, content);
-            whiles(slice(child.children), function (child, childNodes) {
-              if (child.clas.nodeType == 1 || $chen.test(child.clas.nodeValue)) {
-                compiler(node, scopes, childNodes, clas);
-              }
-              else {
-                var newNode = child.clas.cloneNode();
-                node.appendChild(newNode);
-                var clasNodes = classNode(newNode, child);
-                clas.childNodes.push(clasNodes);
-                commom(newNode, scopes, clasNodes, clas);
-              }
-              childNodes.shift();
-            });
-          }
-          else if (whem(childNodes[0])) {
-            compiler(node, scopes, childNodes, clas);
-          }
-          return whem(child);
+        if ((/(CODE|SCRIPT)/).test(child.clas.nodeName)) {
+          var newNode = child.clas.cloneNode(true);
+          node.appendChild(newNode);
+          var clasNodes = classNode(newNode, child);
+          content.childNodes.push(clasNodes);
         }
         else {
           var newNode = child.clas.cloneNode();
           node.appendChild(newNode);
           var clasNodes = classNode(newNode, child);
           content.childNodes.push(clasNodes);
+          component(newNode, scopes, clasNodes, content);
+          compiler(newNode, scopes, child.children, clasNodes);
           commom(newNode, scopes, clasNodes, content);
         }
       }
-      childNodes.shift();
+      else if ($each.test(child.clas.nodeValue)) {
+        var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
+        var field = expreses.shift().trim();
+        var source = expreses.pop().trim();
+        var id = expreses.shift();
+        var sources = code(source, scopes);
+        var clas = eachNode(null, node, child);
+        content.childNodes.push(clas);
+        binding.each(null, scopes, clas, content);
+        let children = child.children;
+        forEach(sources, function (item, index) {
+          var scope = Object.create(scopes.$target);
+          if (id) scope[id.trim()] = index;
+          scope = new Proxy(scope, handler(scopes, field, sources, index));
+          compiler(node, scope, children, clas);
+        });
+      }
+      else if ($whea.test(child.clas.nodeValue)) {
+        var clas = whenNode(null, node, child, content);
+        content.childNodes.push(clas);
+        farEach(child.children, function (child) {
+          var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
+          binding.when(null, scopes, clas, content);
+          if (when || when == undefined) {
+            compiler(node, scopes, child.children, clas);
+            return true;
+          }
+        });
+      }
+      else {
+        var newNode = child.clas.cloneNode();
+        node.appendChild(newNode);
+        var clasNodes = classNode(newNode, child);
+        content.childNodes.push(clasNodes);
+        commom(newNode, scopes, clasNodes, content);
+      }
     });
   }
 
@@ -179,10 +117,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
     }
   }
 
-  function whem(child) {
-    if (child) return new RegExp($whec).test(child.clas.nodeValue);
-  }
-
   let binding = {
     attrEach(node, scope, clas, content) {
       if (global.$cache == undefined) return;
@@ -202,9 +136,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
     },
     when(node, scope, clas) {
       if (global.$cache == undefined) return;
-      var nodeValue = clas.clas.nodeValue;
-      let whens = new RegExp($when).exec(nodeValue);
-      if (!whens) return;
       clas.resolver = "when";
       clas.scope = scope;
       clas.node = node;
@@ -320,27 +251,23 @@ export function Compiler(node, scopes, childNodes, content, we) {
     };
   }
 
-  function whenNode(newNode, node, child, content, scopes) {
-    if (new RegExp($whea).test(child.clas.nodeValue)) {
-      var comment = document.createComment("when:" + global.$path);
-      node.appendChild(comment);
-      content.childNodes.push(content = {
-        node: newNode,
+  function whenNode(newNode, node, child, content) {
+    var comment = document.createComment("when:" + global.$path);
+    node.appendChild(comment);
+    return {
+      node: newNode,
+      clas: child.clas,
+      scope: child.scope,
+      content: content,
+      children: child.children,
+      childNodes: [{
+        node: comment,
         clas: child.clas,
         scope: child.scope,
-        content: content,
         children: [],
-        childNodes: [{
-          node: comment,
-          clas: child.clas,
-          scope: child.scope,
-          children: [],
-          childNodes: []
-        }]
-      });
-      binding.when(null, scopes, content);
-    }
-    return content;
+        childNodes: []
+      }]
+    };
   }
 
   function comNode(node, scope, clas, content) {
