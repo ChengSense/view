@@ -1,5 +1,6 @@
 import { each, slice } from "./ViewLang";
 import { code } from "./ViewScope";
+import { $attr } from "./ViewExpress";
 
 export function query(express) {
   try {
@@ -12,13 +13,23 @@ export function query(express) {
   }
 }
 
-export function createNode(express) {
-  if (express.trim() == "") return;
-  let newNode = document.createElement("div");
-  newNode.innerHTML = express.trim();
-  let node = newNode.childNodes[0];
-  newNode.removeChild(node);
-  return node;
+export function createNode(template) {
+  if (new RegExp(/<.*>/).test(template)) {
+    let list = template.match($attr);
+    let element = document.createElement(list.shift());
+    list.forEach(attr => {
+      try {
+        let name = attr.replace($attr, "$1");
+        let value = attr.replace($attr, "$3");
+        element.setAttribute(name, value);
+      } catch (error) {
+        console.warn(error);
+      }
+    });
+    return element;
+  } else {
+    return document.createTextNode(template);
+  }
 }
 
 function addListener(type, methods, scope) {

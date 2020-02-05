@@ -37,10 +37,9 @@ var view = (function (exports) {
     return Constructor;
   }
 
-  function whiles(obj, method, me) {
-    while (obj.length) {
-      var data = obj[0];
-      if (method.call(me, data, obj)) break;
+  function whiles(list, method, me) {
+    while (list.length) {
+      if (method.call(me, list.shift(), list)) break;
     }
   }
   function each(obj, method, arg) {
@@ -104,6 +103,7 @@ var view = (function (exports) {
   var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $eash = /@each=("([^"]*)"|'([^']*)')/;
+  var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
@@ -746,13 +746,26 @@ var view = (function (exports) {
       return newNode.childNodes;
     }
   }
-  function createNode(express) {
-    if (express.trim() == "") return;
-    var newNode = document.createElement("div");
-    newNode.innerHTML = express.trim();
-    var node = newNode.childNodes[0];
-    newNode.removeChild(node);
-    return node;
+  function createNode(template) {
+    if (new RegExp(/<.*>/).test(template)) {
+      var list = template.match($attr);
+
+      var _element = document.createElement(list.shift());
+
+      list.forEach(function (attr) {
+        try {
+          var name = attr.replace($attr, "$1");
+          var value = attr.replace($attr, "$3");
+
+          _element.setAttribute(name, value);
+        } catch (error) {
+          console.warn(error);
+        }
+      });
+      return _element;
+    } else {
+      return document.createTextNode(template);
+    }
   }
 
   function addListener(type, methods, scope) {
@@ -896,7 +909,6 @@ var view = (function (exports) {
   }
   function initCompiler(list, children) {
     whiles(list, function (child) {
-      list.shift();
       if (child.trim() == "") return;
       if (new RegExp($close).test(child)) return true;
       var item = {

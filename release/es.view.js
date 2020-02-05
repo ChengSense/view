@@ -1,7 +1,6 @@
-function whiles(obj, method, me) {
-  while (obj.length) {
-    var data = obj[0];
-    if (method.call(me, data, obj))
+function whiles(list, method, me) {
+  while (list.length) {
+    if (method.call(me, list.shift(), list))
       break;
   }
 }
@@ -74,6 +73,7 @@ var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|
 var $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
 var $eash = /@each=("([^"]*)"|'([^']*)')/;
+let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
 var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
@@ -706,13 +706,23 @@ function query(express) {
   }
 }
 
-function createNode(express) {
-  if (express.trim() == "") return;
-  let newNode = document.createElement("div");
-  newNode.innerHTML = express.trim();
-  let node = newNode.childNodes[0];
-  newNode.removeChild(node);
-  return node;
+function createNode(template) {
+  if (new RegExp(/<.*>/).test(template)) {
+    let list = template.match($attr);
+    let element = document.createElement(list.shift());
+    list.forEach(attr => {
+      try {
+        let name = attr.replace($attr, "$1");
+        let value = attr.replace($attr, "$3");
+        element.setAttribute(name, value);
+      } catch (error) {
+        console.warn(error);
+      }
+    });
+    return element;
+  } else {
+    return document.createTextNode(template);
+  }
 }
 
 function addListener(type, methods, scope) {
@@ -853,7 +863,6 @@ function init(dom) {
 
 function initCompiler(list, children) {
   whiles(list, child => {
-    list.shift();
     if (child.trim() == "") return;
     if (new RegExp($close).test(child)) return true;
     let item = { clas: createNode(child), children: [], childNodes: [] };

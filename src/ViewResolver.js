@@ -1,4 +1,4 @@
-import { Compiler, compoNode } from "./ViewCompiler1";
+import { Compiler, compoNode } from "./ViewCompiler";
 import { blank, each, slice } from "./ViewLang";
 import { View } from "./ViewIndex";
 import { codex } from "./ViewScope";

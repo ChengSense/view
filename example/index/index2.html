@@ -32,6 +32,7 @@
   let $whea = /@when/;
   let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/;
   let $close = /^\}$|<\s*\/.*>/;
+  let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
   let text = document.querySelector("app").outerHTML;
   text = text.replace($lang, tag => "###########".concat(tag.trim(), "###########"));
   let list = text.split("###########");
@@ -73,17 +74,27 @@
     return children;
   }
 
-  function html(express) {
-    if (express.trim() == "") return;
-    let newNode = document.createElement("div");
-    newNode.innerHTML = express.trim();
-    let node = newNode.childNodes[0];
-    newNode.removeChild(node);
-    return node;
+  function createNode(template) {
+    if (new RegExp(/<.*>/).test(template)) {
+      let list = template.match($attr);
+      let element = document.createElement(list.shift());
+      list.forEach(attr => {
+        try {
+          let name = attr.replace($attr, "$1");
+          let value = attr.replace($attr, "$3");
+          element.setAttribute(name, value);
+        } catch (error) {
+          console.warn(error);
+        }
+      });
+      return element;
+    } else {
+      return document.createTextNode(template);
+    }
   }
 
-  let children = [];
-  let apps = preCompiler(list, children);
+  let apps = preCompiler(list, []);
   console.log(apps);
+  console.log(createNode(`<div @each="item:i:list">`));
 
 </script>

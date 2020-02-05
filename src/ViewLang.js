@@ -1,7 +1,6 @@
-export function whiles(obj, method, me) {
-  while (obj.length) {
-    var data = obj[0];
-    if (method.call(me, data, obj))
+export function whiles(list, method, me) {
+  while (list.length) {
+    if (method.call(me, list.shift(), list))
       break;
   }
 }

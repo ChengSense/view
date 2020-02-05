@@ -1,5 +1,5 @@
 import { resolver, clearNodes } from "./ViewResolver";
-import { init, initCompiler } from "./ViewInit1";
+import { init, initCompiler } from "./ViewInit";
 import { observer } from "./ViewObserve";
 import { setScopes } from "./ViewScope";
 import { Router } from "./ViewRouter";
