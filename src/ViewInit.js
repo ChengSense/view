@@ -25,21 +25,18 @@ export function initCompiler(list, children) {
         let index = children.indexOf(item);
         let each = { clas: createNode(express), children: [item] };
         children.splice(index, 1, each);
-        item.clas.removeAttribute("@each");
         return "";
       });
       child = child.replace($id, (express) => {
         let name = express.replace($id, "$1");
         let value = express.replace($id, "$3");
         Reflect.set(item, name, value);
-        item.clas.removeAttribute("@id");
         return "";
       });
       child = child.replace($event, (express) => {
         let name = express.replace($event, "$1");
         let value = express.replace($event, "$3");
         item.action.set(name, value);
-        item.clas.removeAttribute(name);
         return "";
       });
     }

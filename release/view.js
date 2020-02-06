@@ -907,21 +907,18 @@ var view = (function (exports) {
             children: [item]
           };
           children.splice(index, 1, each);
-          item.clas.removeAttribute("@each");
           return "";
         });
         child = child.replace($id, function (express) {
           var name = express.replace($id, "$1");
           var value = express.replace($id, "$3");
           Reflect.set(item, name, value);
-          item.clas.removeAttribute("@id");
           return "";
         });
         child = child.replace($event, function (express) {
           var name = express.replace($event, "$1");
           var value = express.replace($event, "$3");
           item.action.set(name, value);
-          item.clas.removeAttribute(name);
           return "";
         });
       } else if (new RegExp($chen).test(child)) {
