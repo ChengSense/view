@@ -8,7 +8,7 @@ export var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whea = /@when/g;
 export let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
-export var $express = /\{([^\{\}]*)\}/;
+export var $express = /\{([^\{\}]*)\}/g;
 export var $close = /^\}$|<\s*\/.*>/;
 export var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 export var $html = /<.*>/;

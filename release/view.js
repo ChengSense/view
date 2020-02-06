@@ -109,7 +109,7 @@ var view = (function (exports) {
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
   var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
-  var $express = /\{([^\{\}]*)\}/;
+  var $express = /\{([^\{\}]*)\}/g;
   var $close = /^\}$|<\s*\/.*>/;
   var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $html = /<.*>/;
