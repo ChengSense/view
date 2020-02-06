@@ -2,7 +2,7 @@ import { global } from "./ViewIndex";
 import { blank, forEach, farEach } from "./ViewLang";
 import { setCache, resolver } from "./ViewResolver";
 import { code, codeo, codex, handler } from "./ViewScope";
-import { $component, $each, $event, $expres, $express, $whea, $when, } from "./ViewExpress";
+import { $each, $express, $whea, $when, } from "./ViewExpress";
 
 export function Compiler(node, scopes, childNodes, content, we) {
 
@@ -22,7 +22,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           content.childNodes.push(clasNodes);
           component(newNode, scopes, clasNodes, content);
           compiler(newNode, scopes, child.children, clasNodes);
-          commom(newNode, scopes, clasNodes, content);
+          commom(newNode, scopes, clasNodes, child);
         }
       }
       else if (new RegExp($each).test(child.clas.nodeValue)) {
@@ -55,7 +55,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
         node.appendChild(newNode);
         var clasNodes = classNode(newNode, child);
         content.childNodes.push(clasNodes);
-        commom(newNode, scopes, clasNodes, content);
+        commom(newNode, scopes, clasNodes);
       }
     });
   }
@@ -67,30 +67,28 @@ export function Compiler(node, scopes, childNodes, content, we) {
       if (clas.clas.name == ":model") {
         model(child, scope);
       }
-      else if (new RegExp($expres).test(child.nodeValue)) {
+      else if (new RegExp($express).test(child.nodeValue)) {
         if (clas.clas.name == "value") model(child, scope);
         child.nodeValue = codex(child.nodeValue, scope, we);
-        binding.attrExpress(child, scope, clas);
+        binding.express(child, scope, clas);
       }
-      bind(child, scope);
     });
+  }
 
-    function bind(node, scope) {
-      node.name.replace($event, function (key) {
-        key = key.replace($event, "$1");
-        let owner = node.ownerElement;
-        var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+  function bind(owner, scope, child) {
+    if (child && child.action)
+      child.action.forEach((value, key) => {
+        var array = value.toString().match(/\(([^)]*)\)/);
         if (array) {
-          var name = node.nodeValue.toString().replace(array[0], "");
+          var name = value.toString().replace(array[0], "");
           let method = code(name, we.action);
           owner.on(key, method, scope, array[1]);
         }
         else {
-          let method = code(node.nodeValue, we.action);
+          let method = code(value, we.action);
           owner.on(key, method, scope);
         }
       });
-    }
   }
 
   function component(node, scope, clas, content) {
@@ -100,28 +98,17 @@ export function Compiler(node, scopes, childNodes, content, we) {
     }
   }
 
-  function commom(node, scope, clas, content) {
+  function commom(node, scope, clas, child) {
     let express;
     attrExpress(node, scope);
-    if (new RegExp($component).test(node.nodeValue)) {
-      comNode(node, scope, clas, content);
-      resolver.component(clas, we);
-    }
-    else if (express = new RegExp($expres).exec(node.nodeValue)) {
+    bind(node, scope, child);
+    if (express = new RegExp($express).exec(node.nodeValue)) {
       node.nodeValue = codeo(express[1], scope, we);
       binding.express(node, scope, clas);
     }
   }
 
   let binding = {
-    attrEach(node, scope, clas, content) {
-      if (global.$cache == undefined) return;
-      clas.resolver = "each";
-      clas.content = content;
-      clas.scope = scope;
-      clas.node = node;
-      setCache(clas, we, global.$cache);
-    },
     each(node, scope, clas, content) {
       if (global.$cache == undefined) return;
       clas.resolver = "each";
@@ -138,13 +125,6 @@ export function Compiler(node, scopes, childNodes, content, we) {
       setCache(clas, we, global.$cache);
     },
     express(node, scope, clas) {
-      if (global.$cache == undefined) return;
-      clas.resolver = "express";
-      clas.scope = scope;
-      clas.node = node;
-      setCache(clas, we, global.$cache);
-    },
-    attrExpress(node, scope, clas) {
       if (global.$cache == undefined) return;
       clas.resolver = "express";
       clas.scope = scope;
@@ -221,6 +201,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function classNode(newNode, child) {
     return {
+      id: child.id,
       node: newNode,
       clas: child.clas,
       scope: child.scope,
@@ -299,6 +280,7 @@ export function compoNode(node, child, component) {
   node.before(comment);
   component.content.node = component.view;
   return {
+    id: child.id,
     clas: child.clas,
     scope: child.scope,
     resolver: child.resolver,

@@ -27,11 +27,8 @@ export var resolver = {
       let clasNodes = compoNode(insert, node, component);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-      if (!node.clas.hasAttribute("@id")) return;
-      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
-      let idNode = node.clas.getAttributeNode("@id").cloneNode();
-      idNode.nodeValue = id;
-      component.view.setAttributeNode(idNode);
+      if (!node.id) return;
+      let id = codex(node.id, node.scope, we);
       Reflect.set(clasNodes, `@${id}`, component);
     } catch (error) {
       console.error(error)
@@ -47,11 +44,8 @@ export var resolver = {
       let clasNodes = compoNode(insert, node, component);
       childNodes.replace(node, clasNodes);
       if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-      if (!node.clas.hasAttribute("@id")) return;
-      let id = codex(node.clas.getAttribute("@id"), node.scope, we);
-      let idNode = node.clas.getAttributeNode("@id").cloneNode();
-      idNode.nodeValue = id;
-      component.view.setAttributeNode(idNode);
+      if (!node.id) return;
+      let id = codex(node.id, node.scope, we);
       Reflect.set(clasNodes, `@${id}`, component);
     } catch (error) {
       console.error(error)

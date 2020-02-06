@@ -103,16 +103,15 @@ var view = (function (exports) {
   var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
+  var $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
+  var $event = /@(.*)\s*=\s*("([^"]*)"|'([^']*)')/;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
   var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
-  var $express = /\{\s*@?([^\{\}]*)\}/;
-  var $expres = /\{([^\{\}]*)\}/g;
-  var $component = /\{\s*@([^\{\}]*)\}/;
+  var $express = /\{([^\{\}]*)\}/;
   var $close = /^\}$|<\s*\/.*>/;
   var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
-  var $event = /^@([^id].*)/;
   var $html = /<.*>/;
 
   function code(_express, _scope) {
@@ -130,7 +129,7 @@ var view = (function (exports) {
     try {
       global.$path = undefined;
       global.$cache = new Map();
-      _express = "'".concat(_express.replace($expres, "'+($1)+'"), "'");
+      _express = "'".concat(_express.replace($express, "'+($1)+'"), "'");
       return codec(_express, _scope, we);
     } catch (error) {
       console.warn(error);
@@ -218,7 +217,7 @@ var view = (function (exports) {
             content.childNodes.push(clasNodes);
             component(newNode, scopes, clasNodes, content);
             compiler(newNode, scopes, child.children, clasNodes);
-            commom(newNode, scopes, clasNodes, content);
+            commom(newNode, scopes, clasNodes, child);
           }
         } else if (new RegExp($each).test(child.clas.nodeValue)) {
           var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
@@ -252,7 +251,7 @@ var view = (function (exports) {
           node.appendChild(newNode);
           var clasNodes = classNode(newNode, child);
           content.childNodes.push(clasNodes);
-          commom(newNode, scopes, clasNodes, content);
+          commom(newNode, scopes, clasNodes);
         }
       });
     }
@@ -264,32 +263,28 @@ var view = (function (exports) {
 
         if (clas.clas.name == ":model") {
           model(child, scope);
-        } else if (new RegExp($expres).test(child.nodeValue)) {
+        } else if (new RegExp($express).test(child.nodeValue)) {
           if (clas.clas.name == "value") model(child, scope);
           child.nodeValue = codex(child.nodeValue, scope, we);
-          binding.attrExpress(child, scope, clas);
+          binding.express(child, scope, clas);
         }
-
-        bind(child, scope);
       });
+    }
 
-      function bind(node, scope) {
-        node.name.replace($event, function (key) {
-          key = key.replace($event, "$1");
-          var owner = node.ownerElement;
-          var array = node.nodeValue.toString().match(/\(([^)]*)\)/);
+    function bind(owner, scope, child) {
+      if (child && child.action) child.action.forEach(function (value, key) {
+        var array = value.toString().match(/\(([^)]*)\)/);
 
-          if (array) {
-            var name = node.nodeValue.toString().replace(array[0], "");
-            var method = code(name, we.action);
-            owner.on(key, method, scope, array[1]);
-          } else {
-            var _method = code(node.nodeValue, we.action);
+        if (array) {
+          var name = value.toString().replace(array[0], "");
+          var method = code(name, we.action);
+          owner.on(key, method, scope, array[1]);
+        } else {
+          var _method = code(value, we.action);
 
-            owner.on(key, _method, scope);
-          }
-        });
-      }
+          owner.on(key, _method, scope);
+        }
+      });
     }
 
     function component(node, scope, clas, content) {
@@ -299,28 +294,18 @@ var view = (function (exports) {
       }
     }
 
-    function commom(node, scope, clas, content) {
+    function commom(node, scope, clas, child) {
       var express;
       attrExpress(node, scope);
+      bind(node, scope, child);
 
-      if (new RegExp($component).test(node.nodeValue)) {
-        comNode(node, scope, clas, content);
-        resolver.component(clas, we);
-      } else if (express = new RegExp($expres).exec(node.nodeValue)) {
+      if (express = new RegExp($express).exec(node.nodeValue)) {
         node.nodeValue = codeo(express[1], scope, we);
         binding.express(node, scope, clas);
       }
     }
 
     var binding = {
-      attrEach: function attrEach(node, scope, clas, content) {
-        if (global.$cache == undefined) return;
-        clas.resolver = "each";
-        clas.content = content;
-        clas.scope = scope;
-        clas.node = node;
-        setCache(clas, we, global.$cache);
-      },
       each: function each(node, scope, clas, content) {
         if (global.$cache == undefined) return;
         clas.resolver = "each";
@@ -337,13 +322,6 @@ var view = (function (exports) {
         setCache(clas, we, global.$cache);
       },
       express: function express(node, scope, clas) {
-        if (global.$cache == undefined) return;
-        clas.resolver = "express";
-        clas.scope = scope;
-        clas.node = node;
-        setCache(clas, we, global.$cache);
-      },
-      attrExpress: function attrExpress(node, scope, clas) {
         if (global.$cache == undefined) return;
         clas.resolver = "express";
         clas.scope = scope;
@@ -427,6 +405,7 @@ var view = (function (exports) {
 
     function classNode(newNode, child) {
       return {
+        id: child.id,
         node: newNode,
         clas: child.clas,
         scope: child.scope,
@@ -503,6 +482,7 @@ var view = (function (exports) {
     node.before(comment);
     component.content.node = component.view;
     return {
+      id: child.id,
       clas: child.clas,
       scope: child.scope,
       resolver: child.resolver,
@@ -546,11 +526,8 @@ var view = (function (exports) {
         var clasNodes = compoNode(insert, node, component);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-        if (!node.clas.hasAttribute("@id")) return;
-        var id = codex(node.clas.getAttribute("@id"), node.scope, we);
-        var idNode = node.clas.getAttributeNode("@id").cloneNode();
-        idNode.nodeValue = id;
-        component.view.setAttributeNode(idNode);
+        if (!node.id) return;
+        var id = codex(node.id, node.scope, we);
         Reflect.set(clasNodes, "@".concat(id), component);
       } catch (error) {
         console.error(error);
@@ -570,11 +547,8 @@ var view = (function (exports) {
         var clasNodes = compoNode(insert, node, component);
         childNodes.replace(node, clasNodes);
         if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-        if (!node.clas.hasAttribute("@id")) return;
-        var id = codex(node.clas.getAttribute("@id"), node.scope, we);
-        var idNode = node.clas.getAttributeNode("@id").cloneNode();
-        idNode.nodeValue = id;
-        component.view.setAttributeNode(idNode);
+        if (!node.id) return;
+        var id = codex(node.id, node.scope, we);
         Reflect.set(clasNodes, "@".concat(id), component);
       } catch (error) {
         console.error(error);
@@ -758,9 +732,7 @@ var view = (function (exports) {
           var value = attr.replace($attr, "$3");
 
           _element.setAttribute(name, value);
-        } catch (error) {
-          console.warn(error);
-        }
+        } catch (error) {}
       });
       return _element;
     } else {
@@ -917,7 +889,8 @@ var view = (function (exports) {
       if (new RegExp($close).test(child)) return true;
       var item = {
         clas: createNode(child),
-        children: []
+        children: [],
+        action: new Map()
       };
       children.push(item);
 
@@ -926,18 +899,31 @@ var view = (function (exports) {
           initCompiler(list, item.children);
         }
 
-        if (new RegExp($eash).test(child)) {
-          item.clas = createNode(child.replace($eash, function (child) {
-            child = child.replace($eash, "@each($3){");
-            var index = children.indexOf(item);
-            var each = {
-              clas: createNode(child),
-              children: [item]
-            };
-            children.splice(index, 1, each);
-            return "";
-          }));
-        }
+        child = child.replace($eash, function (express) {
+          express = express.replace($eash, "@each($3){");
+          var index = children.indexOf(item);
+          var each = {
+            clas: createNode(express),
+            children: [item]
+          };
+          children.splice(index, 1, each);
+          item.clas.removeAttribute("@each");
+          return "";
+        });
+        child = child.replace($id, function (express) {
+          var name = express.replace($id, "$1");
+          var value = express.replace($id, "$3");
+          Reflect.set(item, name, value);
+          item.clas.removeAttribute("@id");
+          return "";
+        });
+        child = child.replace($event, function (express) {
+          var name = express.replace($event, "$1");
+          var value = express.replace($event, "$3");
+          item.action.set(name, value);
+          item.clas.removeAttribute(name);
+          return "";
+        });
       } else if (new RegExp($chen).test(child)) {
         initCompiler(list, item.children);
 

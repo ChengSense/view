@@ -29,11 +29,13 @@
   let $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
   let $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   let $html = /<.*>/;
-  let $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
   let $whea = /@when/;
   let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/;
   let $close = /^\}$|<\s*\/.*>/;
   let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
+  let $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
+  let $event = /(@.*)\s*=\s*("([^"]*)"|'([^']*)')/;
+  let $id = /(@id)\s*=\s*("([^"]*)"|'([^']*)')/;
   let text = document.querySelector("app").outerHTML;
   text = text.replace($lang, tag => "###########".concat(tag.trim(), "###########"));
   let list = text.split("###########");
@@ -104,5 +106,5 @@
   let apps = initCompiler(list, []);
   console.log(apps);
   console.log(createNode(`<div @each="item:i:list">`));
-
+  console.log(`<thead @each="item:i:list">`.match($eash));
 </script>

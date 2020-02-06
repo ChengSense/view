@@ -23,7 +23,6 @@ export function createNode(template) {
         let value = attr.replace($attr, "$3");
         element.setAttribute(name, value);
       } catch (error) {
-        console.warn(error);
       }
     });
     return element;

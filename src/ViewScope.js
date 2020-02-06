@@ -1,4 +1,4 @@
-import { $expres, $express, $word } from "./ViewExpress";
+import { $express, $word } from "./ViewExpress";
 import { global } from "./ViewIndex";
 
 export function code(_express, _scope) {
@@ -17,7 +17,7 @@ export function codex(_express, _scope, we) {
   try {
     global.$path = undefined;
     global.$cache = new Map();
-    _express = `'${_express.replace($expres, "'+($1)+'")}'`;
+    _express = `'${_express.replace($express, "'+($1)+'")}'`;
     return codec(_express, _scope, we);
   } catch (error) {
     console.warn(error)

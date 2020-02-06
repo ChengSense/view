@@ -1,7 +1,7 @@
 
 import { whiles } from "./ViewLang";
 import { createNode } from "./ViewElmemt";
-import { $chen, $lang, $whea, $whec, $eash, $close, $html } from "./ViewExpress";
+import { $chen, $lang, $whea, $whec, $eash, $id, $event, $close, $html } from "./ViewExpress";
 
 export function init(dom) {
   let text = dom.outerHTML
@@ -14,21 +14,34 @@ export function initCompiler(list, children) {
   whiles(list, child => {
     if (child.trim() == "") return;
     if (new RegExp($close).test(child)) return true;
-    let item = { clas: createNode(child), children: [] };
+    let item = { clas: createNode(child), children: [], action: new Map() };
     children.push(item);
     if (new RegExp($html).test(child)) {
       if (new RegExp($close).test(item.clas.outerHTML)) {
         initCompiler(list, item.children);
       }
-      if (new RegExp($eash).test(child)) {
-        item.clas = createNode(child.replace($eash, child => {
-          child = child.replace($eash, "@each($3){");
-          let index = children.indexOf(item);
-          let each = { clas: createNode(child), children: [item] };
-          children.splice(index, 1, each);
-          return "";
-        }));
-      }
+      child = child.replace($eash, (express) => {
+        express = express.replace($eash, "@each($3){");
+        let index = children.indexOf(item);
+        let each = { clas: createNode(express), children: [item] };
+        children.splice(index, 1, each);
+        item.clas.removeAttribute("@each");
+        return "";
+      });
+      child = child.replace($id, (express) => {
+        let name = express.replace($id, "$1");
+        let value = express.replace($id, "$3");
+        Reflect.set(item, name, value);
+        item.clas.removeAttribute("@id");
+        return "";
+      });
+      child = child.replace($event, (express) => {
+        let name = express.replace($event, "$1");
+        let value = express.replace($event, "$3");
+        item.action.set(name, value);
+        item.clas.removeAttribute(name);
+        return "";
+      });
     }
     else if (new RegExp($chen).test(child)) {
       initCompiler(list, item.children);
