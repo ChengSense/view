@@ -25,7 +25,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           commom(newNode, scopes, clasNodes, content);
         }
       }
-      else if ($each.test(child.clas.nodeValue)) {
+      else if (new RegExp($each).test(child.clas.nodeValue)) {
         var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
         var field = expreses.shift().trim(), source = expreses.pop().trim(), id = expreses.shift();
         var sources = code(source, scopes), clas = eachNode(null, node, child);
@@ -38,7 +38,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
           compiler(node, scope, child.children, clas);
         });
       }
-      else if ($whea.test(child.clas.nodeValue)) {
+      else if (new RegExp($whea).test(child.clas.nodeValue)) {
         var clas = whenNode(null, node, child, content);
         content.childNodes.push(clas);
         farEach(child.children, function (child) {

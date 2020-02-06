@@ -10,6 +10,6 @@ export var $express = /\{\s*@?([^\{\}]*)\}/;
 export var $expres = /\{([^\{\}]*)\}/g;
 export var $component = /\{\s*@([^\{\}]*)\}/;
 export var $close = /^\}$|<\s*\/.*>/;
-export var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+export var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
 export var $event = /^@([^id].*)/;
 export var $html = /<.*>/;

@@ -91,9 +91,9 @@
     model: {
       edit: false,
       columns: {
-        id: "档案编号",
+        id: "订单号",
         shop: "门店名称",
-        userName: "借款人",
+        userName: "",
         address: "住址"
       },
       list: (function data() {
@@ -102,7 +102,7 @@
           data.push({
             id: 10000 + data.length,
             shop: "西湖店-" + data.length,
-            userName: "西湖-" + data.length,
+            userName: "李佳-" + data.length,
             address: "西湖区-" + data.length
           });
         }
@@ -115,7 +115,7 @@
         this.list.push({
           id: 10000 + this.list.length,
           shop: "西湖店-" + this.list.length,
-          userName: "西湖-" + this.list.length,
+          userName: "李佳-" + this.list.length,
           address: "西湖区-" + this.list.length
         });
       },

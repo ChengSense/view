@@ -111,7 +111,7 @@ var view = (function (exports) {
   var $expres = /\{([^\{\}]*)\}/g;
   var $component = /\{\s*@([^\{\}]*)\}/;
   var $close = /^\}$|<\s*\/.*>/;
-  var $word = /(["'][^"']*["'])|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+  var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
   var $event = /^@([^id].*)/;
   var $html = /<.*>/;
 
@@ -220,7 +220,7 @@ var view = (function (exports) {
             compiler(newNode, scopes, child.children, clasNodes);
             commom(newNode, scopes, clasNodes, content);
           }
-        } else if ($each.test(child.clas.nodeValue)) {
+        } else if (new RegExp($each).test(child.clas.nodeValue)) {
           var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
           var field = expreses.shift().trim(),
               source = expreses.pop().trim(),
@@ -235,7 +235,7 @@ var view = (function (exports) {
             scope = new Proxy(scope, handler(scopes, field, sources, index));
             compiler(node, scope, child.children, clas);
           });
-        } else if ($whea.test(child.clas.nodeValue)) {
+        } else if (new RegExp($whea).test(child.clas.nodeValue)) {
           var clas = whenNode(null, node, child, content);
           content.childNodes.push(clas);
           farEach(child.children, function (child) {
