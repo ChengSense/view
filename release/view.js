@@ -415,7 +415,7 @@ var view = (function (exports) {
     }
 
     function eachNode(newNode, node, child) {
-      var comment = document.createComment("each:" + global.$path);
+      var comment = document.createComment("each:".concat(global.$path));
       node.appendChild(comment);
       return {
         node: newNode,
@@ -433,7 +433,7 @@ var view = (function (exports) {
     }
 
     function whenNode(newNode, node, child, content) {
-      var comment = document.createComment("when:" + global.$path);
+      var comment = document.createComment("when:".concat(global.$path));
       node.appendChild(comment);
       return {
         node: newNode,
@@ -478,7 +478,7 @@ var view = (function (exports) {
     compiler(node, scopes, childNodes, content);
   }
   function compoNode(node, child, component) {
-    var comment = document.createComment("component:" + child.path);
+    var comment = document.createComment("component");
     node.before(comment);
     component.content.node = component.view;
     return {

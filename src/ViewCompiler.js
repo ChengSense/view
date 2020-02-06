@@ -211,7 +211,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function eachNode(newNode, node, child) {
-    var comment = document.createComment("each:" + global.$path);
+    var comment = document.createComment("each:".concat(global.$path));
     node.appendChild(comment);
     return {
       node: newNode,
@@ -229,7 +229,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
   }
 
   function whenNode(newNode, node, child, content) {
-    var comment = document.createComment("when:" + global.$path);
+    var comment = document.createComment("when:".concat(global.$path));
     node.appendChild(comment);
     return {
       node: newNode,
@@ -276,7 +276,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 }
 
 export function compoNode(node, child, component) {
-  var comment = document.createComment("component:" + child.path);
+  var comment = document.createComment("component");
   node.before(comment);
   component.content.node = component.view;
   return {
