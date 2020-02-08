@@ -99,7 +99,7 @@ var view = (function (exports) {
     }
   });
 
-  var $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+  var $lang = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
   var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
@@ -110,9 +110,9 @@ var view = (function (exports) {
   var $whea = /@when/g;
   var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
   var $express = /\{([^\{\}]*)\}/g;
-  var $close = /^\}$|<\s*\/.*>/;
+  var $close = /^\}$|<\s*\/\w+>/;
   var $word = /("[^"]*"|'[^']*')|(\.?([_\$_a-zA-Z]+\w?)(\.([_\$a-zA-Z]+\w?))*)/g;
-  var $html = /<.*>/;
+  var $html = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>/;
 
   function code(_express, _scope) {
     try {
