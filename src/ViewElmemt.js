@@ -49,7 +49,7 @@ function addListener(type, methods, scope) {
     }, false);
   }
   else if (this.attachEvent) {
-    this.attachEvent('on' + type, function (event) {
+    this.attachEvent(`on${type}`, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
@@ -63,7 +63,7 @@ function addListener(type, methods, scope) {
     });
   }
   else {
-    element['on' + type] = function (event) {
+    element[`on${type}`] = function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
@@ -83,10 +83,10 @@ function removeListener(type, handler) {
     this.removeEventListener(type, handler, false);
   }
   else if (this.detachEvent) {
-    this.detachEvent('on' + type, handler);
+    this.detachEvent(`on${type}`, handler);
   }
   else {
-    element['on' + type] = null;
+    element[`on${type}`] = null;
   }
 }
 

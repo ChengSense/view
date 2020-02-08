@@ -74,14 +74,14 @@ var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 var $each = /(@each)\s*\((.*)\)\s*\{/g;
 var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
 var $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
-var $event = /@(.*)\s*=\s*("([^"]*)"|'([^']*)')/;
+var $event = /@(\w*)\s*=\s*("([^"]*)"|'([^']*)')/;
 var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 var $whea = /@when/g;
 let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
 var $express = /\{([^\{\}]*)\}/g;
 var $close = /^\}$|<\s*\/.*>/;
-var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+var $word = /("[^"]*"|'[^']*')|(\.?([_\$_a-zA-Z]+\w?)(\.([_\$a-zA-Z]+\w?))*)/g;
 var $html = /<.*>/;
 
 function code(_express, _scope) {
@@ -137,7 +137,7 @@ function Code(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>
-      word.match(/["']/) ? word : "scope.".concat(word)
+      word.match(/^["'\.]/) ? word : "scope.".concat(word)
     ));
 
   return new Function('scope',
@@ -714,7 +714,7 @@ function addListener(type, methods, scope) {
     }, false);
   }
   else if (this.attachEvent) {
-    this.attachEvent('on' + type, function (event) {
+    this.attachEvent(`on${type}`, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
@@ -728,7 +728,7 @@ function addListener(type, methods, scope) {
     });
   }
   else {
-    element['on' + type] = function (event) {
+    element[`on${type}`] = function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
@@ -748,10 +748,10 @@ function removeListener(type, handler) {
     this.removeEventListener(type, handler, false);
   }
   else if (this.detachEvent) {
-    this.detachEvent('on' + type, handler);
+    this.detachEvent(`on${type}`, handler);
   }
   else {
-    element['on' + type] = null;
+    element[`on${type}`] = null;
   }
 }
 

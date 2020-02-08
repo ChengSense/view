@@ -3,12 +3,12 @@ export var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
 export var $each = /(@each)\s*\((.*)\)\s*\{/g;
 export var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
 export var $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
-export var $event = /@(.*)\s*=\s*("([^"]*)"|'([^']*)')/;
+export var $event = /@(\w*)\s*=\s*("([^"]*)"|'([^']*)')/;
 export var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
 export var $whea = /@when/g;
 export let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
 export var $express = /\{([^\{\}]*)\}/g;
 export var $close = /^\}$|<\s*\/.*>/;
-export var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+export var $word = /("[^"]*"|'[^']*')|(\.?([_\$_a-zA-Z]+\w?)(\.([_\$a-zA-Z]+\w?))*)/g;
 export var $html = /<.*>/;

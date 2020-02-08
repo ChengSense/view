@@ -104,14 +104,14 @@ var view = (function (exports) {
   var $each = /(@each)\s*\((.*)\)\s*\{/g;
   var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
   var $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
-  var $event = /@(.*)\s*=\s*("([^"]*)"|'([^']*)')/;
+  var $event = /@(\w*)\s*=\s*("([^"]*)"|'([^']*)')/;
   var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
   var $whea = /@when/g;
   var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
   var $express = /\{([^\{\}]*)\}/g;
   var $close = /^\}$|<\s*\/.*>/;
-  var $word = /("[^"]*"|'[^']*')|(([_\$a-zA-Z]+\w?)((\.\w+)|(\[(.+)\]))*)/g;
+  var $word = /("[^"]*"|'[^']*')|(\.?([_\$_a-zA-Z]+\w?)(\.([_\$a-zA-Z]+\w?))*)/g;
   var $html = /<.*>/;
 
   function code(_express, _scope) {
@@ -164,7 +164,7 @@ var view = (function (exports) {
   function Code(_express, scope) {
     var express = codeCacher.get(_express);
     if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
-      return word.match(/["']/) ? word : "scope.".concat(word);
+      return word.match(/^["'\.]/) ? word : "scope.".concat(word);
     }));
     return new Function('scope', "return ".concat(express, ";"))(scope);
   }
@@ -759,7 +759,7 @@ var view = (function (exports) {
         });
       }, false);
     } else if (this.attachEvent) {
-      this.attachEvent('on' + type, function (event) {
+      this.attachEvent("on".concat(type), function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
@@ -772,7 +772,7 @@ var view = (function (exports) {
         });
       });
     } else {
-      element['on' + type] = function (event) {
+      element["on".concat(type)] = function (event) {
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
@@ -791,9 +791,9 @@ var view = (function (exports) {
     if (this.addEventListener) {
       this.removeEventListener(type, handler, false);
     } else if (this.detachEvent) {
-      this.detachEvent('on' + type, handler);
+      this.detachEvent("on".concat(type), handler);
     } else {
-      element['on' + type] = null;
+      element["on".concat(type)] = null;
     }
   }
 

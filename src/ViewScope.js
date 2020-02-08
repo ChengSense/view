@@ -54,7 +54,7 @@ function Code(_express, scope) {
   var express = codeCacher.get(_express);
   if (express == undefined)
     codeCacher.set(_express, express = _express.replace($word, word =>
-      word.match(/["']/) ? word : "scope.".concat(word)
+      word.match(/^["'\.]/) ? word : "scope.".concat(word)
     ));
 
   return new Function('scope',
