@@ -7,14 +7,10 @@ function whiles(list, method) {
 
 function forEach(obj, method) {
   if (!obj) return;
-  if (obj.hasOwnProperty("$index")) {
-    for (let i = obj.$index; i < obj.length; i++) {
+  if (Array.isArray(obj)) {
+    for (let i = obj.index || 0; i < obj.length; i++) {
       method(obj[i], i);
     }
-  } else if (Array.isArray(obj)) {
-    obj.forEach((value, i) =>
-      method(value, i)
-    );
   } else {
     Object.keys(obj).forEach(i =>
       method(obj[i], i)
@@ -256,7 +252,8 @@ function Compiler(node, scopes, childNodes, content, we) {
   function component(node, scope, clas, content) {
     if (Reflect.has(we.component, node.localName)) {
       comNode(node, scope, clas, content);
-      resolver.component(clas, we);
+      let app = new we.component[node.localName]();
+      resolver.component(app, clas, we);
     }
   }
 
@@ -469,26 +466,7 @@ var resolver = {
       console.error(error);
     }
   },
-  component: function (node, we) {
-    try {
-      let app = new we.component[node.clas.localName]();
-      if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope);
-      var insert = insertion(node.childNodes);
-      var childNodes = node.content.childNodes;
-      clearNodes(node.childNodes);
-      let component = new View({ view: app.view, model: app.model, action: app.action });
-      let clasNodes = compoNode(insert, node, component);
-      childNodes.replace(node, clasNodes);
-      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-      if (!node.id) return;
-      let id = codex(node.id, node.scope, we);
-      Reflect.set(clasNodes, `@${id}`, component);
-    } catch (error) {
-      console.error(error);
-    }
-  },
-  compo: function (app, node, we) {
+  component: function (app, node, we) {
     try {
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
@@ -533,7 +511,7 @@ var resolver = {
       console.error(error);
     }
   },
-  arrayEach: function (node, we, index, nodes) {
+  array: function (node, we, index, nodes) {
     try {
       var insert = insertNode([node.childNodes[index]]);
       var doc = document.createDocumentFragment();
@@ -592,7 +570,7 @@ var arrayEach = {
   each: function (node, we, children, index, add) {
     try {
       if (add > 0) {
-        resolver.arrayEach(node, we, index, children);
+        resolver.array(node, we, index, children);
       }
       else {
         var nodes = node.childNodes.splice(index + 1);
@@ -964,29 +942,29 @@ function array(object, cache) {
       if (this.length) {
         let index = this.length;
         let data = method.apply(this, arguments);
-        arguments.length > 2 ? this.$index = index : index = this.length;
+        arguments.length > 2 ? this.index = index : index = this.length;
         cacher(cache, index, arguments.length - 2);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },
     unshift() {
       var method = Array.prototype.unshift;
       if (arguments.length) {
-        let index = this.$index = this.length;
+        let index = this.index = this.length;
         let data = method.apply(this, arguments);
         cacher(cache, index, arguments.length);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },
     push() {
       var method = Array.prototype.push;
       if (arguments.length) {
-        let index = this.$index = this.length;
+        let index = this.index = this.length;
         let data = method.apply(this, arguments);
         cacher(cache, index, arguments.length);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },
@@ -1199,7 +1177,7 @@ function setRef(content, we) {
       let childNodes = content.childNodes;
       let list = getRef(childNodes, prop, []);
       let node = list.shift();
-      resolver.compo(new app(), node, we);
+      resolver.component(new app(), node, we);
       return true;
     }
   })

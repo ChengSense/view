@@ -7,14 +7,10 @@ export function whiles(list, method) {
 
 export function forEach(obj, method) {
   if (!obj) return;
-  if (obj.hasOwnProperty("$index")) {
-    for (let i = obj.$index; i < obj.length; i++) {
+  if (Array.isArray(obj)) {
+    for (let i = obj.index || 0; i < obj.length; i++) {
       method(obj[i], i);
     }
-  } else if (Array.isArray(obj)) {
-    obj.forEach((value, i) =>
-      method(value, i)
-    )
   } else {
     Object.keys(obj).forEach(i =>
       method(obj[i], i)

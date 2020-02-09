@@ -92,29 +92,29 @@ function array(object, cache) {
       if (this.length) {
         let index = this.length;
         let data = method.apply(this, arguments);
-        arguments.length > 2 ? this.$index = index : index = this.length;
+        arguments.length > 2 ? this.index = index : index = this.length;
         cacher(cache, index, arguments.length - 2);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },
     unshift() {
       var method = Array.prototype.unshift;
       if (arguments.length) {
-        let index = this.$index = this.length;
+        let index = this.index = this.length;
         let data = method.apply(this, arguments);
         cacher(cache, index, arguments.length);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },
     push() {
       var method = Array.prototype.push;
       if (arguments.length) {
-        let index = this.$index = this.length;
+        let index = this.index = this.length;
         let data = method.apply(this, arguments);
         cacher(cache, index, arguments.length);
-        Reflect.deleteProperty(this, "$index");
+        Reflect.deleteProperty(this, "index");
         return data;
       }
     },

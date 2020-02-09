@@ -15,26 +15,7 @@ export var resolver = {
       console.error(error)
     }
   },
-  component: function (node, we) {
-    try {
-      let app = new we.component[node.clas.localName]();
-      if (blank(app)) return;
-      Reflect.setPrototypeOf(app.model, node.scope);
-      var insert = insertion(node.childNodes);
-      var childNodes = node.content.childNodes;
-      clearNodes(node.childNodes);
-      let component = new View({ view: app.view, model: app.model, action: app.action });
-      let clasNodes = compoNode(insert, node, component);
-      childNodes.replace(node, clasNodes);
-      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
-      if (!node.id) return;
-      let id = codex(node.id, node.scope, we);
-      Reflect.set(clasNodes, `@${id}`, component);
-    } catch (error) {
-      console.error(error)
-    }
-  },
-  compo: function (app, node, we) {
+  component: function (app, node, we) {
     try {
       Reflect.setPrototypeOf(app.model, node.scope);
       var insert = insertion(node.childNodes);
@@ -79,7 +60,7 @@ export var resolver = {
       console.error(error)
     }
   },
-  arrayEach: function (node, we, index, nodes) {
+  array: function (node, we, index, nodes) {
     try {
       var insert = insertNode([node.childNodes[index]]);
       var doc = document.createDocumentFragment();
@@ -138,7 +119,7 @@ var arrayEach = {
   each: function (node, we, children, index, add) {
     try {
       if (add > 0) {
-        resolver.arrayEach(node, we, index, children);
+        resolver.array(node, we, index, children);
       }
       else {
         var nodes = node.childNodes.splice(index + 1);

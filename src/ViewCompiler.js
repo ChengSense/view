@@ -94,7 +94,8 @@ export function Compiler(node, scopes, childNodes, content, we) {
   function component(node, scope, clas, content) {
     if (Reflect.has(we.component, node.localName)) {
       comNode(node, scope, clas, content);
-      resolver.component(clas, we);
+      let app = new we.component[node.localName]();
+      resolver.component(app, clas, we);
     }
   }
 

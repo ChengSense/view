@@ -56,7 +56,7 @@ function setRef(content, we) {
       let childNodes = content.childNodes
       let list = getRef(childNodes, prop, []);
       let node = list.shift();
-      resolver.compo(new app(), node, we);
+      resolver.component(new app(), node, we);
       return true;
     }
   })
