@@ -37,36 +37,31 @@ var view = (function (exports) {
     return Constructor;
   }
 
-  function whiles(list, method, me) {
+  function whiles(list, method) {
     while (list.length) {
-      if (method.call(me, list.shift(), list)) break;
+      if (method(list.shift())) break;
     }
   }
-  function each(obj, method, arg) {
-    if (!obj) return;
-    arg = arg || obj;
-    Object.keys(obj).every(function (i) {
-      var data = obj[i];
-      return !method.call(data, data, i, arg);
-    });
-    return arg;
-  }
-  function forEach(obj, method, me) {
+  function forEach(obj, method) {
     if (!obj) return;
 
     if (obj.hasOwnProperty("$index")) {
       for (var i = obj.$index; i < obj.length; i++) {
-        method.call(me, obj[i], i);
+        method(obj[i], i);
       }
+    } else if (Array.isArray(obj)) {
+      obj.forEach(function (value, i) {
+        return method(value, i);
+      });
     } else {
       Object.keys(obj).forEach(function (i) {
-        method.call(me, obj[i], i);
+        return method(obj[i], i);
       });
     }
   }
-  function farEach(obj, method, me) {
-    Object.keys(obj).every(function (i) {
-      return !method.call(me, obj[i], obj);
+  function farEach(list, method) {
+    list.every(function (value, i) {
+      return !method(value, i);
     });
   }
   function slice(obj) {
@@ -664,7 +659,7 @@ var view = (function (exports) {
 
   function insertion(nodes, node) {
     try {
-      each(nodes, function (child) {
+      farEach(nodes, function (child) {
         if (child.node && child.node.parentNode) {
           node = child.node;
           child.node = null;
@@ -680,7 +675,7 @@ var view = (function (exports) {
 
   function insertNode(nodes, node) {
     try {
-      each(nodes, function (child) {
+      farEach(nodes, function (child) {
         if (child.node && child.node.parentNode) {
           node = child.node;
           return node;
@@ -847,7 +842,7 @@ var view = (function (exports) {
       return this;
     },
     reappend: function reappend(node) {
-      each(slice(this.childNodes), function (child) {
+      farEach(slice(this.childNodes), function (child) {
         child.parentNode.removeChild(child);
       });
       this.appendChild(node);
@@ -862,13 +857,13 @@ var view = (function (exports) {
   });
   Object.assign(NodeList.prototype, {
     on: function on(type, call) {
-      each(this, function (node) {
+      farEach(this, function (node) {
         node.on(type, call);
       });
       return this;
     },
     off: function off(type, call) {
-      each(this, function (node) {
+      farEach(this, function (node) {
         node.off(type, call);
       });
       return this;

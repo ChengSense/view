@@ -1,37 +1,31 @@
-function whiles(list, method, me) {
+function whiles(list, method) {
   while (list.length) {
-    if (method.call(me, list.shift(), list))
+    if (method(list.shift()))
       break;
   }
 }
 
-function each(obj, method, arg) {
-  if (!obj) return;
-  arg = arg || obj;
-  Object.keys(obj).every(i => {
-    var data = obj[i];
-    return !method.call(data, data, i, arg);
-  });
-  return arg;
-}
-
-function forEach(obj, method, me) {
+function forEach(obj, method) {
   if (!obj) return;
   if (obj.hasOwnProperty("$index")) {
     for (let i = obj.$index; i < obj.length; i++) {
-      method.call(me, obj[i], i);
+      method(obj[i], i);
     }
+  } else if (Array.isArray(obj)) {
+    obj.forEach((value, i) =>
+      method(value, i)
+    );
   } else {
-    Object.keys(obj).forEach(i => {
-      method.call(me, obj[i], i);
-    });
+    Object.keys(obj).forEach(i =>
+      method(obj[i], i)
+    );
   }
 }
 
-function farEach(obj, method, me) {
-  Object.keys(obj).every(i => {
-    return !method.call(me, obj[i], obj);
-  });
+function farEach(list, method) {
+  list.every((value, i) =>
+    !method(value, i)
+  );
 }
 
 function slice(obj) {
@@ -623,7 +617,7 @@ function setCache(clas, we, $cache) {
 
 function insertion(nodes, node) {
   try {
-    each(nodes, child => {
+    farEach(nodes, child => {
       if (child.node && child.node.parentNode) {
         node = child.node;
         child.node = null;
@@ -638,7 +632,7 @@ function insertion(nodes, node) {
 
 function insertNode(nodes, node) {
   try {
-    each(nodes, child => {
+    farEach(nodes, child => {
       if (child.node && child.node.parentNode) {
         node = child.node;
         return node;
@@ -795,7 +789,7 @@ Object.assign(Node.prototype, {
     return this;
   },
   reappend(node) {
-    each(slice(this.childNodes), function (child) {
+    farEach(slice(this.childNodes), function (child) {
       child.parentNode.removeChild(child);
     });
     this.appendChild(node);
@@ -814,13 +808,13 @@ Object.assign(Node.prototype, {
 
 Object.assign(NodeList.prototype, {
   on(type, call) {
-    each(this, function (node) {
+    farEach(this, function (node) {
       node.on(type, call);
     });
     return this;
   },
   off(type, call) {
-    each(this, function (node) {
+    farEach(this, function (node) {
       node.off(type, call);
     });
     return this;

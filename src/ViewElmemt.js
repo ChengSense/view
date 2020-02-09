@@ -1,4 +1,4 @@
-import { each, slice } from "./ViewLang";
+import { farEach, slice } from "./ViewLang";
 import { code } from "./ViewScope";
 import { $attr, $html } from "./ViewExpress";
 
@@ -130,7 +130,7 @@ Object.assign(Node.prototype, {
     return this;
   },
   reappend(node) {
-    each(slice(this.childNodes), function (child) {
+    farEach(slice(this.childNodes), function (child) {
       child.parentNode.removeChild(child);
     });
     this.appendChild(node);
@@ -149,13 +149,13 @@ Object.assign(Node.prototype, {
 
 Object.assign(NodeList.prototype, {
   on(type, call) {
-    each(this, function (node) {
+    farEach(this, function (node) {
       node.on(type, call);
     });
     return this;
   },
   off(type, call) {
-    each(this, function (node) {
+    farEach(this, function (node) {
       node.off(type, call);
     });
     return this;

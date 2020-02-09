@@ -1,37 +1,31 @@
-export function whiles(list, method, me) {
+export function whiles(list, method) {
   while (list.length) {
-    if (method.call(me, list.shift(), list))
+    if (method(list.shift()))
       break;
   }
 }
 
-export function each(obj, method, arg) {
-  if (!obj) return;
-  arg = arg || obj;
-  Object.keys(obj).every(i => {
-    var data = obj[i];
-    return !method.call(data, data, i, arg);
-  })
-  return arg;
-}
-
-export function forEach(obj, method, me) {
+export function forEach(obj, method) {
   if (!obj) return;
   if (obj.hasOwnProperty("$index")) {
     for (let i = obj.$index; i < obj.length; i++) {
-      method.call(me, obj[i], i);
+      method(obj[i], i);
     }
+  } else if (Array.isArray(obj)) {
+    obj.forEach((value, i) =>
+      method(value, i)
+    )
   } else {
-    Object.keys(obj).forEach(i => {
-      method.call(me, obj[i], i);
-    })
+    Object.keys(obj).forEach(i =>
+      method(obj[i], i)
+    )
   }
 }
 
-export function farEach(obj, method, me) {
-  Object.keys(obj).every(i => {
-    return !method.call(me, obj[i], obj);
-  })
+export function farEach(list, method) {
+  list.every((value, i) =>
+    !method(value, i)
+  )
 }
 
 export function slice(obj) {

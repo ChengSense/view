@@ -1,5 +1,5 @@
 import { Compiler, compoNode } from "./ViewCompiler";
-import { blank, each, slice } from "./ViewLang";
+import { blank, farEach, slice } from "./ViewLang";
 import { View } from "./ViewIndex";
 import { codex } from "./ViewScope";
 
@@ -163,7 +163,7 @@ export function setCache(clas, we, $cache) {
 
 function insertion(nodes, node) {
   try {
-    each(nodes, child => {
+    farEach(nodes, child => {
       if (child.node && child.node.parentNode) {
         node = child.node;
         child.node = null;
@@ -179,7 +179,7 @@ function insertion(nodes, node) {
 
 function insertNode(nodes, node) {
   try {
-    each(nodes, child => {
+    farEach(nodes, child => {
       if (child.node && child.node.parentNode) {
         node = child.node;
         return node;
