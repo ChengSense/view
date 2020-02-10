@@ -18,16 +18,15 @@ export var resolver = {
   component: function (app, node, we) {
     try {
       Reflect.setPrototypeOf(app.model, node.scope);
-      var insert = insertion(node.childNodes);
-      var childNodes = node.content.childNodes;
+      var insert = node.node;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.view, model: app.model, action: app.action });
-      let clasNodes = compoNode(insert, node, component);
-      childNodes.replace(node, clasNodes);
-      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      let view = new View({ view: app.view, model: app.model, action: app.action });
+      node.node = view.view;
+      Object.assign(node, view.content)
+      if (insert.parentNode) insert.parentNode.replaceChild(view.view, insert);
       if (!node.id) return;
       let id = codex(node.id, node.scope, we);
-      Reflect.set(clasNodes, `@${id}`, component);
+      Reflect.set(node, `@${id}`, view);
     } catch (error) {
       console.error(error)
     }

@@ -93,7 +93,7 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   function component(node, scope, clas, content) {
     if (Reflect.has(we.component, node.localName)) {
-      comNode(node, scope, clas, content);
+      comNode(scope, clas, content);
       let app = new we.component[node.localName]();
       resolver.component(app, clas, we);
     }
@@ -248,18 +248,10 @@ export function Compiler(node, scopes, childNodes, content, we) {
     };
   }
 
-  function comNode(node, scope, clas, content) {
-    var comment = document.createComment("component");
-    node.parentNode.replaceChild(comment, node);
+  function comNode(scope, clas, content) {
     clas.scope = scope;
     clas.resolver = "component";
     clas.content = content;
-    clas.childNodes.push({
-      node: comment,
-      content: clas,
-      children: [],
-      childNodes: []
-    });
   }
 
   function attrNode(newNode, scope, clas) {
@@ -274,24 +266,4 @@ export function Compiler(node, scopes, childNodes, content, we) {
 
   compiler(node, scopes, childNodes, content);
 
-}
-
-export function compoNode(node, child, component) {
-  var comment = document.createComment("component");
-  node.before(comment);
-  component.content.node = component.view;
-  return {
-    id: child.id,
-    clas: child.clas,
-    scope: child.scope,
-    resolver: child.resolver,
-    content: child.content,
-    children: [component.node],
-    childNodes: [{
-      node: comment,
-      scope: child.scope,
-      children: [],
-      childNodes: []
-    }, component.content]
-  };
 }

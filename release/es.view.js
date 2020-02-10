@@ -251,7 +251,7 @@ function Compiler(node, scopes, childNodes, content, we) {
 
   function component(node, scope, clas, content) {
     if (Reflect.has(we.component, node.localName)) {
-      comNode(node, scope, clas, content);
+      comNode(scope, clas, content);
       let app = new we.component[node.localName]();
       resolver.component(app, clas, we);
     }
@@ -406,18 +406,10 @@ function Compiler(node, scopes, childNodes, content, we) {
     };
   }
 
-  function comNode(node, scope, clas, content) {
-    var comment = document.createComment("component");
-    node.parentNode.replaceChild(comment, node);
+  function comNode(scope, clas, content) {
     clas.scope = scope;
     clas.resolver = "component";
     clas.content = content;
-    clas.childNodes.push({
-      node: comment,
-      content: clas,
-      children: [],
-      childNodes: []
-    });
   }
 
   function attrNode(newNode, scope, clas) {
@@ -432,26 +424,6 @@ function Compiler(node, scopes, childNodes, content, we) {
 
   compiler(node, scopes, childNodes, content);
 
-}
-
-function compoNode(node, child, component) {
-  var comment = document.createComment("component");
-  node.before(comment);
-  component.content.node = component.view;
-  return {
-    id: child.id,
-    clas: child.clas,
-    scope: child.scope,
-    resolver: child.resolver,
-    content: child.content,
-    children: [component.node],
-    childNodes: [{
-      node: comment,
-      scope: child.scope,
-      children: [],
-      childNodes: []
-    }, component.content]
-  };
 }
 
 var resolver = {
@@ -469,16 +441,15 @@ var resolver = {
   component: function (app, node, we) {
     try {
       Reflect.setPrototypeOf(app.model, node.scope);
-      var insert = insertion(node.childNodes);
-      var childNodes = node.content.childNodes;
+      var insert = node.node;
       clearNodes(node.childNodes);
-      let component = new View({ view: app.view, model: app.model, action: app.action });
-      let clasNodes = compoNode(insert, node, component);
-      childNodes.replace(node, clasNodes);
-      if (insert.parentNode) insert.parentNode.replaceChild(component.view, insert);
+      let view = new View({ view: app.view, model: app.model, action: app.action });
+      node.node = view.view;
+      Object.assign(node, view.content);
+      if (insert.parentNode) insert.parentNode.replaceChild(view.view, insert);
       if (!node.id) return;
       let id = codex(node.id, node.scope, we);
-      Reflect.set(clasNodes, `@${id}`, component);
+      Reflect.set(node, `@${id}`, view);
     } catch (error) {
       console.error(error);
     }
