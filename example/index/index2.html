@@ -26,16 +26,19 @@
 
 </html>
 <script type="text/javascript">
-  let $lang = /<(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-  let $chen = /<.*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
-  let $html = /<.*>/;
-  let $whea = /@when/;
-  let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/;
-  let $close = /^\}$|<\s*\/.*>/;
-  let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
+  let $lang = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+  let $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
+  let $each = /(@each)\s*\((.*)\)\s*\{/g;
   let $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
-  let $event = /(@.*)\s*=\s*("([^"]*)"|'([^']*)')/;
-  let $id = /(@id)\s*=\s*("([^"]*)"|'([^']*)')/;
+  let $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
+  let $event = /@(\w*)\s*=\s*("([^"]*)"|'([^']*)')/;
+  let $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
+  let $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
+  let $whea = /@when/g;
+  let $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g
+  let $close = /^\}$|<\s*\/\w+>/;
+  let $html = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>/;
+
   let text = document.querySelector("app").outerHTML;
   text = text.replace($lang, tag => "###########".concat(tag.trim(), "###########"));
   let list = text.split("###########");
@@ -47,36 +50,52 @@
     }
   }
 
-  function initCompiler(list, children) {
+  function initCompiler(list, children, nodes) {
     whiles(list, child => {
       if (child.trim() == "") return;
       if (new RegExp($close).test(child)) return true;
-      let item = { clas: createNode(child), children: [] };
+      let item = { clas: child, children: [], action: new Map(), nodes: [] };
       children.push(item);
       if (new RegExp($html).test(child)) {
-        if (new RegExp($close).test(item.clas.outerHTML)) {
-          initCompiler(list, item.children);
+        if (new RegExp($close).test(createNode(item.clas).outerHTML)) {
+          initCompiler(list, item.children, item.nodes);
         }
-        if (new RegExp($eash).test(child)) {
-          item.clas = createNode(child.replace($eash, child => {
-            child = child.replace($eash, "@each($3){");
-            let index = children.indexOf(item);
-            let each = { clas: createNode(child), children: [item] };
-            children.splice(index, 1, each);
-            return "";
-          }));
-        }
+        let attrs = child.match($attr);
+        nodes.push(`React.createElement('${attrs.shift()}',${createAttr(attrs)},${item.nodes.join(',')})`);
+        child = child.replace($eash, (express) => {
+          express = express.replace($eash, "@each($3){");
+          let index = children.indexOf(item);
+          let each = { clas: express, children: [item], nodes: [`React.createElement('${child.match($attr).shift()}',${item.nodes.join(',')})`] };
+          children.splice(index, 1, each);
+          nodes.splice(index, 1, `React.createElement('${express}',${each.nodes.join(',')})`);
+          return "";
+        });
+        child = child.replace($id, (express) => {
+          let name = express.replace($id, "$1");
+          let value = express.replace($id, "$3");
+          Reflect.set(item, name, value);
+          return "";
+        });
+        child = child.replace($event, (express) => {
+          let name = express.replace($event, "$1");
+          let value = express.replace($event, "$3");
+          item.action.set(name, value);
+          return "";
+        });
       }
       else if (new RegExp($chen).test(child)) {
-        initCompiler(list, item.children);
+        initCompiler(list, item.children, item.nodes);
         if (new RegExp($whea).test(child)) {
           let index = children.indexOf(item);
-          let when = { clas: createNode("@when{"), children: [item] };
+          let when = { clas: "@when{", children: [item] };
           children.splice(index, 1, when);
         } else if (new RegExp($whec).test(child)) {
           let when = children[children.length - 2];
           when.children.push(children.pop());
         }
+        nodes.push(`React.createElement('${child}',null,${item.nodes.join(',')})`);
+      } else {
+        nodes.push(`React.createElement('${child}',null,${item.nodes.join(',')})`);
       }
     });
     return children;
@@ -102,9 +121,16 @@
       return element.firstChild;
     }
   }
-
-  let apps = initCompiler(list, []);
-  console.log(apps);
-  console.log(createNode(`<div @each="item:i:list">`));
-  console.log(`<thead @each="item:i:list">`.match($eash));
+  function createAttr(attrs) {
+    let attra = {};
+    attrs.forEach(attr => {
+      let name = attr.replace($attr, "$1");
+      let value = attr.replace($attr, "$3");
+      Reflect.set(attra, name, value);
+    });
+    return JSON.stringify(attra);
+  }
+  let aaa = { children: [], action: new Map(), nodes: [] };
+  let apps = initCompiler(list, aaa.children, aaa.nodes);
+  console.log(aaa);
 </script>
