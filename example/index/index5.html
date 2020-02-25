@@ -78,7 +78,7 @@
           <tr class="{id%2?'k-alt':''}">
             @each(col:i:item){
               <td data-field="{i}" data-row="{id}">
-                {col}
+               {col}
               </td>
             }
             <td>
@@ -298,8 +298,9 @@
     }
     else if (token == quote && b == quote) {
       let c = a.concat(b);
+      node.setName(c.trim());
       token = close;
-      return c;
+      return "";
     }
     else if (token == close && b == close) {
       let c = a;
@@ -319,7 +320,7 @@
       list.push(node);
       return b;
     }
-    else if (node.type == "TAG" && token == close && b == " ") {
+    else if (node.type == "TAG" && !node.name && b == " ") {
       node.setName(a);
       return "";
     }
