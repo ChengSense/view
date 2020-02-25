@@ -107,7 +107,10 @@
       this.attrs = {};
     }
     setName(attr) {
-      if (this.name) {
+      if (attr == "") {
+        return;
+      }
+      else if (this.name) {
         let index = attr.indexOf("=");
         let name = attr.slice(0, index);
         let value = attr.slice(index + 2, attr.length - 1);
@@ -356,7 +359,7 @@
     },
     list: (function data() {
       var data = [];
-      for (var i = 0; i < 1000; i++) {
+      for (var i = 0; i < 10; i++) {
         data.push({
           id: 10000 + data.length,
           shop: "西湖店-" + data.length,
