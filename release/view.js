@@ -49,26 +49,18 @@ var view = (function (exports) {
     var node = document.createElement(name);
     return !new RegExp(/<\/\w+>/).test(node.outerHTML);
   }
-  function attrCreater(object) {
-    var list = [];
-    Object.keys(object).forEach(function (i) {
-      var value = object[i];
-      list.push("".concat(i, "=\"").concat(value, "\""));
-    });
-    return list.join(" ");
-  }
   function attrRender(object) {
     var list = [];
-    Object.keys(object).forEach(function (i) {
-      var value = object[i];
+    forEach(object, function (value, name) {
       var express = "`".concat(value.replace($express, "${$1}"), "`");
-      list.push("\"".concat(i, "\":").concat(express));
+      list.push("\"".concat(name, "\":").concat(express));
     });
     return "{".concat(list, "}");
   }
-  function forEach(list, method) {
-    list.every(function (value, i) {
-      return !method(value, i);
+  function forEach(object, method) {
+    Object.keys(object).forEach(function (key) {
+      var value = Reflect.get(object, key);
+      method(value, key);
     });
   }
 
@@ -220,15 +212,14 @@ var view = (function (exports) {
       }
     }, {
       key: "forEach",
-      value: function forEach(object, method) {
-        var _this = this;
+      value: function forEach$1(object, method) {
+        var list = this.value = [];
 
-        this.value = [];
-        Object.keys(object).forEach(function (i) {
-          var value = method(object[i], i);
-
-          _this.value.push(value.join(""));
+        forEach(object, function (value, key) {
+          var arr = method(value, key);
+          list.push.apply(list, arr);
         });
+
         return this;
       }
     }, {
@@ -273,16 +264,34 @@ var view = (function (exports) {
     },
     createElement: function createElement(name, attr) {
       if (attr) {
+        var element = document.createElement(name);
+
         for (var _len3 = arguments.length, children = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
           children[_key3 - 2] = arguments[_key3];
         }
 
-        return "<".concat(name, " ").concat(attrCreater(attr), ">").concat(children.join(""), "</").concat(name, ">");
+        children.forEach(function (a) {
+          return a instanceof Render ? a.value.forEach(function (b) {
+            return element.appendChild(b);
+          }) : element.appendChild(a);
+        });
+        setAttribute(element, attr);
+        return element;
       } else {
-        return "".concat(name);
+        var _element = document.createTextNode(name);
+
+        return _element;
       }
     }
   };
+
+  function setAttribute(element, attr) {
+    forEach(attr, function (value, name) {
+      var attribute = document.createAttribute(name.replace("@", "on"));
+      attribute.value = value;
+      element.setAttributeNode(attribute);
+    });
+  }
 
   function ReactCode(express) {
     return new Function('React', "return ".concat(express, ";"))(React);
@@ -351,7 +360,6 @@ var view = (function (exports) {
       return a.react();
     }).join().trim();
     var func = ReactCode(express).replace($when, ".when").trim();
-    console.info(express);
     return func;
   }
 
@@ -546,6 +554,7 @@ var view = (function (exports) {
       key: "creater",
       value: function creater(app) {
         this.view = Transfer(this.view);
+        console.warn(this.view);
         this.node = RenderCode(this.view, this.model);
       }
     }]);

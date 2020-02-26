@@ -12,29 +12,20 @@ function selfClose(name) {
   return !new RegExp(/<\/\w+>/).test(node.outerHTML);
 }
 
-function attrCreater(object) {
-  let list = [];
-  Object.keys(object).forEach(i => {
-    let value = object[i];
-    list.push(`${i}="${value}"`);
-  });
-  return list.join(" ");
-}
-
 function attrRender(object) {
   let list = [];
-  Object.keys(object).forEach(i => {
-    let value = object[i];
+  forEach(object, (value, name) => {
     let express = `\`${value.replace($express, "${$1}")}\``;
-    list.push(`"${i}":${express}`);
+    list.push(`"${name}":${express}`);
   });
   return `{${list}}`;
 }
 
-function forEach(list, method) {
-  list.every((value, i) =>
-    !method(value, i)
-  );
+function forEach(object, method) {
+  Object.keys(object).forEach(key => {
+    let value = Reflect.get(object, key);
+    method(value, key);
+  });
 }
 
 class TagNode {
@@ -147,10 +138,10 @@ class Render {
     return this;
   }
   forEach(object, method) {
-    this.value = [];
-    Object.keys(object).forEach(i => {
-      let value = method(object[i], i);
-      this.value.push(value.join(""));
+    let list = this.value = [];
+    forEach(object, (value, key) => {
+      let arr = method(value, key);
+      list.push.apply(list, arr);
     });
     return this;
   }
@@ -186,13 +177,25 @@ let React = {
   },
   createElement(name, attr, ...children) {
     if (attr) {
-      return `<${name} ${attrCreater(attr)}>${children.join("")}</${name}>`;
+      let element = document.createElement(name);
+      children.forEach(a => a instanceof Render ? a.value.forEach(b => element.appendChild(b)) : element.appendChild(a));
+      setAttribute(element, attr);
+      return element;
     }
     else {
-      return `${name}`;
+      let element = document.createTextNode(name);
+      return element;
     }
   }
 };
+
+function setAttribute(element, attr) {
+  forEach(attr, (value, name) => {
+    let attribute = document.createAttribute(name.replace("@", "on"));
+    attribute.value = value;
+    element.setAttributeNode(attribute);
+  });
+}
 
 function ReactCode(express) {
   return new Function('React',
@@ -273,7 +276,6 @@ function Transfer(html) {
     replace($when, ".when").
     trim();
 
-  console.info(express);
   return func;
 }
 
@@ -456,6 +458,7 @@ class View {
   }
   creater(app) {
     this.view = Transfer(this.view);
+    console.warn(this.view);
     this.node = RenderCode(this.view, this.model);
   }
 }
@@ -466,7 +469,7 @@ let watcher = {
     document.querySelector("app").innerHTML = view;
   },
   get(path) {
-    
+
   }
 };
 

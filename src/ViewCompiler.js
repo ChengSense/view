@@ -67,6 +67,5 @@ export function Transfer(html) {
     replace($when, ".when").
     trim();
 
-  console.info(express);
   return func;
 }

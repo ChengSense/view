@@ -11,25 +11,24 @@ export function selfClose(name) {
 
 export function attrCreater(object) {
   let list = [];
-  Object.keys(object).forEach(i => {
-    let value = object[i];
-    list.push(`${i}="${value}"`);
+  forEach(object, (value, name) => {
+    list.push(`${name}="${value}"`);
   });
   return list.join(" ");
 }
 
 export function attrRender(object) {
   let list = [];
-  Object.keys(object).forEach(i => {
-    let value = object[i];
+  forEach(object, (value, name) => {
     let express = `\`${value.replace($express, "${$1}")}\``;
-    list.push(`"${i}":${express}`);
+    list.push(`"${name}":${express}`);
   });
   return `{${list}}`;
 }
 
-export function forEach(list, method) {
-  list.every((value, i) =>
-    !method(value, i)
-  )
+export function forEach(object, method) {
+  Object.keys(object).forEach(key => {
+    let value = Reflect.get(object, key);
+    method(value, key)
+  });
 }

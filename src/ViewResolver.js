@@ -1,5 +1,5 @@
 import { $chen, $express } from "./ViewExpress"
-import { selfClose, attrCreater, attrRender } from "./ViewLang"
+import { selfClose, forEach, attrRender } from "./ViewLang"
 
 export class TagNode {
   constructor(name) {
@@ -111,10 +111,10 @@ export class Render {
     return this;
   }
   forEach(object, method) {
-    this.value = [];
-    Object.keys(object).forEach(i => {
-      let value = method(object[i], i);
-      this.value.push(value.join(""));
+    let list = this.value = [];
+    forEach(object, (value, key) => {
+      let arr = method(value, key);
+      list.push.apply(list, arr);
     });
     return this;
   }
@@ -150,10 +150,22 @@ export let React = {
   },
   createElement(name, attr, ...children) {
     if (attr) {
-      return `<${name} ${attrCreater(attr)}>${children.join("")}</${name}>`;
+      let element = document.createElement(name);
+      children.forEach(a => a instanceof Render ? a.value.forEach(b => element.appendChild(b)) : element.appendChild(a));
+      setAttribute(element, attr);
+      return element;
     }
     else {
-      return `${name}`;
+      let element = document.createTextNode(name);
+      return element;
     }
   }
+}
+
+function setAttribute(element, attr) {
+  forEach(attr, (value, name) => {
+    let attribute = document.createAttribute(name.replace("@", "on"));
+    attribute.value = value;
+    element.setAttributeNode(attribute);
+  });
 }

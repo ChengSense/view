@@ -17,6 +17,7 @@ export class View {
   }
   creater(app) {
     this.view = Transfer(this.view);
+    console.warn(this.view);
     this.node = RenderCode(this.view, this.model);
   }
 }
@@ -27,7 +28,7 @@ let watcher = {
     document.querySelector("app").innerHTML = view;
   },
   get(path) {
-    
+
   }
 };
 
