@@ -1,6 +1,4 @@
-import { farEach, slice } from "./ViewLang";
-import { code } from "./ViewScope";
-import { $attr, $html } from "./ViewExpress";
+import { forEach } from "./ViewLang";
 
 export function query(express) {
   try {
@@ -13,26 +11,6 @@ export function query(express) {
   }
 }
 
-export function createNode(template) {
-  if (new RegExp($html).test(template)) {
-    let list = template.match($attr);
-    let element = document.createElement(list.shift());
-    list.forEach(attr => {
-      try {
-        let name = attr.replace($attr, "$1");
-        let value = attr.replace($attr, "$3");
-        element.setAttribute(name, value);
-      } catch (error) {
-      }
-    });
-    return element;
-  } else {
-    let range = document.createRange();
-    let element = range.createContextualFragment(template)
-    return element.firstChild;
-  }
-}
-
 function addListener(type, methods, scope) {
   if (this.addEventListener) {
     this.addEventListener(type, function (event) {
@@ -40,10 +18,7 @@ function addListener(type, methods, scope) {
         params.forEach(param => {
           let args = param ? code(`[${param}]`, scope) : [];
           args.push(event);
-          let proto = Reflect.getPrototypeOf(method);
-          let action = Object.assign({}, proto);
-          Reflect.setPrototypeOf(action, scope || method.$model);
-          method.apply(action, args);
+          method.apply(this, args);
         })
       });
     }, false);
@@ -130,7 +105,7 @@ Object.assign(Node.prototype, {
     return this;
   },
   reappend(node) {
-    farEach(slice(this.childNodes), function (child) {
+    forEach(slice(this.childNodes), function (child) {
       child.parentNode.removeChild(child);
     });
     this.appendChild(node);
@@ -149,13 +124,13 @@ Object.assign(Node.prototype, {
 
 Object.assign(NodeList.prototype, {
   on(type, call) {
-    farEach(this, function (node) {
+    forEach(this, function (node) {
       node.on(type, call);
     });
     return this;
   },
   off(type, call) {
-    farEach(this, function (node) {
+    forEach(this, function (node) {
       node.off(type, call);
     });
     return this;

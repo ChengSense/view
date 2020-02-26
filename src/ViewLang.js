@@ -1,60 +1,35 @@
-export function whiles(list, method) {
-  while (list.length) {
-    if (method(list.shift()))
-      break;
-  }
+import { $express } from "./ViewExpress"
+
+export function toChars(html) {
+  return html.split("");
 }
 
-export function forEach(obj, method) {
-  if (!obj) return;
-  if (Array.isArray(obj)) {
-    for (let i = obj.index || 0; i < obj.length; i++) {
-      method(obj[i], i);
-    }
-  } else {
-    Object.keys(obj).forEach(i =>
-      method(obj[i], i)
-    )
-  }
+export function selfClose(name) {
+  let node = document.createElement(name);
+  return !new RegExp(/<\/\w+>/).test(node.outerHTML);
 }
 
-export function farEach(list, method) {
+export function attrCreater(object) {
+  let list = [];
+  Object.keys(object).forEach(i => {
+    let value = object[i];
+    list.push(`${i}="${value}"`);
+  });
+  return list.join(" ");
+}
+
+export function attrRender(object) {
+  let list = [];
+  Object.keys(object).forEach(i => {
+    let value = object[i];
+    let express = `\`${value.replace($express, "${$1}")}\``;
+    list.push(`"${i}":${express}`);
+  });
+  return `{${list}}`;
+}
+
+export function forEach(list, method) {
   list.every((value, i) =>
     !method(value, i)
   )
 }
-
-export function slice(obj) {
-  return [].slice.call(obj);
-}
-
-export function blank(str) {
-  return str == null || str == undefined || str == "";
-}
-
-Object.assign(Array.prototype, {
-  remove(n) {
-    var index = this.indexOf(n);
-    if (index > -1)
-      this.splice(index, 1);
-    return this;
-  },
-  replace(o, n) {
-    var index = this.indexOf(o);
-    if (index > -1)
-      this.splice(index, 1, n);
-  },
-  splices(items) {
-    this.splice.apply(this, items);
-  },
-  has(o) {
-    var index = this.indexOf(o);
-    if (index > -1)
-      return true;
-    return false
-  },
-  ones(o) {
-    if (this.has(o)) return;
-    this.push(o);
-  }
-});

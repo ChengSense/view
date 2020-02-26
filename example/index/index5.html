@@ -33,21 +33,6 @@
 
 <body>
   <app>
-    @each(item:l:list){
-    <div forEach={list,l,item}>
-      @each(i:item){
-      <div @click="alert(param1)">
-        @when(i=="shop"){
-        <div id="{i}">{param1}</div>
-        }.when(i=="id"){
-        <div>{param2}</div>
-        }.when{
-        <div>{i}</div>
-        }
-      </div>
-      }
-    </div>
-    }
   </app>
 </body>
 
@@ -71,7 +56,7 @@
         </table>
       </div>
     </div>
-    <div class="k-grid-content k-auto-scrollable" style="height: 643px;" @scroll="scroll">
+    <div class="k-grid-content k-auto-scrollable" style="height: 643px;" onScroll="scroll">
       <table style="height: auto;">
         <tbody>
           @each(item:id:list){
@@ -87,7 +72,7 @@
                 @when(edit==id){ 保存 }
                 .when{ 编辑 }
               </span>
-              <span class="k-button k-button-icontext k-grid-delete" @click="del(id)">删除</span>
+              <span class="k-button k-button-icontext k-grid-delete" onClick="del(id)">删除</span>
             </td>
           </tr>
           }
@@ -96,281 +81,76 @@
     </div>
   </div>
   `;
-  let $lang = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-  let $chen = /(@each|@when|\.when)\s*(\((.*)\))?\s*\{/;
-  let $express = /\{([^\{\}]*)\}/;
 
-  class TagNode {
-    constructor(name) {
-      this.type = "TAG";
-      this.name = name;
-      this.attrs = {};
-    }
-    setName(attr) {
-      if (attr == "") {
-        return;
-      }
-      else if (this.name) {
-        let index = attr.indexOf("=");
-        let name = attr.slice(0, index);
-        let value = attr.slice(index + 2, attr.length - 1);
-        Reflect.set(this.attrs, name, value)
-      }
-      else {
-        this.name = attr;
-      }
-    }
-    react() {
-      if (this.name.startsWith("/")) {
-        return ")";
-      }
-      else if (selfClose(this.name)) {
-        let attrs = JSON.stringify(this.attrs);
-        return `\nReact.createRender("${this.name}",${attrs})`;
-      }
-      else {
-        let attrs = JSON.stringify(this.attrs);
-        return `\nReact.createRender("${this.name}",${attrs}`;
-      }
-    }
-  }
-
-  class FuncNode {
-    constructor(list, name, text) {
-      this.type = "FUNC";
-      this.name = name;
-      this.attrs = {};
-      this.setName(list, text)
-    }
-    setName(list, text) {
-      if (this.name.startsWith(".when")) {
-        list.push(this);
-        let chen = this.name.match($chen);
-        this.attrs = chen[3];
-        this.name = chen[1];
-      }
-      else if (this.name.startsWith("}")) {
-        let name = text.slice(0, text.indexOf(this.name));
-        list.push(new TextNode(name));
-        list.push(this);
-      }
-      else if (this.name.startsWith("{")) {
-        let name = text.slice(0, text.indexOf(this.name));
-        list.push(new TextNode(name));
-        list.push(new TextNode(this.name));
-      }
-      else {
-        let name = text.slice(0, text.indexOf(this.name));
-        list.push(new TextNode(name));
-        list.push(this);
-        let chen = this.name.match($chen);
-        this.attrs = chen[3];
-        this.name = chen[1];
-      }
-    }
-    react() {
-      if (this.name.startsWith("}")) {
-        return ")";
-      }
-      else {
-        let attrs = JSON.stringify(this.attrs);
-        return `\nReact.createFunction("${this.name}",${attrs}`;
-      }
-    }
-  }
-
-  class TextNode {
-    constructor(name) {
-      this.type = "TEXT";
-      this.name = name;
-    }
-    setName(attr) {
-      this.name = attr;
-    }
-    react() {
-      let name = this.name.replace(/\n/g, "");
-      return `\nReact.createRender("${name}",null)`;
-    }
-  }
-
-  class Render {
-    constructor() {
-      this.status = null;
-      this.value = null;
-    }
-    when(status, method) {
-      if (this.status == null && status) {
-        this.status = status;
-        this.value = method();
-      }
-      else if (this.status == null && status == undefined) {
-        this.status = status;
-        this.value = method();
-      }
-      return this;
-    }
-    forEach(object, method) {
-      this.value = [];
-      Object.keys(object).forEach(i => {
-        let value = method(object[i], i);
-        this.value.push(value.join(""));
-      });
-      return this;
-    }
-    toString() {
-      return this.value.join("");
-    }
-  }
-
-  let React = {
-    createFunction(...element) {
-      let name = element.shift(), param = element.shift();
-      if ("@when" == name) {
-        return `\nnew Render().when(${param}, () => [${element}])`;
-      }
-      else if (".when" == name) {
-        return `\n.when(${param}, () => [${element}])`;
-      }
-      else if ("@each" == name) {
-        let params = param.split(":"), object = params.pop();
-        return `\nnew Render().forEach(${object}, (${params}) => [${element}])`;
+  let app = new View({
+    view: html,
+    model: {
+      edit: false,
+      columns: {
+        id: "订单号",
+        shop: "门店名称",
+        userName: "",
+        address: "住址"
+      },
+      list: (function data() {
+        var data = [];
+        for (var i = 0; i < 1000; i++) {
+          data.push({
+            id: 10000 + data.length,
+            shop: "西湖店-" + data.length,
+            userName: "李佳-" + data.length,
+            address: "西湖区-" + data.length
+          });
+        }
+        return data;
+      })()
+    },
+    action: {
+      node: {},
+      add() {
+        this.list.push({
+          id: 10000 + this.list.length,
+          shop: "西湖店-" + this.list.length,
+          userName: "李佳-" + this.list.length,
+          address: "西湖区-" + this.list.length
+        });
+      },
+      edit(item) {
+        this.$action.node = item;
+        if (this.edit == false) {
+          this.$ref.edit0userName = AppInput;
+          this.edit = true;
+        } else {
+          this.$ref.edit0userName = AppText;
+          this.edit = false;
+        }
+      },
+      del(id) {
+        this.list.splice(id, 1);
       }
     },
-    createRender(...element) {
-      let name = element.shift(), attr = element.shift(), express;
-      if (attr) {
-        return `\nReact.createElement("${name}",${attrRender(attr)},${element})`;
+    filter: {
+      editing(item) {
+        if (this.edit && this.$action.node == item) {
+          return input;
+        } else {
+          return text;
+        }
+      },
+      editTitle(item) {
+        if (this.edit && this.$action.node == item) {
+          return "保存";
+        } else {
+          return "编辑";
+        }
       }
-      else if (express = name.match($express)) {
-        return `\nReact.createElement(${express[1]},null)`;
-      }
-      else {
-        return `\nReact.createElement("${name}",null)`;
-      }
-    },
-    createElement(...element) {
-      let name = element.shift();
-      let attr = element.shift();
-      if (attr) {
-        return `<${name} ${attrCreater(attr)}>${element.join("")}</${name}>`;
-      }
-      else {
-        return `${name}`;
-      }
-    }
-  }
-
-  function selfClose(name) {
-    let node = document.createElement(name);
-    return !new RegExp(/<\/\w+>/).test(node.outerHTML);
-  }
-
-  function attrCreater(object) {
-    let list = [];
-    Object.keys(object).forEach(i => {
-      let value = object[i];
-      list.push(`${i}="${value}"`);
-    });
-    return list.join(" ");
-  }
-
-  function attrRender(object) {
-    let list = [];
-    Object.keys(object).forEach(i => {
-      let value = object[i];
-      let express = `\`${value.replace($express, "${$1}")}\``;
-      list.push(`"${i}":${express}`);
-    });
-    return `{${list}}`;
-  }
-
-  function toChars(html) {
-    return html.split("");
-  }
-
-  let list = [];
-  let open = "<", quote = "\"", close = ">";
-  let chem = null, node = null, token = null;
-  let chars = toChars(html);
-  chars.reduce((a, b) => {
-    if (a == open) {
-      let c = b;
-      token = close;
-      node = new TagNode();
-      return c;
-    }
-    else if (token == quote && b == quote) {
-      let c = a.concat(b);
-      node.setName(c.trim());
-      token = close;
-      return "";
-    }
-    else if (token == close && b == close) {
-      let c = a;
-      token = null;
-      node.setName(c);
-      list.push(node);
-      node = new TextNode();
-      return "";
-    }
-    else if (b == quote) {
-      let c = a.concat(b);
-      token = quote;
-      return c;
-    }
-    else if (b == open) {
-      node.setName(a)
-      list.push(node);
-      return b;
-    }
-    else if (node.type == "TAG" && !node.name && b == " ") {
-      node.setName(a);
-      return "";
-    }
-    else if (node.type == "TEXT" && (chem = a.match($lang))) {
-      new FuncNode(list, chem[0], a);
-      return b;
-    }
-    else {
-      let c = a.concat(b);
-      return c;
     }
   });
 
-  function Code(list) {
-    let express = list.filter(a => a.name.trim() != "").map(a => a.react()).join(",").trim();
-    console.log(express);
-    return new Function('scope', `return ${express};`)();
-  }
-  function render(list, scope) {
-    let express = Code(list).replace(/,\s*\.when/g, ".when").trim();
-    console.log(express);
-    return new Function('scope', `let {${Object.keys(scope)}}=scope;return ${express};`
-    )(scope);
-  }
+  document.querySelector("app").on("click", e => {
+    app.model.list.shift();
+  });
 
-  let data = {
-    edit: false,
-    columns: {
-      id: "订单号",
-      shop: "门店名称",
-      userName: "",
-      address: "住址"
-    },
-    list: (function data() {
-      var data = [];
-      for (var i = 0; i < 10; i++) {
-        data.push({
-          id: 10000 + data.length,
-          shop: "西湖店-" + data.length,
-          userName: "李佳-" + data.length,
-          address: "西湖区-" + data.length
-        });
-      }
-      return data;
-    })()
-  };
-  let app = render(list, data);
-  document.querySelector("app").outerHTML = app;
+  document.querySelector("app").innerHTML = app.node;
 
 </script>

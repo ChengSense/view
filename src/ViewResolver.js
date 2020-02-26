@@ -1,189 +1,159 @@
-import { Compiler, compoNode } from "./ViewCompiler";
-import { blank, farEach, slice } from "./ViewLang";
-import { View } from "./ViewIndex";
-import { codex } from "./ViewScope";
+import { $chen, $express } from "./ViewExpress"
+import { selfClose, attrCreater, attrRender } from "./ViewLang"
 
-export var resolver = {
-  view: function (view, node, scope, content, we) {
-    try {
-      var doc = document.createDocumentFragment();
-      new Compiler(doc, scope, slice(node.children), content, we);
-      content.children = node.children;
-      content.clas = node.clas;
-      view.reappend(doc);
-    } catch (error) {
-      console.error(error)
+export class TagNode {
+  constructor(name) {
+    this.type = "TAG";
+    this.name = name;
+    this.attrs = {};
+  }
+  setName(attr) {
+    if (attr == "") {
+      return;
     }
-  },
-  component: function (app, node, we) {
-    try {
-      Reflect.setPrototypeOf(app.model, node.scope);
-      var insert = node.node;
-      clearNodes(node.childNodes);
-      let view = new View({ view: app.view, model: app.model, action: app.action });
-      node.node = view.view;
-      Object.assign(node, view.content)
-      if (insert.parentNode) insert.parentNode.replaceChild(view.view, insert);
-      if (!node.id) return;
-      let id = codex(node.id, node.scope, we);
-      Reflect.set(node, `@${id}`, view);
-    } catch (error) {
-      console.error(error)
+    else if (this.name) {
+      let index = attr.indexOf("=");
+      let name = attr.slice(0, index);
+      let value = attr.slice(index + 2, attr.length - 1);
+      Reflect.set(this.attrs, name, value)
     }
-  },
-  when: function (node, we) {
-    try {
-      var insert = insertion(node.childNodes);
-      var doc = document.createDocumentFragment();
-      var childNodes = node.content.childNodes;
-      clearNodes(node.childNodes);
-      new Compiler(doc, node.scope, [node], node.content, we);
-      childNodes.replace(node, childNodes.pop());
-      if (insert.parentNode)
-        insert.parentNode.replaceChild(doc, insert);
-    } catch (error) {
-      console.error(error)
-    }
-  },
-  each: function (node, we) {
-    try {
-      var insert = insertion(node.childNodes);
-      var doc = document.createDocumentFragment();
-      var childNodes = node.content.childNodes;
-      clearNodes(node.childNodes);
-      new Compiler(doc, node.scope, [node], node.content, we);
-      childNodes.replace(node, childNodes.pop())
-      if (insert.parentNode)
-        insert.parentNode.replaceChild(doc, insert);
-    } catch (error) {
-      console.error(error)
-    }
-  },
-  array: function (node, we, index, nodes) {
-    try {
-      var insert = insertNode([node.childNodes[index]]);
-      var doc = document.createDocumentFragment();
-      var child = { clas: node.clas, children: node.children, scope: node.scope };
-      var content = { childNodes: [], children: [] };
-      new Compiler(doc, node.scope, [child], content, we);
-      doc.removeChild(doc.childNodes[0]);
-      var childNodes = slice(content.childNodes[0].childNodes);
-      childNodes.splice(0, 1, index + 1, 0);
-      node.childNodes.splices(childNodes);
-      nodes.remove(content.childNodes[0]);
-      if (insert.parentNode) insert.after(doc);
-    } catch (error) {
-      console.error(error)
-    }
-  },
-  express: function (node, we, cache) {
-    try {
-      node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
-      setCache(node, we, cache);
-      if (node.node.name == "value")
-        node.node.ownerElement.value = node.node.nodeValue;
-    } catch (error) {
-      console.error(error)
-    }
-  },
-  attribute: function (node, we, cache) {
-    try {
-      var newNode = document.createAttribute(codex(node.clas.name, scope));
-      setCache(node, we, cache);
-      newNode.nodeValue = node.clas.nodeValue;
-      node.node.ownerElement.setAttributeNode(newNode);
-      node.node.ownerElement.removeAttributeNode(node.node);
-    } catch (error) {
-      console.error(error)
+    else {
+      this.name = attr;
     }
   }
-};
-
-export var cacher = function (cache, index, add) {
-  cache.forEach((nodes, we) => {
-    nodes.forEach(node => {
-      try {
-        if (arrayEach[node.resolver])
-          arrayEach[node.resolver](node, we, nodes, index, add);
-        else
-          resolver[node.resolver](node, we, cache);
-      } catch (error) {
-        console.error(error);
-      }
-    })
-  });
-};
-
-var arrayEach = {
-  each: function (node, we, children, index, add) {
-    try {
-      if (add > 0) {
-        resolver.array(node, we, index, children);
-      }
-      else {
-        var nodes = node.childNodes.splice(index + 1);
-        clearNodes(nodes);
-      }
-    } catch (error) {
-      console.error(error);
+  react() {
+    if (this.name.startsWith("/")) {
+      return ")";
+    }
+    else if (selfClose(this.name)) {
+      let attrs = JSON.stringify(this.attrs);
+      return `\nReact.createRender("${this.name}",${attrs})`;
+    }
+    else {
+      let attrs = JSON.stringify(this.attrs);
+      return `\nReact.createRender("${this.name}",${attrs}`;
     }
   }
-};
-
-export function setCache(clas, we, $cache) {
-  $cache.forEach(value => {
-    let cache = value.get(we);
-    if (cache) {
-      cache.ones(clas);
-    } else {
-      value.set(we, [clas]);
-    }
-  });
 }
 
-function insertion(nodes, node) {
-  try {
-    farEach(nodes, child => {
-      if (child.node && child.node.parentNode) {
-        node = child.node;
-        child.node = null;
-        return node;
-      };
-      node = insertion(child.childNodes);
+export class FuncNode {
+  constructor(list, name, text) {
+    this.type = "FUNC";
+    this.name = name;
+    this.attrs = {};
+    this.setName(list, text)
+  }
+  setName(list, text) {
+    if (this.name.startsWith(".when")) {
+      list.push(this);
+      let chen = this.name.match($chen);
+      this.attrs = chen[3];
+      this.name = chen[1];
+    }
+    else if (this.name.startsWith("}")) {
+      let name = text.slice(0, text.indexOf(this.name));
+      list.push(new TextNode(name));
+      list.push(this);
+    }
+    else if (this.name.startsWith("{")) {
+      let name = text.slice(0, text.indexOf(this.name));
+      list.push(new TextNode(name));
+      list.push(new TextNode(this.name));
+    }
+    else {
+      let name = text.slice(0, text.indexOf(this.name));
+      list.push(new TextNode(name));
+      list.push(this);
+      let chen = this.name.match($chen);
+      this.attrs = chen[3];
+      this.name = chen[1];
+    }
+  }
+  react() {
+    if (this.name.startsWith("}")) {
+      return ")";
+    }
+    else {
+      let attrs = JSON.stringify(this.attrs);
+      return `\nReact.createFunction("${this.name}",${attrs}`;
+    }
+  }
+}
+
+export class TextNode {
+  constructor(name) {
+    this.type = "TEXT";
+    this.name = name;
+  }
+  setName(attr) {
+    this.name = attr;
+  }
+  react() {
+    let name = this.name.replace(/\n/g, "");
+    return `\nReact.createRender("${name}",null)`;
+  }
+}
+
+export class Render {
+  constructor() {
+    this.status = null;
+    this.value = null;
+  }
+  when(status, method) {
+    if (this.status == null && status) {
+      this.status = status;
+      this.value = method();
+    }
+    else if (this.status == null && status == undefined) {
+      this.status = status;
+      this.value = method();
+    }
+    return this;
+  }
+  forEach(object, method) {
+    this.value = [];
+    Object.keys(object).forEach(i => {
+      let value = method(object[i], i);
+      this.value.push(value.join(""));
     });
-    return node;
-  } catch (error) {
-    console.error(error)
+    return this;
+  }
+  toString() {
+    return this.value.join("");
   }
 }
 
-function insertNode(nodes, node) {
-  try {
-    farEach(nodes, child => {
-      if (child.node && child.node.parentNode) {
-        node = child.node;
-        return node;
-      }
-      if (child.childNodes.length) {
-        let children = child.childNodes[child.childNodes.length - 1];
-        if (children.node && children.node.parentNode) {
-          node = children.node;
-          return node;
-        }
-        node = insertNode([children]);
-      }
-    });
-    return node;
-  } catch (error) {
-    console.error(error)
+export let React = {
+  createFunction(name, param, ...children) {
+    if ("@when" == name) {
+      return `\nnew Render().when(${param}, () => [${children}])`;
+    }
+    else if (".when" == name) {
+      return `\n.when(${param}, () => [${children}])`;
+    }
+    else if ("@each" == name) {
+      let params = param.split(":"), object = params.pop();
+      return `\nnew Render().forEach(${object}, (${params}) => [${children}])`;
+    }
+  },
+  createRender(name, attr, ...children) {
+    let express;
+    if (attr) {
+      return `\nReact.createElement("${name}",${attrRender(attr)},${children})`;
+    }
+    else if (express = name.match($express)) {
+      return `\nReact.createElement(${express[1]},null)`;
+    }
+    else {
+      return `\nReact.createElement("${name}",null)`;
+    }
+  },
+  createElement(name, attr, ...children) {
+    if (attr) {
+      return `<${name} ${attrCreater(attr)}>${children.join("")}</${name}>`;
+    }
+    else {
+      return `${name}`;
+    }
   }
-}
-
-export function clearNodes(nodes) {
-  nodes.forEach(function (child) {
-    if (child.node && child.node.parentNode)
-      return child.node.parentNode.removeChild(child.node);
-    if (child.childNodes)
-      clearNodes(child.childNodes);
-  });
 }

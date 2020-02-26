@@ -37,618 +37,354 @@ var view = (function (exports) {
     return Constructor;
   }
 
-  function whiles(list, method) {
-    while (list.length) {
-      if (method(list.shift())) break;
-    }
-  }
-  function forEach(obj, method) {
-    if (!obj) return;
+  var $lang = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
+  var $chen = /(@each|@when|\.when)\s*(\((.*)\))?\s*\{/;
+  var $express = /\{([^\{\}]*)\}/;
+  var $when = /,\s*\.when/g;
 
-    if (Array.isArray(obj)) {
-      for (var i = obj.index || 0; i < obj.length; i++) {
-        method(obj[i], i);
-      }
-    } else {
-      Object.keys(obj).forEach(function (i) {
-        return method(obj[i], i);
-      });
-    }
+  function toChars(html) {
+    return html.split("");
   }
-  function farEach(list, method) {
+  function selfClose(name) {
+    var node = document.createElement(name);
+    return !new RegExp(/<\/\w+>/).test(node.outerHTML);
+  }
+  function attrCreater(object) {
+    var list = [];
+    Object.keys(object).forEach(function (i) {
+      var value = object[i];
+      list.push("".concat(i, "=\"").concat(value, "\""));
+    });
+    return list.join(" ");
+  }
+  function attrRender(object) {
+    var list = [];
+    Object.keys(object).forEach(function (i) {
+      var value = object[i];
+      var express = "`".concat(value.replace($express, "${$1}"), "`");
+      list.push("\"".concat(i, "\":").concat(express));
+    });
+    return "{".concat(list, "}");
+  }
+  function forEach(list, method) {
     list.every(function (value, i) {
       return !method(value, i);
     });
   }
-  function slice(obj) {
-    return [].slice.call(obj);
-  }
-  function blank(str) {
-    return str == null || str == undefined || str == "";
-  }
-  Object.assign(Array.prototype, {
-    remove: function remove(n) {
-      var index = this.indexOf(n);
-      if (index > -1) this.splice(index, 1);
-      return this;
-    },
-    replace: function replace(o, n) {
-      var index = this.indexOf(o);
-      if (index > -1) this.splice(index, 1, n);
-    },
-    splices: function splices(items) {
-      this.splice.apply(this, items);
-    },
-    has: function has(o) {
-      var index = this.indexOf(o);
-      if (index > -1) return true;
-      return false;
-    },
-    ones: function ones(o) {
-      if (this.has(o)) return;
-      this.push(o);
+
+  var TagNode =
+  /*#__PURE__*/
+  function () {
+    function TagNode(name) {
+      _classCallCheck(this, TagNode);
+
+      this.type = "TAG";
+      this.name = name;
+      this.attrs = {};
     }
-  });
 
-  var $lang = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>|(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{|\{([^\{\}]*)\}|\}/g;
-  var $chen = /(@each|@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/;
-  var $each = /(@each)\s*\((.*)\)\s*\{/g;
-  var $eash = /(@each)\s*=\s*("([^"]*)"|'([^']*)')/;
-  var $id = /@(id)\s*=\s*("([^"]*)"|'([^']*)')/;
-  var $event = /@(\w*)\s*=\s*("([^"]*)"|'([^']*)')/;
-  var $when = /(@when|\.when)\s*\((.*)\)\s*\{|\.when\s*\{/g;
-  var $whec = /\.when\s*\((.*)\)\s*\{|\.when\s*\{/g;
-  var $whea = /@when/g;
-  var $attr = /\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/g;
-  var $express = /\{([^\{\}]*)\}/g;
-  var $close = /^\}$|<\s*\/\w+>/;
-  var $word = /("[^"]*"|'[^']*')|(\.?([_\$_a-zA-Z]+\w?)(\.([_\$a-zA-Z]+\w?))*)/g;
-  var $html = /<\s*([^\s"'<>=]+)(?:[^"'>]|"[^"]*"|'[^']*')*>/;
-
-  function code(_express, _scope) {
-    try {
-      global.$path = undefined;
-      global.$cache = new Map();
-      _express = _express.replace($express, "$1");
-      return Code(_express, _scope);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-  function codex(_express, _scope, we) {
-    try {
-      global.$path = undefined;
-      global.$cache = new Map();
-      _express = "'".concat(_express.replace($express, "'+($1)+'"), "'");
-      return codec(_express, _scope, we);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-  function codeo(_express, _scope, we) {
-    try {
-      global.$path = undefined;
-      global.$cache = new Map();
-      _express = _express.replace($express, "$1");
-      return codec(_express, _scope, we);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-
-  function codec(_express, _scope, we) {
-    try {
-      var filter = Reflect.getPrototypeOf(we.filter);
-      Reflect.setPrototypeOf(filter, _scope);
-      return Code(_express, we.filter);
-    } catch (error) {
-      console.warn(error);
-      return undefined;
-    }
-  }
-
-  var codeCacher = new Map();
-
-  function Code(_express, scope) {
-    var express = codeCacher.get(_express);
-    if (express == undefined) codeCacher.set(_express, express = _express.replace($word, function (word) {
-      return word.match(/^["'\.]/) ? word : "scope.".concat(word);
-    }));
-    return new Function('scope', "return ".concat(express, ";"))(scope);
-  }
-  function handler(proto, field, scope, key) {
-    return {
-      get: function get(parent, prop) {
-        if (field == prop) return Reflect.get(scope, key);
-        if (prop == "$target") return parent;
-        if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
-        return Reflect.get(proto, prop);
-      },
-      set: function set(parent, prop, val) {
-        if (field == prop) return Reflect.set(scope, key, val);
-        if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
-        return Reflect.set(proto, prop, val);
-      }
-    };
-  }
-  function setScopes(we) {
-    var action = {
-      $view: we.view,
-      $model: we.model,
-      $action: we.action,
-      $watch: we.watch,
-      $ref: we.ref
-    };
-    we.action = we.action || {};
-    Reflect.setPrototypeOf(action, Function.prototype);
-    Object.values(we.action).forEach(function (method) {
-      return Reflect.setPrototypeOf(method, action);
-    });
-    var filter = Object.assign({}, action);
-    we.filter = we.filter || {};
-    Reflect.setPrototypeOf(we.filter, filter);
-  }
-
-  function Compiler(node, scopes, childNodes, content, we) {
-    function compiler(node, scopes, childNodes, content) {
-      farEach(childNodes, function (child) {
-        if (child.clas.nodeType == 1) {
-          if (/(CODE|SCRIPT)/.test(child.clas.nodeName)) {
-            var newNode = child.clas.cloneNode(true);
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-          } else {
-            var newNode = child.clas.cloneNode();
-            node.appendChild(newNode);
-            var clasNodes = classNode(newNode, child);
-            content.childNodes.push(clasNodes);
-            component(newNode, scopes, clasNodes, content);
-            compiler(newNode, scopes, child.children, clasNodes);
-            commom(newNode, scopes, clasNodes, child);
-          }
-        } else if (new RegExp($each).test(child.clas.nodeValue)) {
-          var expreses = child.clas.nodeValue.replace($each, "$2").split(":");
-          var field = expreses.shift().trim(),
-              source = expreses.pop().trim(),
-              id = expreses.shift();
-          var sources = code(source, scopes),
-              clas = eachNode(null, node, child);
-          content.childNodes.push(clas);
-          binding.each(null, scopes, clas, content);
-          forEach(sources, function (item, index) {
-            var scope = Object.create(scopes.$target);
-            if (id) scope[id.trim()] = index;
-            scope = new Proxy(scope, handler(scopes, field, sources, index));
-            compiler(node, scope, child.children, clas);
-          });
-        } else if (new RegExp($whea).test(child.clas.nodeValue)) {
-          var clas = whenNode(null, node, child, content);
-          content.childNodes.push(clas);
-          farEach(child.children, function (child) {
-            var when = code(child.clas.nodeValue.replace($when, "$2"), scopes);
-            binding.when(null, scopes, clas, content);
-
-            if (when || when == undefined) {
-              compiler(node, scopes, child.children, clas);
-              return true;
-            }
-          });
+    _createClass(TagNode, [{
+      key: "setName",
+      value: function setName(attr) {
+        if (attr == "") {
+          return;
+        } else if (this.name) {
+          var index = attr.indexOf("=");
+          var name = attr.slice(0, index);
+          var value = attr.slice(index + 2, attr.length - 1);
+          Reflect.set(this.attrs, name, value);
         } else {
-          var newNode = child.clas.cloneNode();
-          node.appendChild(newNode);
-          var clasNodes = classNode(newNode, child);
-          content.childNodes.push(clasNodes);
-          commom(newNode, scopes, clasNodes);
+          this.name = attr;
         }
-      });
-    }
-
-    function attrExpress(node, scope) {
-      forEach(node.attributes, function (child) {
-        if (!child) return;
-        var clas = attrNode(child, scope, child.cloneNode());
-
-        if (clas.clas.name == ":model") {
-          model(child, scope);
-        } else if (new RegExp($express).test(child.nodeValue)) {
-          if (clas.clas.name == "value") model(child, scope);
-          child.nodeValue = codex(child.nodeValue, scope, we);
-          binding.express(child, scope, clas);
-        }
-      });
-    }
-
-    function bind(owner, scope, child) {
-      if (child && child.action) child.action.forEach(function (value, key) {
-        var array = value.toString().match(/\(([^)]*)\)/);
-
-        if (array) {
-          var name = value.toString().replace(array[0], "");
-          var method = code(name, we.action);
-          owner.on(key, method, scope, array[1]);
+      }
+    }, {
+      key: "react",
+      value: function react() {
+        if (this.name.startsWith("/")) {
+          return ")";
+        } else if (selfClose(this.name)) {
+          var attrs = JSON.stringify(this.attrs);
+          return "\nReact.createRender(\"".concat(this.name, "\",").concat(attrs, ")");
         } else {
-          var _method = code(value, we.action);
+          var _attrs = JSON.stringify(this.attrs);
 
-          owner.on(key, _method, scope);
-        }
-      });
-    }
-
-    function component(node, scope, clas, content) {
-      if (Reflect.has(we.component, node.localName)) {
-        comNode(scope, clas, content);
-        var app = new we.component[node.localName]();
-        resolver.component(app, clas, we);
-      }
-    }
-
-    function commom(node, scope, clas, child) {
-      var express;
-      attrExpress(node, scope);
-      bind(node, scope, child);
-
-      if (express = new RegExp($express).exec(node.nodeValue)) {
-        node.nodeValue = codeo(express[1], scope, we);
-        binding.express(node, scope, clas);
-      }
-    }
-
-    var binding = {
-      each: function each(node, scope, clas, content) {
-        if (global.$cache == undefined) return;
-        clas.resolver = "each";
-        clas.content = content;
-        clas.scope = scope;
-        clas.node = node;
-        setCache(clas, we, global.$cache);
-      },
-      when: function when(node, scope, clas) {
-        if (global.$cache == undefined) return;
-        clas.resolver = "when";
-        clas.scope = scope;
-        clas.node = node;
-        setCache(clas, we, global.$cache);
-      },
-      express: function express(node, scope, clas) {
-        if (global.$cache == undefined) return;
-        clas.resolver = "express";
-        clas.scope = scope;
-        clas.node = node;
-        setCache(clas, we, global.$cache);
-      }
-    };
-
-    function model(node, scope) {
-      var owner = node.ownerElement;
-      owner._express = node.nodeValue.replace($express, "$1");
-
-      var _express = "scope.".concat(owner._express);
-
-      var method = input[owner.type] || input[owner.localName] || input.other;
-      method(node, scope, _express);
-    }
-
-    var input = {
-      checkbox: function checkbox(node, scope, _express) {
-        try {
-          var owner = node.ownerElement;
-          owner.on("change", function () {
-            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-
-            var value = code(owner._express, scope);
-            owner.checked ? value.ones(_value) : value.remove(_value);
-          }, scope);
-          var value = code(owner._express, scope);
-          if (Array.isArray(value) && value.has(owner.value)) owner.checked = true;
-        } catch (error) {
-          console.error(error);
-        }
-      },
-      radio: function radio(node, scope, _express) {
-        try {
-          var owner = node.ownerElement;
-          owner.on("change", function () {
-            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-
-            var express = "".concat(_express, "='").concat(_value, "';");
-            new Function('scope', express)(scope);
-          }, scope);
-          var value = code(owner._express, scope);
-          if (value == owner.value) owner.checked = true;
-          owner.name = global.$path;
-        } catch (error) {
-          console.error(error);
-        }
-      },
-      select: function select(node, scope, _express) {
-        try {
-          var owner = node.ownerElement,
-              handle;
-          owner.on("change", handle = function handle() {
-            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-
-            var express = "".concat(_express, "='").concat(_value, "';");
-            new Function('scope', express)(scope);
-          }, scope);
-          var value = code(owner._express, scope);
-          blank(value) ? handle() : owner.value = value;
-        } catch (error) {
-          console.error(error);
-        }
-      },
-      other: function other(node, scope, _express) {
-        try {
-          var owner = node.ownerElement;
-          owner.on("change", function () {
-            var _value = owner.value.replace(/(\'|\")/g, "\\$1");
-
-            var express = "".concat(_express, "='").concat(_value, "';");
-            new Function('scope', express)(scope);
-          }, scope);
-        } catch (error) {
-          console.error(error);
+          return "\nReact.createRender(\"".concat(this.name, "\",").concat(_attrs);
         }
       }
-    };
+    }]);
 
-    function classNode(newNode, child) {
-      return {
-        id: child.id,
-        node: newNode,
-        clas: child.clas,
-        scope: child.scope,
-        children: child.children,
-        childNodes: []
-      };
+    return TagNode;
+  }();
+  var FuncNode =
+  /*#__PURE__*/
+  function () {
+    function FuncNode(list, name, text) {
+      _classCallCheck(this, FuncNode);
+
+      this.type = "FUNC";
+      this.name = name;
+      this.attrs = {};
+      this.setName(list, text);
     }
 
-    function eachNode(newNode, node, child) {
-      var comment = document.createComment("each:".concat(global.$path));
-      node.appendChild(comment);
-      return {
-        node: newNode,
-        clas: child.clas,
-        scope: child.scope,
-        children: child.children,
-        childNodes: [{
-          node: comment,
-          clas: child.clas,
-          scope: child.scope,
-          children: [],
-          childNodes: []
-        }]
-      };
-    }
+    _createClass(FuncNode, [{
+      key: "setName",
+      value: function setName(list, text) {
+        if (this.name.startsWith(".when")) {
+          list.push(this);
+          var chen = this.name.match($chen);
+          this.attrs = chen[3];
+          this.name = chen[1];
+        } else if (this.name.startsWith("}")) {
+          var name = text.slice(0, text.indexOf(this.name));
+          list.push(new TextNode(name));
+          list.push(this);
+        } else if (this.name.startsWith("{")) {
+          var _name = text.slice(0, text.indexOf(this.name));
 
-    function whenNode(newNode, node, child, content) {
-      var comment = document.createComment("when:".concat(global.$path));
-      node.appendChild(comment);
-      return {
-        node: newNode,
-        clas: child.clas,
-        scope: child.scope,
-        content: content,
-        children: child.children,
-        childNodes: [{
-          node: comment,
-          clas: child.clas,
-          scope: child.scope,
-          children: [],
-          childNodes: []
-        }]
-      };
-    }
+          list.push(new TextNode(_name));
+          list.push(new TextNode(this.name));
+        } else {
+          var _name2 = text.slice(0, text.indexOf(this.name));
 
-    function comNode(scope, clas, content) {
-      clas.scope = scope;
-      clas.resolver = "component";
-      clas.content = content;
-    }
+          list.push(new TextNode(_name2));
+          list.push(this);
 
-    function attrNode(newNode, scope, clas) {
-      return {
-        node: newNode,
-        clas: clas,
-        scope: scope,
-        children: [],
-        childNodes: []
-      };
-    }
+          var _chen = this.name.match($chen);
 
-    compiler(node, scopes, childNodes, content);
-  }
-
-  var resolver = {
-    view: function view(_view, node, scope, content, we) {
-      try {
-        var doc = document.createDocumentFragment();
-        new Compiler(doc, scope, slice(node.children), content, we);
-        content.children = node.children;
-        content.clas = node.clas;
-
-        _view.reappend(doc);
-      } catch (error) {
-        console.error(error);
+          this.attrs = _chen[3];
+          this.name = _chen[1];
+        }
       }
-    },
-    component: function component(app, node, we) {
-      try {
-        Reflect.setPrototypeOf(app.model, node.scope);
-        var insert = node.node;
-        clearNodes(node.childNodes);
-        var view = new View({
-          view: app.view,
-          model: app.model,
-          action: app.action
+    }, {
+      key: "react",
+      value: function react() {
+        if (this.name.startsWith("}")) {
+          return ")";
+        } else {
+          var attrs = JSON.stringify(this.attrs);
+          return "\nReact.createFunction(\"".concat(this.name, "\",").concat(attrs);
+        }
+      }
+    }]);
+
+    return FuncNode;
+  }();
+  var TextNode =
+  /*#__PURE__*/
+  function () {
+    function TextNode(name) {
+      _classCallCheck(this, TextNode);
+
+      this.type = "TEXT";
+      this.name = name;
+    }
+
+    _createClass(TextNode, [{
+      key: "setName",
+      value: function setName(attr) {
+        this.name = attr;
+      }
+    }, {
+      key: "react",
+      value: function react() {
+        var name = this.name.replace(/\n/g, "");
+        return "\nReact.createRender(\"".concat(name, "\",null)");
+      }
+    }]);
+
+    return TextNode;
+  }();
+  var Render =
+  /*#__PURE__*/
+  function () {
+    function Render() {
+      _classCallCheck(this, Render);
+
+      this.status = null;
+      this.value = null;
+    }
+
+    _createClass(Render, [{
+      key: "when",
+      value: function when(status, method) {
+        if (this.status == null && status) {
+          this.status = status;
+          this.value = method();
+        } else if (this.status == null && status == undefined) {
+          this.status = status;
+          this.value = method();
+        }
+
+        return this;
+      }
+    }, {
+      key: "forEach",
+      value: function forEach(object, method) {
+        var _this = this;
+
+        this.value = [];
+        Object.keys(object).forEach(function (i) {
+          var value = method(object[i], i);
+
+          _this.value.push(value.join(""));
         });
-        node.node = view.view;
-        Object.assign(node, view.content);
-        if (insert.parentNode) insert.parentNode.replaceChild(view.view, insert);
-        if (!node.id) return;
-        var id = codex(node.id, node.scope, we);
-        Reflect.set(node, "@".concat(id), view);
-      } catch (error) {
-        console.error(error);
+        return this;
       }
-    },
-    when: function when(node, we) {
-      try {
-        var insert = insertion(node.childNodes);
-        var doc = document.createDocumentFragment();
-        var childNodes = node.content.childNodes;
-        clearNodes(node.childNodes);
-        new Compiler(doc, node.scope, [node], node.content, we);
-        childNodes.replace(node, childNodes.pop());
-        if (insert.parentNode) insert.parentNode.replaceChild(doc, insert);
-      } catch (error) {
-        console.error(error);
+    }, {
+      key: "toString",
+      value: function toString() {
+        return this.value.join("");
       }
-    },
-    each: function each(node, we) {
-      try {
-        var insert = insertion(node.childNodes);
-        var doc = document.createDocumentFragment();
-        var childNodes = node.content.childNodes;
-        clearNodes(node.childNodes);
-        new Compiler(doc, node.scope, [node], node.content, we);
-        childNodes.replace(node, childNodes.pop());
-        if (insert.parentNode) insert.parentNode.replaceChild(doc, insert);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    array: function array(node, we, index, nodes) {
-      try {
-        var insert = insertNode([node.childNodes[index]]);
-        var doc = document.createDocumentFragment();
-        var child = {
-          clas: node.clas,
-          children: node.children,
-          scope: node.scope
-        };
-        var content = {
-          childNodes: [],
-          children: []
-        };
-        new Compiler(doc, node.scope, [child], content, we);
-        doc.removeChild(doc.childNodes[0]);
-        var childNodes = slice(content.childNodes[0].childNodes);
-        childNodes.splice(0, 1, index + 1, 0);
-        node.childNodes.splices(childNodes);
-        nodes.remove(content.childNodes[0]);
-        if (insert.parentNode) insert.after(doc);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    express: function express(node, we, cache) {
-      try {
-        node.node.nodeValue = codex(node.clas.nodeValue, node.scope, we);
-        setCache(node, we, cache);
-        if (node.node.name == "value") node.node.ownerElement.value = node.node.nodeValue;
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    attribute: function attribute(node, we, cache) {
-      try {
-        var newNode = document.createAttribute(codex(node.clas.name, scope));
-        setCache(node, we, cache);
-        newNode.nodeValue = node.clas.nodeValue;
-        node.node.ownerElement.setAttributeNode(newNode);
-        node.node.ownerElement.removeAttributeNode(node.node);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-  var cacher = function cacher(cache, index, add) {
-    cache.forEach(function (nodes, we) {
-      nodes.forEach(function (node) {
-        try {
-          if (arrayEach[node.resolver]) arrayEach[node.resolver](node, we, nodes, index, add);else resolver[node.resolver](node, we, cache);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    });
-  };
-  var arrayEach = {
-    each: function each(node, we, children, index, add) {
-      try {
-        if (add > 0) {
-          resolver.array(node, we, index, children);
-        } else {
-          var nodes = node.childNodes.splice(index + 1);
-          clearNodes(nodes);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-  function setCache(clas, we, $cache) {
-    $cache.forEach(function (value) {
-      var cache = value.get(we);
+    }]);
 
-      if (cache) {
-        cache.ones(clas);
+    return Render;
+  }();
+  var React = {
+    createFunction: function createFunction(name, param) {
+      for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+        children[_key - 2] = arguments[_key];
+      }
+
+      if ("@when" == name) {
+        return "\nnew Render().when(".concat(param, ", () => [").concat(children, "])");
+      } else if (".when" == name) {
+        return "\n.when(".concat(param, ", () => [").concat(children, "])");
+      } else if ("@each" == name) {
+        var params = param.split(":"),
+            object = params.pop();
+        return "\nnew Render().forEach(".concat(object, ", (").concat(params, ") => [").concat(children, "])");
+      }
+    },
+    createRender: function createRender(name, attr) {
+      var express;
+
+      if (attr) {
+        for (var _len2 = arguments.length, children = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+          children[_key2 - 2] = arguments[_key2];
+        }
+
+        return "\nReact.createElement(\"".concat(name, "\",").concat(attrRender(attr), ",").concat(children, ")");
+      } else if (express = name.match($express)) {
+        return "\nReact.createElement(".concat(express[1], ",null)");
       } else {
-        value.set(we, [clas]);
+        return "\nReact.createElement(\"".concat(name, "\",null)");
+      }
+    },
+    createElement: function createElement(name, attr) {
+      if (attr) {
+        for (var _len3 = arguments.length, children = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+          children[_key3 - 2] = arguments[_key3];
+        }
+
+        return "<".concat(name, " ").concat(attrCreater(attr), ">").concat(children.join(""), "</").concat(name, ">");
+      } else {
+        return "".concat(name);
+      }
+    }
+  };
+
+  function ReactCode(express) {
+    return new Function('React', "return ".concat(express, ";"))(React);
+  }
+  function RenderCode(express, scope) {
+    var keys = Object.keys(scope);
+    return new Function('scope', 'React', 'Render', "let {".concat(keys, "}=scope;\n     return ").concat(express, ";\n    "))(scope, React, Render);
+  }
+
+  function AST(html) {
+    var list = [];
+    var open = "<",
+        quote = "\"",
+        close = ">";
+    var chem = null,
+        node = null,
+        token = null;
+    var chars = toChars(html);
+    chars.reduce(function (a, b) {
+      if (a == open) {
+        var c = b;
+        token = close;
+        node = new TagNode();
+        return c;
+      } else if (token == quote && b == quote) {
+        var _c = a.concat(b);
+
+        node.setName(_c.trim());
+        token = close;
+        return "";
+      } else if (token == close && b == close) {
+        var _c2 = a;
+        token = null;
+        node.setName(_c2);
+        list.push(node);
+        node = new TextNode();
+        return "";
+      } else if (b == quote) {
+        var _c3 = a.concat(b);
+
+        token = quote;
+        return _c3;
+      } else if (b == open) {
+        node.setName(a);
+        list.push(node);
+        return b;
+      } else if (node.type == "TAG" && !node.name && b == " ") {
+        node.setName(a);
+        return "";
+      } else if (node.type == "TEXT" && (chem = a.match($lang))) {
+        new FuncNode(list, chem[0], a);
+        return b;
+      } else {
+        var _c4 = a.concat(b);
+
+        return _c4;
       }
     });
+    return list;
   }
-
-  function insertion(nodes, node) {
-    try {
-      farEach(nodes, function (child) {
-        if (child.node && child.node.parentNode) {
-          node = child.node;
-          child.node = null;
-          return node;
-        }
-        node = insertion(child.childNodes);
-      });
-      return node;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  function insertNode(nodes, node) {
-    try {
-      farEach(nodes, function (child) {
-        if (child.node && child.node.parentNode) {
-          node = child.node;
-          return node;
-        }
-
-        if (child.childNodes.length) {
-          var children = child.childNodes[child.childNodes.length - 1];
-
-          if (children.node && children.node.parentNode) {
-            node = children.node;
-            return node;
-          }
-
-          node = insertNode([children]);
-        }
-      });
-      return node;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  function clearNodes(nodes) {
-    nodes.forEach(function (child) {
-      if (child.node && child.node.parentNode) return child.node.parentNode.removeChild(child.node);
-      if (child.childNodes) clearNodes(child.childNodes);
+  function Transfer(html) {
+    var list = AST(html).filter(function (a) {
+      return a.name.trim() != "";
     });
+    var express = list.map(function (a) {
+      return a.react();
+    }).join().trim();
+    var func = ReactCode(express).replace($when, ".when").trim();
+    console.info(express);
+    return func;
+  }
+
+  function observer(target, watcher, we) {
+    return new Proxy(target, handler(watcher, we));
+  }
+
+  function handler(watcher, we, root) {
+    var values = new Map(),
+        caches = new Map();
+    return {
+      get: function get(parent, prop, proxy) {
+        if (prop == "$target") return parent;
+        var value = values.get(prop);
+        if (value != undefined) return value;
+        var path = root ? "".concat(root, ".").concat(prop) : prop;
+        value = Reflect.get(parent, prop);
+        if (_typeof(value) == "object") value = new Proxy(value, handler(watcher, we, path));
+        values.set(prop, value);
+        caches.set(prop, new Map());
+        watcher.get(path);
+        return value;
+      },
+      set: function set(parent, prop, val, proxy) {
+        var oldValue = values.get(prop);
+        var oldCache = caches.get(prop);
+        values["delete"](prop);
+        caches["delete"](prop);
+        Reflect.set(parent, prop, val.$target || val);
+        watcher.set(oldCache, we);
+        return true;
+      }
+    };
   }
 
   function query(express) {
@@ -661,41 +397,17 @@ var view = (function (exports) {
       return newNode.childNodes;
     }
   }
-  function createNode(template) {
-    if (new RegExp($html).test(template)) {
-      var list = template.match($attr);
-
-      var _element = document.createElement(list.shift());
-
-      list.forEach(function (attr) {
-        try {
-          var name = attr.replace($attr, "$1");
-          var value = attr.replace($attr, "$3");
-
-          _element.setAttribute(name, value);
-        } catch (error) {}
-      });
-      return _element;
-    } else {
-      var range = document.createRange();
-
-      var _element2 = range.createContextualFragment(template);
-
-      return _element2.firstChild;
-    }
-  }
 
   function addListener(type, methods, scope) {
     if (this.addEventListener) {
       this.addEventListener(type, function (event) {
+        var _this = this;
+
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
             var args = param ? code("[".concat(param, "]"), scope) : [];
             args.push(event);
-            var proto = Reflect.getPrototypeOf(method);
-            var action = Object.assign({}, proto);
-            Reflect.setPrototypeOf(action, scope || method.$model);
-            method.apply(action, args);
+            method.apply(_this, args);
           });
         });
       }, false);
@@ -788,7 +500,7 @@ var view = (function (exports) {
       return this;
     },
     reappend: function reappend(node) {
-      farEach(slice(this.childNodes), function (child) {
+      forEach(slice(this.childNodes), function (child) {
         child.parentNode.removeChild(child);
       });
       this.appendChild(node);
@@ -803,566 +515,56 @@ var view = (function (exports) {
   });
   Object.assign(NodeList.prototype, {
     on: function on(type, call) {
-      farEach(this, function (node) {
+      forEach(this, function (node) {
         node.on(type, call);
       });
       return this;
     },
     off: function off(type, call) {
-      farEach(this, function (node) {
+      forEach(this, function (node) {
         node.off(type, call);
       });
       return this;
     }
   });
 
-  function init(dom) {
-    var text = dom.outerHTML;
-    text = text.replace($lang, function (tag) {
-      return "######".concat(tag.trim(), "######");
-    });
-    var list = text.split("######");
-    return list;
-  }
-  function initCompiler(list, children) {
-    whiles(list, function (child) {
-      if (child.trim() == "") return;
-      if (new RegExp($close).test(child)) return true;
-      var item = {
-        clas: createNode(child),
-        children: [],
-        action: new Map()
-      };
-      children.push(item);
-
-      if (new RegExp($html).test(child)) {
-        if (new RegExp($close).test(item.clas.outerHTML)) {
-          initCompiler(list, item.children);
-        }
-
-        child = child.replace($eash, function (express) {
-          express = express.replace($eash, "@each($3){");
-          var index = children.indexOf(item);
-          var each = {
-            clas: createNode(express),
-            children: [item]
-          };
-          children.splice(index, 1, each);
-          return "";
-        });
-        child = child.replace($id, function (express) {
-          var name = express.replace($id, "$1");
-          var value = express.replace($id, "$3");
-          Reflect.set(item, name, value);
-          return "";
-        });
-        child = child.replace($event, function (express) {
-          var name = express.replace($event, "$1");
-          var value = express.replace($event, "$3");
-          item.action.set(name, value);
-          return "";
-        });
-      } else if (new RegExp($chen).test(child)) {
-        initCompiler(list, item.children);
-
-        if (new RegExp($whea).test(child)) {
-          var index = children.indexOf(item);
-          var when = {
-            clas: createNode("@when{"),
-            children: [item]
-          };
-          children.splice(index, 1, when);
-        } else if (new RegExp($whec).test(child)) {
-          var _when = children[children.length - 2];
-
-          _when.children.push(children.pop());
-        }
-      }
-    });
-    return children;
-  }
-
-  function observer(target, call, watch) {
-    if (_typeof(target) != 'object') return target;
-    target = new Proxy(target, handler());
-
-    function handler(root) {
-      var values = new Map(),
-          caches = new Map();
-      return {
-        get: function get(parent, prop, proxy) {
-          if (prop == "$target") return parent;
-          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
-          var path = root ? "".concat(root, ".").concat(prop) : prop;
-          global.$cache["delete"](root);
-          global.$cache.set(path, caches.get(prop));
-          mq.publish(target, "get", [path]);
-          var value = values.get(prop);
-          if (value != undefined) return value;
-          value = Reflect.get(parent, prop);
-          if (check(value)) value = new Proxy(value, handler(path));
-          values.set(prop, value);
-          caches.set(prop, new Map());
-          global.$cache["delete"](root);
-          global.$cache.set(path, caches.get(prop));
-          array(value, caches.get(prop));
-          return value;
-        },
-        set: function set(parent, prop, val, proxy) {
-          if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
-          var oldValue = values.get(prop);
-          var oldCache = caches.get(prop);
-          values["delete"](prop);
-          caches["delete"](prop);
-          Reflect.set(parent, prop, val.$target || val);
-          var value = proxy[prop];
-          setValue(value, oldValue);
-          var path = root ? "".concat(root, ".").concat(prop) : prop;
-          mq.publish(target, "set", [new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]])]);
-          mq.publish(target, path, [value, oldValue]);
-          return true;
-        }
-      };
-    }
-
-    function setValue(object, oldObject) {
-      if (object instanceof Component) return;
-
-      if (_typeof(object) == "object" && _typeof(oldObject) == "object") {
-        Object.keys(oldObject).forEach(function (prop) {
-          global.$cache = new Map();
-          var value = object[prop],
-              cache = global.$cache;
-          global.$cache = new Map();
-          var oldValue = oldObject[prop],
-              oldCache = global.$cache;
-          if (_typeof(value) != "object" && _typeof(oldValue) != "object") mq.publish(target, "set", [oldCache, cache]);
-          setValue(value, oldValue);
-        });
-      }
-    }
-
-    function check(value) {
-      if (value instanceof Component) return;
-      if (value instanceof Date) return;
-      if (_typeof(value) == "object") return value;
-    }
-
-    Object.keys(call).forEach(function (key) {
-      return mq.subscribe(target, key, call[key]);
-    });
-    Object.keys(watch || {}).forEach(function (key) {
-      return mq.subscribe(target, key, watch[key]);
-    });
-    return target;
-  }
-
-  function array(object, cache) {
-    if (!Array.isArray(object)) return;
-    var methods = {
-      shift: function shift() {
-        var method = Array.prototype.shift;
-        var data = method.apply(this, arguments);
-        var index = this.length;
-        cacher(cache, index);
-        return data;
-      },
-      pop: function pop() {
-        var method = Array.prototype.pop;
-        var data = method.apply(this, arguments);
-        var index = this.length;
-        cacher(cache, index);
-        return data;
-      },
-      splice: function splice() {
-        var method = Array.prototype.splice;
-
-        if (this.length) {
-          var index = this.length;
-          var data = method.apply(this, arguments);
-          arguments.length > 2 ? this.index = index : index = this.length;
-          cacher(cache, index, arguments.length - 2);
-          Reflect.deleteProperty(this, "index");
-          return data;
-        }
-      },
-      unshift: function unshift() {
-        var method = Array.prototype.unshift;
-
-        if (arguments.length) {
-          var index = this.index = this.length;
-          var data = method.apply(this, arguments);
-          cacher(cache, index, arguments.length);
-          Reflect.deleteProperty(this, "index");
-          return data;
-        }
-      },
-      push: function push() {
-        var method = Array.prototype.push;
-
-        if (arguments.length) {
-          var index = this.index = this.length;
-          var data = method.apply(this, arguments);
-          cacher(cache, index, arguments.length);
-          Reflect.deleteProperty(this, "index");
-          return data;
-        }
-      },
-      reverse: function reverse() {
-        var method = Array.prototype.reverse;
-        var data = method.apply(this, arguments);
-        return data;
-      },
-      sort: function sort() {
-        var method = Array.prototype.sort;
-        var data = method.apply(this, arguments);
-        return data;
-      }
-    };
-    Reflect.setPrototypeOf(methods, Array.prototype);
-    Reflect.setPrototypeOf(object, methods);
-  }
-
-  var Mess =
-  /*#__PURE__*/
-  function () {
-    function Mess() {
-      _classCallCheck(this, Mess);
-
-      this.map = new Map();
-    }
-
-    _createClass(Mess, [{
-      key: "publish",
-      value: function publish(scope, event, data) {
-        var cache = this.map.get(scope);
-
-        if (cache) {
-          var action = cache.get(event);
-
-          if (action) {
-            action.data.push(data);
-          } else {
-            cache.set(event, {
-              data: [data],
-              queue: []
-            });
-          }
-        } else {
-          var _data = new Map();
-
-          _data.set(event, {
-            data: [_data],
-            queue: []
-          });
-
-          this.map.set(scope, _data);
-        }
-
-        this.notify(cache.get(event), scope);
-      }
-    }, {
-      key: "notify",
-      value: function notify(action, scope) {
-        if (action) {
-          var _loop = function _loop() {
-            var data = action.data.shift();
-            action.queue.forEach(function (call) {
-              call.apply(scope, data);
-            });
-          };
-
-          while (action.data.length) {
-            _loop();
-          }
-        } else {
-          this.map.forEach(function (cache) {
-            cache.forEach(function (action) {
-              var _loop2 = function _loop2() {
-                var data = action.data.shift();
-                action.queue.forEach(function (call) {
-                  call.apply(scope, data);
-                });
-              };
-
-              while (action.data.length) {
-                _loop2();
-              }
-            });
-          });
-        }
-      }
-    }, {
-      key: "subscribe",
-      value: function subscribe(scope, event, call) {
-        var cache = this.map.get(scope);
-
-        if (cache) {
-          var action = cache.get(event);
-
-          if (action) {
-            action.queue.push(call);
-          } else {
-            cache.set(event, {
-              data: [],
-              queue: [call]
-            });
-          }
-        } else {
-          var data = new Map();
-          data.set(event, {
-            data: [],
-            queue: [call]
-          });
-          this.map.set(scope, data);
-        }
-      }
-    }]);
-
-    return Mess;
-  }();
-
-  var mq = new Mess();
-
-  function Router(app, params) {
-    var $param = /^:/,
-        $root = /^\/(.+)/;
-    var router, para, routes;
-    this.redreact = redreact;
-
-    var supportsPushState = function () {
-      var userAgent = window.navigator.userAgent;
-
-      if (userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1 || userAgent.indexOf("Trident") > -1 || userAgent.indexOf("Edge") > -1) {
-        return false;
-      }
-
-      return window.history && 'pushState' in window.history;
-    }();
-
-    function resolver(hash) {
-      routes = Object.keys(params);
-
-      while (routes.length) {
-        router = routes.shift(), para = {};
-        var routs = router.replace($root, "$1");
-        routs = routs.split("/");
-        var haths = hash.split("/");
-        if (match(routs, haths)) return {
-          component: params[router].component,
-          router: params[router].router,
-          action: params[router].action,
-          after: params[router].after,
-          params: para,
-          path: hash
-        };
-      }
-    }
-
-    function match(routs, hashs) {
-      while (hashs.length) {
-        var name = routs.shift();
-        var param = hashs.shift();
-
-        if (param != name) {
-          if (!$param.test(name)) {
-            return false;
-          }
-
-          name = name.replace($param, "");
-          para[name] = param;
-        }
-      }
-
-      return true;
-    }
-
-    function redreact(path) {
-      var url = window.location.pathname;
-      window.location.href = url + "#" + path;
-    }
-
-    function action(event) {
-      var hash = window.location.hash.replace(/^#\/?/, "");
-      var router = resolver(hash);
-
-      if (router) {
-        router.action(router.params);
-        app.ref[router.router] = router.component;
-
-        if (router.after) {
-          router.after();
-        }
-      } else {
-        if (event == undefined || event.type == "load") {
-          redreact("");
-        }
-      }
-    }
-
-    window.addEventListener("load", action, action());
-    window.addEventListener(supportsPushState ? "popstate" : "hashchange", action, false);
-  }
-
-  var global = {
-    $path: undefined
-  };
   var View =
   /*#__PURE__*/
   function () {
     function View(app) {
       _classCallCheck(this, View);
 
-      this.model = observer(app.model, watcher);
+      this.view = app.view;
+      this.model = observer(app.model, watcher, this);
       this.action = app.action;
       this.watch = app.watch;
       this.filter = app.filter;
-      this.component = {};
-      this.componenter(app.component);
       this.creater(app);
     }
 
     _createClass(View, [{
       key: "creater",
       value: function creater(app) {
-        this.content = {
-          childNodes: [],
-          children: []
-        };
-        this.view = query(app.view)[0];
-        this.ref = setRef(this.content, this);
-        var node = initCompiler(init(this.view), [])[0];
-        setScopes(this);
-        resolver.view(this.view, node, this.model, this.content, this);
-      }
-    }, {
-      key: "componenter",
-      value: function componenter(coms) {
-        var _this = this;
-
-        var list = Object.values(coms || {});
-        list.forEach(function (com) {
-          var name = com.name.toLowerCase();
-          Reflect.set(_this.component, name, com);
-        });
+        this.view = Transfer(this.view);
+        this.node = RenderCode(this.view, this.model);
       }
     }]);
 
     return View;
   }();
   var watcher = {
-    set: function set(cache, newCache) {
-      deepen(cache, newCache);
+    set: function set(cache, we) {
+      var view = RenderCode(we.view, we.model);
+      document.querySelector("app").innerHTML = view;
     },
-    get: function get(path) {
-      global.$path = path;
-    }
+    get: function get(path) {}
   };
-
-  function setRef(content, we) {
-    return new Proxy({}, {
-      get: function get(parent, prop) {
-        var childNodes = content.childNodes;
-        var list = getRef(childNodes, prop, []);
-        var node = list.shift();
-        return node.childNodes[1];
-      },
-      set: function set(parent, prop, app) {
-        var childNodes = content.childNodes;
-        var list = getRef(childNodes, prop, []);
-        var node = list.shift();
-        resolver.component(new app(), node, we);
-        return true;
-      }
-    });
-  }
-
-  function getRef(nodes, id, list) {
-    nodes.every(function (child) {
-      if (child["@".concat(id)]) {
-        list.push(child);
-        return false;
-      }
-
-      if (child.childNodes) getRef(child.childNodes, id, list);
-      return !list.length;
-    });
-    return list;
-  }
-
-  var Component$1 =
-  /*#__PURE__*/
-  function () {
-    function Component(app) {
-      _classCallCheck(this, Component);
-
-      this.model = app.model;
-      this.action = app.action;
-      this.watch = app.watch;
-      this.filter = app.filter;
-      this.creater(app);
-    }
-
-    _createClass(Component, [{
-      key: "creater",
-      value: function creater(app) {
-        this.content = {
-          childNodes: [],
-          children: []
-        };
-        var view = query(app.view)[0];
-        view.parentNode.removeChild(view);
-        this.view = view.outerHTML;
-      }
-    }]);
-
-    return Component;
-  }();
-
-  function clearNode(nodes, status) {
-    try {
-      nodes.every(function (child) {
-        if (child.node) {
-          var node = child.node.ownerElement || child.node;
-          status = document.body.contains(node);
-          return false;
-        }
-        status = clearNode(child.childNodes);
-      });
-      return status;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  function deepen(cache, newCache) {
-    if (cache && newCache) {
-      cache.forEach(function (caches) {
-        if (!caches) return;
-        caches.forEach(function (nodes, we) {
-          slice(nodes).forEach(function (node) {
-            if (clearNode([node])) resolver[node.resolver](node, we, newCache);else nodes.remove(node);
-          });
-        });
-      });
-    } else if (cache && !newCache) {
-      cache.forEach(function (caches) {
-        if (!caches) return;
-        caches.forEach(function (nodes) {
-          clearNodes(nodes);
-        });
-      });
-    }
-  }
-
   window.View = View;
-  window.Component = Component$1;
-  window.Router = Router;
-  window.query = query;
 
-  exports.Component = Component$1;
+  exports.React = React;
+  exports.Render = Render;
   exports.View = View;
-  exports.global = global;
+  exports.query = query;
 
   return exports;
 
