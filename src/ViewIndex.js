@@ -18,14 +18,14 @@ export class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this.model);
+    this.node = RenderCode(this.view, this);
   }
 }
 
 let watcher = {
   set(cache, we) {
-    let view = RenderCode(we.view, we.model);
-    document.querySelector("app").innerHTML = view;
+    let view = RenderCode(we.view, we);
+    document.querySelector("app").reappend(view);
   },
   get(path) {
 

@@ -16,9 +16,9 @@ function addListener(type, methods, scope) {
     this.addEventListener(type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
-          let args = param ? code(`[${param}]`, scope) : [];
+          let args = param ? [param] : [];
           args.push(event);
-          method.apply(this, args);
+          method.apply(scope, args);
         })
       });
     }, false);
@@ -105,9 +105,7 @@ Object.assign(Node.prototype, {
     return this;
   },
   reappend(node) {
-    forEach(slice(this.childNodes), function (child) {
-      child.parentNode.removeChild(child);
-    });
+    this.innerHTML = "";
     this.appendChild(node);
     return this;
   },

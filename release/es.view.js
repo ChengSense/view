@@ -12,15 +12,6 @@ function selfClose(name) {
   return !new RegExp(/<\/\w+>/).test(node.outerHTML);
 }
 
-function attrRender(object) {
-  let list = [];
-  forEach(object, (value, name) => {
-    let express = `\`${value.replace($express, "${$1}")}\``;
-    list.push(`"${name}":${express}`);
-  });
-  return `{${list}}`;
-}
-
 function forEach(object, method) {
   Object.keys(object).forEach(key => {
     let value = Reflect.get(object, key);
@@ -166,7 +157,7 @@ let React = {
   createRender(name, attr, ...children) {
     let express;
     if (attr) {
-      return `\nReact.createElement("${name}",${attrRender(attr)},${children})`;
+      return `\nReact.createElement("${name}",${JSON.stringify(attr)},${children})`;
     }
     else if (express = name.match($express)) {
       return `\nReact.createElement(${express[1]},null)`;
@@ -191,10 +182,27 @@ let React = {
 
 function setAttribute(element, attr) {
   forEach(attr, (value, name) => {
-    let attribute = document.createAttribute(name.replace("@", "on"));
-    attribute.value = value;
-    element.setAttributeNode(attribute);
+    if (name.startsWith("@")) {
+      bind(element, name.slice(1), value, we.action);
+    } else {
+      let attribute = document.createAttribute(name);
+      attribute.value = value;
+      element.setAttributeNode(attribute);
+    }
   });
+}
+
+function bind(owner, key, value, action) {
+  var array = value.match(/(.*)\((.*)\)/);
+  if (array) {
+    var name = array[1];
+    let method = Reflect.get(action, name);
+    owner.on(key, method, we.model, array[2]);
+  }
+  else {
+    let method = Reflect.get(action, value);
+    owner.on(key, method, we.model);
+  }
 }
 
 function ReactCode(express) {
@@ -203,13 +211,14 @@ function ReactCode(express) {
   )(React);
 }
 
-function RenderCode(express, scope) {
-  let keys = Object.keys(scope);
-  return new Function('scope', 'React', 'Render',
-    `let {${keys}}=scope;
+function RenderCode(express, we) {
+  let keys = Object.keys(we.model);
+  window.we = we;
+  return new Function('we', 'React', 'Render',
+    `let {${keys}}=we.model;
      return ${express};
     `
-  )(scope, React, Render);
+  )(we, React, Render);
 }
 
 function AST(html) {
@@ -326,9 +335,9 @@ function addListener(type, methods, scope) {
     this.addEventListener(type, function (event) {
       methods.forEach((params, method) => {
         params.forEach(param => {
-          let args = param ? code(`[${param}]`, scope) : [];
+          let args = param ? [param] : [];
           args.push(event);
-          method.apply(this, args);
+          method.apply(scope, args);
         });
       });
     }, false);
@@ -415,9 +424,7 @@ Object.assign(Node.prototype, {
     return this;
   },
   reappend(node) {
-    forEach(slice(this.childNodes), function (child) {
-      child.parentNode.removeChild(child);
-    });
+    this.innerHTML = "";
     this.appendChild(node);
     return this;
   },
@@ -459,14 +466,14 @@ class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this.model);
+    this.node = RenderCode(this.view, this);
   }
 }
 
 let watcher = {
   set(cache, we) {
-    let view = RenderCode(we.view, we.model);
-    document.querySelector("app").innerHTML = view;
+    let view = RenderCode(we.view, we);
+    document.querySelector("app").reappend(view);
   },
   get(path) {
 

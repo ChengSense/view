@@ -139,7 +139,7 @@ export let React = {
   createRender(name, attr, ...children) {
     let express;
     if (attr) {
-      return `\nReact.createElement("${name}",${attrRender(attr)},${children})`;
+      return `\nReact.createElement("${name}",${JSON.stringify(attr)},${children})`;
     }
     else if (express = name.match($express)) {
       return `\nReact.createElement(${express[1]},null)`;
@@ -164,8 +164,25 @@ export let React = {
 
 function setAttribute(element, attr) {
   forEach(attr, (value, name) => {
-    let attribute = document.createAttribute(name.replace("@", "on"));
-    attribute.value = value;
-    element.setAttributeNode(attribute);
+    if (name.startsWith("@")) {
+      bind(element, name.slice(1), value, we.action)
+    } else {
+      let attribute = document.createAttribute(name);
+      attribute.value = value;
+      element.setAttributeNode(attribute);
+    }
   });
+}
+
+function bind(owner, key, value, action) {
+  var array = value.match(/(.*)\((.*)\)/);
+  if (array) {
+    var name = array[1];
+    let method = Reflect.get(action, name);
+    owner.on(key, method, we.model, array[2]);
+  }
+  else {
+    let method = Reflect.get(action, value);
+    owner.on(key, method, we.model);
+  }
 }

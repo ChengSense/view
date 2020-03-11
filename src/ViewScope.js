@@ -6,11 +6,12 @@ export function ReactCode(express) {
   )(React);
 }
 
-export function RenderCode(express, scope) {
-  let keys = Object.keys(scope);
-  return new Function('scope', 'React', 'Render',
-    `let {${keys}}=scope;
+export function RenderCode(express, we) {
+  let keys = Object.keys(we.model);
+  window.we = we;
+  return new Function('we', 'React', 'Render',
+    `let {${keys}}=we.model;
      return ${express};
     `
-  )(scope, React, Render);
+  )(we, React, Render);
 }

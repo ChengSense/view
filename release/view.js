@@ -49,14 +49,6 @@ var view = (function (exports) {
     var node = document.createElement(name);
     return !new RegExp(/<\/\w+>/).test(node.outerHTML);
   }
-  function attrRender(object) {
-    var list = [];
-    forEach(object, function (value, name) {
-      var express = "`".concat(value.replace($express, "${$1}"), "`");
-      list.push("\"".concat(name, "\":").concat(express));
-    });
-    return "{".concat(list, "}");
-  }
   function forEach(object, method) {
     Object.keys(object).forEach(function (key) {
       var value = Reflect.get(object, key);
@@ -255,7 +247,7 @@ var view = (function (exports) {
           children[_key2 - 2] = arguments[_key2];
         }
 
-        return "\nReact.createElement(\"".concat(name, "\",").concat(attrRender(attr), ",").concat(children, ")");
+        return "\nReact.createElement(\"".concat(name, "\",").concat(JSON.stringify(attr), ",").concat(children, ")");
       } else if (express = name.match($express)) {
         return "\nReact.createElement(".concat(express[1], ",null)");
       } else {
@@ -287,18 +279,37 @@ var view = (function (exports) {
 
   function setAttribute(element, attr) {
     forEach(attr, function (value, name) {
-      var attribute = document.createAttribute(name.replace("@", "on"));
-      attribute.value = value;
-      element.setAttributeNode(attribute);
+      if (name.startsWith("@")) {
+        bind(element, name.slice(1), value, we.action);
+      } else {
+        var attribute = document.createAttribute(name);
+        attribute.value = value;
+        element.setAttributeNode(attribute);
+      }
     });
+  }
+
+  function bind(owner, key, value, action) {
+    var array = value.match(/(.*)\((.*)\)/);
+
+    if (array) {
+      var name = array[1];
+      var method = Reflect.get(action, name);
+      owner.on(key, method, we.model, array[2]);
+    } else {
+      var _method = Reflect.get(action, value);
+
+      owner.on(key, _method, we.model);
+    }
   }
 
   function ReactCode(express) {
     return new Function('React', "return ".concat(express, ";"))(React);
   }
-  function RenderCode(express, scope) {
-    var keys = Object.keys(scope);
-    return new Function('scope', 'React', 'Render', "let {".concat(keys, "}=scope;\n     return ").concat(express, ";\n    "))(scope, React, Render);
+  function RenderCode(express, we) {
+    var keys = Object.keys(we.model);
+    window.we = we;
+    return new Function('we', 'React', 'Render', "let {".concat(keys, "}=we.model;\n     return ").concat(express, ";\n    "))(we, React, Render);
   }
 
   function AST(html) {
@@ -409,13 +420,11 @@ var view = (function (exports) {
   function addListener(type, methods, scope) {
     if (this.addEventListener) {
       this.addEventListener(type, function (event) {
-        var _this = this;
-
         methods.forEach(function (params, method) {
           params.forEach(function (param) {
-            var args = param ? code("[".concat(param, "]"), scope) : [];
+            var args = param ? [param] : [];
             args.push(event);
-            method.apply(_this, args);
+            method.apply(scope, args);
           });
         });
       }, false);
@@ -508,9 +517,7 @@ var view = (function (exports) {
       return this;
     },
     reappend: function reappend(node) {
-      forEach(slice(this.childNodes), function (child) {
-        child.parentNode.removeChild(child);
-      });
+      this.innerHTML = "";
       this.appendChild(node);
       return this;
     },
@@ -555,7 +562,7 @@ var view = (function (exports) {
       value: function creater(app) {
         this.view = Transfer(this.view);
         console.warn(this.view);
-        this.node = RenderCode(this.view, this.model);
+        this.node = RenderCode(this.view, this);
       }
     }]);
 
@@ -563,8 +570,8 @@ var view = (function (exports) {
   }();
   var watcher = {
     set: function set(cache, we) {
-      var view = RenderCode(we.view, we.model);
-      document.querySelector("app").innerHTML = view;
+      var view = RenderCode(we.view, we);
+      document.querySelector("app").reappend(view);
     },
     get: function get(path) {}
   };
