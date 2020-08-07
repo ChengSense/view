@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>index</title>
+  <script src="../../release/view.js"></script>
+</head>
+
+<body>
+  <app>
+    <div @each="item:i:list">
+      @each(l:item){
+      <div @click="alert(param1)">
+        @when(i==1){
+        <div id="{i}">{param1}</div>
+        }.when(i==2){
+        <div>{param2}</div>
+        }.when{
+        <div>{l}</div>
+        }
+      </div>
+      }
+    </div>
+  </app>
+</body>
+
+</html>
+<script type="text/javascript">
+  function Code(_express) {
+    let word, c;
+    _express.split("").reduce(function (a, b) {
+      word = word || a;
+      if (c == "'" && a == "'") {
+        c = null;
+        word = word.concat(b);
+        return b;
+      }
+      else if (c == "'") {
+        word = word.concat(b);
+        return b;
+      }
+      else if (a == "'") {
+        c = a;
+        word = word.concat(b);
+        return b;
+      }
+      else if (a.match(/\W/) && !a.match(/\.|\$|_/) && b.match(/\w/) && !b.match(/\d/)) {
+        word = word.concat("status.").concat(b);
+        return b;
+      }
+      else {
+        word = word.concat(b);
+        return b;
+      }
+    });
+    console.log(word);
+  }
+
+  [
+    "del.asda.asd",
+    "[del]",
+    "[asdasd['_$del'].qweqeq]",
+    "editTitle(item)",
+    "'' + (id) + ''",
+    "'' + (list.id % 2 ? 'k-alt' : '') + ''"
+  ].forEach(_express => {
+    Code(_express);
+  });
+</script>
+</body>
+
+</html>
