@@ -281,9 +281,9 @@ var view = (function (exports) {
       }
 
       if ("@when" == name) {
-        return "\n _scope=>new Render(_scope,null,arguments.callee).when(".concat(ReactScope(param), ", () => [").concat(children, "])");
+        return "\n _scope=>new Render(_scope,null,arguments.callee).when(".concat(ReactScope(param), ", (_scope) => [").concat(children, "])");
       } else if (".when" == name) {
-        return "\n .when(".concat(ReactScope(param), ", () => [").concat(children, "])");
+        return "\n .when(".concat(ReactScope(param), ", (_scope) => [").concat(children, "])");
       } else if ("@each" == name) {
         var params = param.split(":"),
             object = params.pop();

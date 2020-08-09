@@ -178,10 +178,10 @@ function render(list, scope, funcNode) {
 let React = {
   createFunction(name, param, ...children) {
     if ("@when" == name) {
-      return `\n _scope=>new Render(_scope,null,arguments.callee).when(${ReactScope(param)}, () => [${children}])`;
+      return `\n _scope=>new Render(_scope,null,arguments.callee).when(${ReactScope(param)}, (_scope) => [${children}])`;
     }
     else if (".when" == name) {
-      return `\n .when(${ReactScope(param)}, () => [${children}])`;
+      return `\n .when(${ReactScope(param)}, (_scope) => [${children}])`;
     }
     else if ("@each" == name) {
       let params = param.split(":"), object = params.pop();
