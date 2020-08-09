@@ -4,6 +4,7 @@ import { Render, React } from "./ViewResolver";
 import { observer } from "./ViewObserve";
 import { query } from "./ViewElmemt";
 
+export let global = { $path: null, cache: new Map() };
 export { Render, React, query }
 
 export class View {
@@ -18,14 +19,16 @@ export class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this);
+    this.node = RenderCode(this.view, this)(this.model);
   }
 }
 
 let watcher = {
   set(cache, we) {
-    let view = RenderCode(we.view, we);
-    document.querySelector("app").reappend(view);
+    cache.forEach((scope, func) => {
+      let node = func(scope);
+      console.log(func.toString());
+    });
   },
   get(path) {
 

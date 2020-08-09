@@ -1,3 +1,5 @@
+import { global } from "./ViewIndex";
+
 export function observer(target, watcher, we) {
   return new Proxy(target, handler(watcher, we));
 }
@@ -8,12 +10,16 @@ function handler(watcher, we, root) {
     get(parent, prop, proxy) {
       if (prop == "$target") return parent;
       let value = values.get(prop);
-      if (value != undefined) return value;
       let path = root ? `${root}.${prop}` : prop;
+      global.cache.delete(root);
+      global.cache.set(path, caches.get(prop));
+      if (value != undefined) return value;
       value = Reflect.get(parent, prop);
       if (typeof value == "object") value = new Proxy(value, handler(watcher, we, path));
       values.set(prop, value);
       caches.set(prop, new Map());
+      global.cache.delete(root);
+      global.cache.set(path, caches.get(prop));
       watcher.get(path);
       return value;
     },

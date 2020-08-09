@@ -45,11 +45,11 @@ class TagNode {
     }
     else if (selfClose(this.name)) {
       let attrs = JSON.stringify(this.attrs);
-      return `\nReact.createRender("${this.name}",${attrs})`;
+      return `React.createRender("${this.name}",${attrs})`;
     }
     else {
       let attrs = JSON.stringify(this.attrs);
-      return `\nReact.createRender("${this.name}",${attrs}`;
+      return `React.createRender("${this.name}",${attrs}`;
     }
   }
 }
@@ -93,7 +93,7 @@ class FuncNode {
     }
     else {
       let attrs = JSON.stringify(this.attrs);
-      return `\nReact.createFunction("${this.name}",${attrs}`;
+      return `React.createFunction("${this.name}",${attrs}`;
     }
   }
 }
@@ -108,31 +108,44 @@ class TextNode {
   }
   react() {
     let name = this.name.replace(/\n/g, "");
-    return `\nReact.createRender("${name}",null)`;
+    return `React.createRender("${name}",null)`;
   }
 }
 
 class Render {
-  constructor() {
+  constructor(scope, params, func) {
+    this.func = func;
+    this.scope = scope;
+    this.params = params;
     this.status = null;
-    this.value = null;
+    this.value = new Map();
   }
   when(status, method) {
+    let map = this.value;
     if (this.status == null && status) {
       this.status = status;
-      this.value = method();
+      let methods = method(this.scope);
+      map.set(this.scope, methods);
     }
     else if (this.status == null && status == undefined) {
       this.status = status;
-      this.value = method();
+      let methods = method(this.scope);
+      map.set(this.scope, methods);
     }
     return this;
   }
   forEach(object, method) {
-    let list = this.value = [];
-    forEach(object, (value, key) => {
-      let arr = method(value, key);
-      list.push.apply(list, arr);
+    let map = this.value;
+    let params = this.params.split(",");
+    let field = params[0], id = params[1];
+    forEach(object, (value, index) => {
+      var scope = Object.create(this.scope.$target);
+      scope[id] = index;
+      scope = new Proxy(scope, handler(this.scope, object, field, index));
+      setCache(global.cache, method, scope);
+      global.cache = new Map();
+      let methods = method(scope);
+      map.set(scope, methods);
     });
     return this;
   }
@@ -144,39 +157,55 @@ class Render {
 let React = {
   createFunction(name, param, ...children) {
     if ("@when" == name) {
-      return `\nnew Render().when(${param}, () => [${children}])`;
+      return `\n _scope=>new Render(_scope,null,arguments.callee).when(${ReactScope(param)}, () => [${children}])`;
     }
     else if (".when" == name) {
-      return `\n.when(${param}, () => [${children}])`;
+      return `\n .when(${ReactScope(param)}, () => [${children}])`;
     }
     else if ("@each" == name) {
       let params = param.split(":"), object = params.pop();
-      return `\nnew Render().forEach(${object}, (${params}) => [${children}])`;
+      return `\n _scope=>new Render(_scope,'${params}',arguments.callee).forEach(${ReactScope(object)}, (_scope) => [${children}])`;
     }
   },
   createRender(name, attr, ...children) {
     let express;
     if (attr) {
-      return `\nReact.createElement("${name}",${JSON.stringify(attr)},${children})`;
+      return `\n _scope=>React.createElement("${name}",_scope,arguments.callee,${JSON.stringify(attr)},${children})`;
     }
     else if (express = name.match($express)) {
-      return `\nReact.createElement(${express[1]},null)`;
+      return `\n _scope=>React.createElement(${ReactScope(express[1])},_scope,arguments.callee,null)`;
     }
     else {
-      return `\nReact.createElement("${name}",null)`;
+      return `\n _scope=>React.createElement("${name}",_scope,arguments.callee,null)`;
     }
   },
-  createElement(name, attr, ...children) {
+  createElement(name, scope, func, attr, ...children) {
+
+    function exce(element, scopes, funcNode) {
+      let child = funcNode(scopes);
+      if (child instanceof Render) {
+        child.value.forEach((b, s) => b.forEach(c => exce(element, s, c)));
+      }
+      else {
+        element.appendChild(child);
+      }
+    }
+
     if (attr) {
       let element = document.createElement(name);
-      children.forEach(a => a instanceof Render ? a.value.forEach(b => element.appendChild(b)) : element.appendChild(a));
+      children.forEach(a => exce(element, scope, a));
+      setCache(global.cache, func, scope, element);
+      global.cache = new Map();
       setAttribute(element, attr);
       return element;
     }
     else {
       let element = document.createTextNode(name);
+      setCache(global.cache, func, scope, element);
+      global.cache = new Map();
       return element;
     }
+
   }
 };
 
@@ -205,6 +234,15 @@ function bind(owner, key, value, action) {
   }
 }
 
+function setCache(cache, func, scopes, element) {
+  cache.forEach(value => {
+    let cache = value;
+    if (cache) {
+      cache.set(func, { scopes, element });
+    }
+  });
+}
+
 function ReactCode(express) {
   return new Function('React',
     `return ${express};`
@@ -212,13 +250,61 @@ function ReactCode(express) {
 }
 
 function RenderCode(express, we) {
-  let keys = Object.keys(we.model);
   window.we = we;
   return new Function('we', 'React', 'Render',
-    `let {${keys}}=we.model;
-     return ${express};
+    `return ${express};
     `
   )(we, React, Render);
+}
+
+function ReactScope(_express) {
+  if (!_express) return;
+  let express, c;
+  _express.split("").reduce(function (a, b) {
+    if (!express && a.match(/\w/)) {
+      express = "_scope.".concat(a);
+    }
+    if (c == "'" && a == "'") {
+      c = null;
+      express = express.concat(b);
+      return b;
+    }
+    else if (c == "'") {
+      express = express.concat(b);
+      return b;
+    }
+    else if (a == "'") {
+      c = a;
+      express = express.concat(b);
+      return b;
+    }
+    else if (a.match(/\W/) && !a.match(/\.|\$|_/) && b.match(/\w/) && !b.match(/\d/)) {
+      express = express.concat("_scope.").concat(b);
+      return b;
+    }
+    else {
+      express = express.concat(b);
+      return b;
+    }
+  });
+  return express;
+}
+
+function handler(proto, scope, field, key) {
+  return {
+    get(parent, prop) {
+      if (field == prop) return Reflect.get(scope, key);
+      if (`${field}$` == prop) return Reflect.get(scope, `${key}$`);
+      if (prop == "$target") return parent;
+      if (parent.hasOwnProperty(prop)) return Reflect.get(parent, prop);
+      return Reflect.get(proto, prop);
+    },
+    set(parent, prop, val) {
+      if (field == prop) return Reflect.set(scope, key, val);
+      if (parent.hasOwnProperty(prop)) return Reflect.set(parent, prop, val);
+      return Reflect.set(proto, prop, val);
+    }
+  }
 }
 
 function AST(html) {
@@ -289,21 +375,25 @@ function Transfer(html) {
 }
 
 function observer(target, watcher, we) {
-  return new Proxy(target, handler(watcher, we));
+  return new Proxy(target, handler$1(watcher, we));
 }
 
-function handler(watcher, we, root) {
+function handler$1(watcher, we, root) {
   let values = new Map(), caches = new Map();
   return {
     get(parent, prop, proxy) {
       if (prop == "$target") return parent;
       let value = values.get(prop);
-      if (value != undefined) return value;
       let path = root ? `${root}.${prop}` : prop;
+      global.cache.delete(root);
+      global.cache.set(path, caches.get(prop));
+      if (value != undefined) return value;
       value = Reflect.get(parent, prop);
-      if (typeof value == "object") value = new Proxy(value, handler(watcher, we, path));
+      if (typeof value == "object") value = new Proxy(value, handler$1(watcher, we, path));
       values.set(prop, value);
       caches.set(prop, new Map());
+      global.cache.delete(root);
+      global.cache.set(path, caches.get(prop));
       watcher.get(path);
       return value;
     },
@@ -454,6 +544,8 @@ Object.assign(NodeList.prototype, {
   }
 });
 
+let global = { $path: null, cache: new Map() };
+
 class View {
   constructor(app) {
     this.view = app.view;
@@ -466,14 +558,16 @@ class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this);
+    this.node = RenderCode(this.view, this)(this.model);
   }
 }
 
 let watcher = {
   set(cache, we) {
-    let view = RenderCode(we.view, we);
-    document.querySelector("app").reappend(view);
+    cache.forEach((scope, func) => {
+      let node = func(scope);
+      console.log(func.toString());
+    });
   },
   get(path) {
 
@@ -482,4 +576,4 @@ let watcher = {
 
 window.View = View;
 
-export { React, Render, View, query };
+export { React, Render, View, global, query };
