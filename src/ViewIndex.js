@@ -25,9 +25,17 @@ export class View {
 
 let watcher = {
   set(cache, we) {
-    cache.forEach((scope, func) => {
-      let node = func(scope);
-      console.log(func.toString());
+    cache.forEach((param, func) => {
+      let funcNodes = func(param.scope);
+      let element = param.child[0];
+      if (!element) return;
+      funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
+      funcNodes.forEach(funcNode => {
+        let child = funcNode(param.scope);
+        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child)
+        element.parentNode.appendChild(child);
+      })
+      param.child.forEach(a => a.parentNode.removeChild(a));
     });
   },
   get(path) {

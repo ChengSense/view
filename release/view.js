@@ -195,18 +195,31 @@ var view = (function (exports) {
     _createClass(Render, [{
       key: "when",
       value: function when(status, method) {
-        var map = this.value;
+        var map = this.value,
+            list = [];
+        var scope = this.scope;
 
         if (this.status == null && status) {
           this.status = status;
+          setCache(global.cache, method, scope, list);
+          global.cache = new Map();
           var methods = method(this.scope);
-          map.set(this.scope, methods);
+          map.set(scope, list);
+          methods.forEach(function (func) {
+            return render(list, scope, func);
+          });
         } else if (this.status == null && status == undefined) {
           this.status = status;
+          setCache(global.cache, method, scope, list);
+          global.cache = new Map();
 
           var _methods = method(this.scope);
 
-          map.set(this.scope, _methods);
+          map.set(scope, list);
+
+          _methods.forEach(function (func) {
+            return render(list, scope, func);
+          });
         }
 
         return this;
@@ -216,19 +229,27 @@ var view = (function (exports) {
       value: function forEach$1(object, method) {
         var _this = this;
 
-        var map = this.value;
+        var map = this.value,
+            arr = [];
         var params = this.params.split(",");
         var field = params[0],
             id = params[1];
+        setCache(global.cache, this.func, this.scope, arr);
+        global.cache = new Map();
 
         forEach(object, function (value, index) {
+          var list = [];
           var scope = Object.create(_this.scope.$target);
           scope[id] = index;
           scope = new Proxy(scope, handler(_this.scope, object, field, index));
-          setCache(global.cache, method, scope);
+          setCache(global.cache, method, scope, list);
           global.cache = new Map();
           var methods = method(scope);
-          map.set(scope, methods);
+          map.set(scope, list);
+          methods.forEach(function (func) {
+            return render(list, scope, func);
+          });
+          arr.push.apply(list);
         });
 
         return this;
@@ -242,6 +263,17 @@ var view = (function (exports) {
 
     return Render;
   }();
+
+  function render(list, scope, funcNode) {
+    var child = funcNode(scope);
+
+    if (child instanceof Render) {
+      list.push.apply(child.value);
+    } else {
+      list.push(child);
+    }
+  }
+
   var React = {
     createFunction: function createFunction(name, param) {
       for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
@@ -274,20 +306,6 @@ var view = (function (exports) {
       }
     },
     createElement: function createElement(name, scope, func, attr) {
-      function exce(element, scopes, funcNode) {
-        var child = funcNode(scopes);
-
-        if (child instanceof Render) {
-          child.value.forEach(function (b, s) {
-            return b.forEach(function (c) {
-              return exce(element, s, c);
-            });
-          });
-        } else {
-          element.appendChild(child);
-        }
-      }
-
       if (attr) {
         var element = document.createElement(name);
 
@@ -295,17 +313,22 @@ var view = (function (exports) {
           children[_key3 - 4] = arguments[_key3];
         }
 
-        children.forEach(function (a) {
-          return exce(element, scope, a);
+        children.forEach(function (funcNode) {
+          var child = funcNode(scope);
+          child instanceof Render ? child.value.forEach(function (a) {
+            return a.forEach(function (c) {
+              return element.appendChild(c);
+            });
+          }) : element.appendChild(child);
         });
-        setCache(global.cache, func, scope, element);
+        setCache(global.cache, func, scope, [element]);
         global.cache = new Map();
         setAttribute(element, attr);
         return element;
       } else {
         var _element = document.createTextNode(name);
 
-        setCache(global.cache, func, scope, _element);
+        setCache(global.cache, func, scope, [_element]);
         global.cache = new Map();
         return _element;
       }
@@ -338,14 +361,14 @@ var view = (function (exports) {
     }
   }
 
-  function setCache(cache, func, scopes, element) {
+  function setCache(cache, func, scope, child) {
     cache.forEach(function (value) {
       var cache = value;
 
       if (cache) {
         cache.set(func, {
-          scopes: scopes,
-          element: element
+          scope: scope,
+          child: child
         });
       }
     });
@@ -672,9 +695,23 @@ var view = (function (exports) {
   }();
   var watcher = {
     set: function set(cache, we) {
-      cache.forEach(function (scope, func) {
-        var node = func(scope);
-        console.log(func.toString());
+      cache.forEach(function (param, func) {
+        var funcNodes = func(param.scope);
+        var element = param.child[0];
+        if (!element) return;
+        funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
+        funcNodes.forEach(function (funcNode) {
+          var child = funcNode(param.scope);
+          child instanceof Render ? child.value.forEach(function (a) {
+            return a.forEach(function (c) {
+              return element.appendChild(c);
+            });
+          }) : element.appendChild(child);
+          element.parentNode.appendChild(child);
+        });
+        param.child.forEach(function (a) {
+          return a.parentNode.removeChild(a);
+        });
       });
     },
     get: function get(path) {}
