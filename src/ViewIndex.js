@@ -19,23 +19,34 @@ export class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this)(this.model);
+    let func = RenderCode(this.view, this);
+    this.node = RenderCode(this.view, this)(this.model, func);
   }
 }
 
 let watcher = {
-  set(cache, we) {
-    cache.forEach((param, func) => {
-      let funcNodes = func(param.scope);
-      let element = param.child[0];
-      if (!element) return;
-      funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
-      funcNodes.forEach(funcNode => {
-        let child = funcNode(param.scope);
-        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child)
-        element.parentNode.appendChild(child);
-      })
-      param.child.forEach(a => a.parentNode.removeChild(a));
+  set(cache, newCache, we) {
+    cache.forEach(caches => {
+      caches.forEach((param, func) => {
+        let childNodes = param.child; param.child = [];
+        let element = childNodes[0];
+        let funcNodes = func(param.scope, func);
+        if (!element) return;
+        funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
+        funcNodes.forEach(funcNode => {
+          //let child = funcNode(param.scope, funcNode);
+          if (funcNode instanceof Render) {
+            funcNode.value.forEach(a => a.forEach(c => {
+              param.child.push(c);
+              element.before(c);
+            }))
+          } else {
+            param.child.push(funcNode);
+            element.before(funcNode);
+          }
+        })
+        childNodes.forEach(a => a.parentNode.removeChild(a));
+      });
     });
   },
   get(path) {

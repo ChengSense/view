@@ -120,28 +120,26 @@ class Render {
     this.status = null;
     this.value = new Map();
   }
-  when(status, method) {
+  when(status, children) {
     let map = this.value, list = [];
     let scope = this.scope;
     if (this.status == null && status) {
       this.status = status;
-      setCache(global.cache, method, scope, list);
+      setCache(global.cache, this.func, scope, list);
       global.cache = new Map();
-      let methods = method(this.scope);
       map.set(scope, list);
-      methods.forEach(func => render(list, scope, func));
+      children.forEach(func => render(list, scope, func));
     }
     else if (this.status == null && status == undefined) {
       this.status = status;
-      setCache(global.cache, method, scope, list);
+      setCache(global.cache, this.func, scope, list);
       global.cache = new Map();
-      let methods = method(this.scope);
       map.set(scope, list);
-      methods.forEach(func => render(list, scope, func));
+      children.forEach(func => render(list, scope, func));
     }
     return this;
   }
-  forEach(object, method) {
+  forEach(object, children) {
     let map = this.value, arr = [];
     let params = this.params.split(",");
     let field = params[0], id = params[1];
@@ -152,11 +150,10 @@ class Render {
       let scope = Object.create(this.scope.$target);
       scope[id] = index;
       scope = new Proxy(scope, handler(this.scope, object, field, index));
-      setCache(global.cache, method, scope, list);
+      //setCache(global.cache, method, scope, list);
       global.cache = new Map();
-      let methods = method(scope);
       map.set(scope, list);
-      methods.forEach(func => render(list, scope, func));
+      children.forEach(func => render(list, scope, func));
       arr.push.apply(list);
     });
     return this;
@@ -167,7 +164,7 @@ class Render {
 }
 
 function render(list, scope, funcNode) {
-  let child = funcNode(scope);
+  let child = funcNode(scope, funcNode);
   if (child instanceof Render) {
     list.push.apply(child.value);
   } else {
@@ -178,37 +175,37 @@ function render(list, scope, funcNode) {
 let React = {
   createFunction(name, param, ...children) {
     if ("@when" == name) {
-      return `\n _scope=>new Render(_scope,null,arguments.callee).when(${ReactScope(param)}, (_scope) => [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,null,func).when(${ReactScope(param)}, [${children}])`;
     }
     else if (".when" == name) {
-      return `\n .when(${ReactScope(param)}, (_scope) => [${children}])`;
+      return `\n .when(${ReactScope(param)}, [${children}])`;
     }
     else if ("@each" == name) {
       let params = param.split(":"), object = params.pop();
-      return `\n _scope=>new Render(_scope,'${params}',arguments.callee).forEach(${ReactScope(object)}, (_scope) => [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,'${params}',func).forEach(${ReactScope(object)}, [${children}])`;
     }
   },
   createRender(name, attr, ...children) {
     let express;
     if (attr) {
-      return `\n _scope=>React.createElement("${name}",_scope,arguments.callee,${JSON.stringify(attr)},${children})`;
+      return `\n (_scope,func)=>React.createElement("${name}",_scope,func,${JSON.stringify(attr)},${children})`;
     }
     else if (express = name.match($express)) {
-      return `\n _scope=>React.createElement(${ReactScope(express[1])},_scope,arguments.callee,null)`;
+      return `\n (_scope,func)=>React.createElement(${ReactScope(express[1])},_scope,func,null)`;
     }
     else {
-      return `\n _scope=>React.createElement("${name}",_scope,arguments.callee,null)`;
+      return `\n (_scope,func)=>React.createElement("${name}",_scope,func,null)`;
     }
   },
   createElement(name, scope, func, attr, ...children) {
     if (attr) {
       let element = document.createElement(name);
-      children.forEach(funcNode => {
-        let child = funcNode(scope);
-        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child);
-      });
       setCache(global.cache, func, scope, [element]);
       global.cache = new Map();
+      children.forEach(funcNode => {
+        let child = funcNode(scope, funcNode);
+        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child);
+      });
       setAttribute(element, attr);
       return element;
     }
@@ -246,10 +243,12 @@ function bind(owner, key, value, action) {
   }
 }
 
-function setCache(cache, func, scope, child) {
-  cache.forEach(value => {
-    let cache = value;
-    if (cache) {
+function setCache(caches, func, scope, child) {
+  caches.forEach(cache => {
+    let value = cache.get(func);
+    if (value) {
+      value.child.push.apply(child);
+    } else {
       cache.set(func, { scope, child });
     }
   });
@@ -395,6 +394,7 @@ function handler$1(watcher, we, root) {
   return {
     get(parent, prop, proxy) {
       if (prop == "$target") return parent;
+      if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.get(parent, prop);
       let value = values.get(prop);
       let path = root ? `${root}.${prop}` : prop;
       global.cache.delete(root);
@@ -410,14 +410,31 @@ function handler$1(watcher, we, root) {
       return value;
     },
     set(parent, prop, val, proxy) {
+      if (!parent.hasOwnProperty(prop) && Reflect.has(parent, prop)) return Reflect.set(parent, prop, val);
       let oldValue = values.get(prop);
       let oldCache = caches.get(prop);
       values.delete(prop);
       caches.delete(prop);
       Reflect.set(parent, prop, val.$target || val);
-      watcher.set(oldCache, we);
+      let value = proxy[prop];
+      setValue(value, oldValue, watcher, we);
+      let path = root ? `${root}.${prop}` : prop;
+      watcher.set(new Map([[path,oldCache]]), new Map([[path,caches.get(prop)]]) , we);
       return true;
     }
+  }
+}
+
+function setValue(object, oldObject, watcher, we) {
+  if (typeof object == "object" && typeof oldObject == "object") {
+    Object.keys(oldObject).forEach(prop => {
+      global.cache = new Map();
+      let value = object[prop], cache = global.cache;
+      global.cache = new Map();
+      let oldValue = oldObject[prop], oldCache = global.cache;
+      if (typeof value != "object" && typeof oldValue != "object") watcher.set(oldCache, cache, we);
+      setValue(value, oldValue, watcher, we);
+    });
   }
 }
 
@@ -570,23 +587,34 @@ class View {
   creater(app) {
     this.view = Transfer(this.view);
     console.warn(this.view);
-    this.node = RenderCode(this.view, this)(this.model);
+    let func = RenderCode(this.view, this);
+    this.node = RenderCode(this.view, this)(this.model, func);
   }
 }
 
 let watcher = {
-  set(cache, we) {
-    cache.forEach((param, func) => {
-      let funcNodes = func(param.scope);
-      let element = param.child[0];
-      if (!element) return;
-      funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
-      funcNodes.forEach(funcNode => {
-        let child = funcNode(param.scope);
-        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child);
-        element.parentNode.appendChild(child);
+  set(cache, newCache, we) {
+    cache.forEach(caches => {
+      caches.forEach((param, func) => {
+        let childNodes = param.child; param.child = [];
+        let element = childNodes[0];
+        let funcNodes = func(param.scope, func);
+        if (!element) return;
+        funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
+        funcNodes.forEach(funcNode => {
+          //let child = funcNode(param.scope, funcNode);
+          if (funcNode instanceof Render) {
+            funcNode.value.forEach(a => a.forEach(c => {
+              param.child.push(c);
+              element.before(c);
+            }));
+          } else {
+            param.child.push(funcNode);
+            element.before(funcNode);
+          }
+        });
+        childNodes.forEach(a => a.parentNode.removeChild(a));
       });
-      param.child.forEach(a => a.parentNode.removeChild(a));
     });
   },
   get(path) {
