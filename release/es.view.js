@@ -113,10 +113,9 @@ class TextNode {
 }
 
 class Render {
-  constructor(scope, params, func) {
+  constructor(scope, func) {
     this.func = func;
     this.scope = scope;
-    this.params = params;
     this.status = null;
     this.value = new Map();
   }
@@ -139,22 +138,21 @@ class Render {
     }
     return this;
   }
-  forEach(object, children) {
-    let map = this.value, arr = [];
-    let params = this.params.split(",");
-    let field = params[0], id = params[1];
+  forEach(object, field, id, children) {
+    let map = this.value, arr = [], forFunc;
     setCache(global.cache, this.func, this.scope, arr);
     global.cache = new Map();
-    forEach(object, (value, index) => {
+    forEach(object, forFunc = (value, index) => {
       let list = [];
       let scope = Object.create(this.scope.$target);
       scope[id] = index;
       scope = new Proxy(scope, handler(this.scope, object, field, index));
-      //setCache(global.cache, method, scope, list);
+      setCache(global.cache, forFunc, scope, list);
       global.cache = new Map();
       map.set(scope, list);
       children.forEach(func => render(list, scope, func));
       arr.push.apply(list);
+      return list;
     });
     return this;
   }
@@ -175,14 +173,14 @@ function render(list, scope, funcNode) {
 let React = {
   createFunction(name, param, ...children) {
     if ("@when" == name) {
-      return `\n (_scope,func)=>new Render(_scope,null,func).when(${ReactScope(param)}, [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,func).when(${ReactScope(param)}, [${children}])`;
     }
     else if (".when" == name) {
       return `\n .when(${ReactScope(param)}, [${children}])`;
     }
     else if ("@each" == name) {
       let params = param.split(":"), object = params.pop();
-      return `\n (_scope,func)=>new Render(_scope,'${params}',func).forEach(${ReactScope(object)}, [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,func).forEach(${ReactScope(object)},'${params.shift()}','${params.shift()}', [${children}])`;
     }
   },
   createRender(name, attr, ...children) {
@@ -419,7 +417,7 @@ function handler$1(watcher, we, root) {
       let value = proxy[prop];
       setValue(value, oldValue, watcher, we);
       let path = root ? `${root}.${prop}` : prop;
-      watcher.set(new Map([[path,oldCache]]), new Map([[path,caches.get(prop)]]) , we);
+      watcher.set(new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]]), prop, we);
       return true;
     }
   }
@@ -432,7 +430,7 @@ function setValue(object, oldObject, watcher, we) {
       let value = object[prop], cache = global.cache;
       global.cache = new Map();
       let oldValue = oldObject[prop], oldCache = global.cache;
-      if (typeof value != "object" && typeof oldValue != "object") watcher.set(oldCache, cache, we);
+      if (typeof value != "object" && typeof oldValue != "object") watcher.set(oldCache, cache, prop, we);
       setValue(value, oldValue, watcher, we);
     });
   }
@@ -593,12 +591,12 @@ class View {
 }
 
 let watcher = {
-  set(cache, newCache, we) {
+  set(cache, newCache, prop, we) {
     cache.forEach(caches => {
       caches.forEach((param, func) => {
         let childNodes = param.child; param.child = [];
         let element = childNodes[0];
-        let funcNodes = func(param.scope, func);
+        let funcNodes = func.name == "forFunc" ? func(param.scope, prop, func) : func(param.scope, func);
         if (!element) return;
         funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
         funcNodes.forEach(funcNode => {

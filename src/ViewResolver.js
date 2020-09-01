@@ -97,10 +97,9 @@ export class TextNode {
 }
 
 export class Render {
-  constructor(scope, params, func) {
+  constructor(scope, func) {
     this.func = func;
     this.scope = scope;
-    this.params = params;
     this.status = null;
     this.value = new Map();
   }
@@ -123,22 +122,21 @@ export class Render {
     }
     return this;
   }
-  forEach(object, children) {
-    let map = this.value, arr = [];
-    let params = this.params.split(",");
-    let field = params[0], id = params[1];
+  forEach(object, field, id, children) {
+    let map = this.value, arr = [], forFunc;
     setCache(global.cache, this.func, this.scope, arr);
     global.cache = new Map();
-    forEach(object, (value, index) => {
+    forEach(object, forFunc = (value, index) => {
       let list = [];
       let scope = Object.create(this.scope.$target);
       scope[id] = index;
       scope = new Proxy(scope, handler(this.scope, object, field, index));
-      //setCache(global.cache, method, scope, list);
+      setCache(global.cache, forFunc, scope, list);
       global.cache = new Map();
       map.set(scope, list);
       children.forEach(func => render(list, scope, func));
       arr.push.apply(list);
+      return list;
     });
     return this;
   }
@@ -159,14 +157,14 @@ function render(list, scope, funcNode) {
 export let React = {
   createFunction(name, param, ...children) {
     if ("@when" == name) {
-      return `\n (_scope,func)=>new Render(_scope,null,func).when(${ReactScope(param)}, [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,func).when(${ReactScope(param)}, [${children}])`;
     }
     else if (".when" == name) {
       return `\n .when(${ReactScope(param)}, [${children}])`;
     }
     else if ("@each" == name) {
       let params = param.split(":"), object = params.pop();
-      return `\n (_scope,func)=>new Render(_scope,'${params}',func).forEach(${ReactScope(object)}, [${children}])`;
+      return `\n (_scope,func)=>new Render(_scope,func).forEach(${ReactScope(object)},'${params.shift()}','${params.shift()}', [${children}])`;
     }
   },
   createRender(name, attr, ...children) {

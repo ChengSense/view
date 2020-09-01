@@ -25,12 +25,12 @@ export class View {
 }
 
 let watcher = {
-  set(cache, newCache, we) {
+  set(cache, newCache, prop, we) {
     cache.forEach(caches => {
       caches.forEach((param, func) => {
         let childNodes = param.child; param.child = [];
         let element = childNodes[0];
-        let funcNodes = func(param.scope, func);
+        let funcNodes = func.name == "forFunc" ? func(param.scope, prop, func) : func(param.scope, func);
         if (!element) return;
         funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
         funcNodes.forEach(funcNode => {

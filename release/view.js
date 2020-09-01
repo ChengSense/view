@@ -176,12 +176,11 @@ var view = (function (exports) {
     return TextNode;
   }();
   var Render = /*#__PURE__*/function () {
-    function Render(scope, params, func) {
+    function Render(scope, func) {
       _classCallCheck(this, Render);
 
       this.func = func;
       this.scope = scope;
-      this.params = params;
       this.status = null;
       this.value = new Map();
     }
@@ -215,29 +214,29 @@ var view = (function (exports) {
       }
     }, {
       key: "forEach",
-      value: function forEach$1(object, children) {
+      value: function forEach$1(object, field, id, children) {
         var _this = this;
 
         var map = this.value,
-            arr = [];
-        var params = this.params.split(",");
-        var field = params[0],
-            id = params[1];
+            arr = [],
+            _forFunc;
+
         setCache(global.cache, this.func, this.scope, arr);
         global.cache = new Map();
 
-        forEach(object, function (value, index) {
+        forEach(object, _forFunc = function forFunc(value, index) {
           var list = [];
           var scope = Object.create(_this.scope.$target);
           scope[id] = index;
-          scope = new Proxy(scope, handler(_this.scope, object, field, index)); //setCache(global.cache, method, scope, list);
-
+          scope = new Proxy(scope, handler(_this.scope, object, field, index));
+          setCache(global.cache, _forFunc, scope, list);
           global.cache = new Map();
           map.set(scope, list);
           children.forEach(function (func) {
             return render(list, scope, func);
           });
           arr.push.apply(list);
+          return list;
         });
 
         return this;
@@ -269,13 +268,13 @@ var view = (function (exports) {
       }
 
       if ("@when" == name) {
-        return "\n (_scope,func)=>new Render(_scope,null,func).when(".concat(ReactScope(param), ", [").concat(children, "])");
+        return "\n (_scope,func)=>new Render(_scope,func).when(".concat(ReactScope(param), ", [").concat(children, "])");
       } else if (".when" == name) {
         return "\n .when(".concat(ReactScope(param), ", [").concat(children, "])");
       } else if ("@each" == name) {
         var params = param.split(":"),
             object = params.pop();
-        return "\n (_scope,func)=>new Render(_scope,'".concat(params, "',func).forEach(").concat(ReactScope(object), ", [").concat(children, "])");
+        return "\n (_scope,func)=>new Render(_scope,func).forEach(".concat(ReactScope(object), ",'").concat(params.shift(), "','").concat(params.shift(), "', [").concat(children, "])");
       }
     },
     createRender: function createRender(name, attr) {
@@ -516,7 +515,7 @@ var view = (function (exports) {
         var value = proxy[prop];
         setValue(value, oldValue, watcher, we);
         var path = root ? "".concat(root, ".").concat(prop) : prop;
-        watcher.set(new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]]), we);
+        watcher.set(new Map([[path, oldCache]]), new Map([[path, caches.get(prop)]]), prop, we);
         return true;
       }
     };
@@ -531,7 +530,7 @@ var view = (function (exports) {
         global.cache = new Map();
         var oldValue = oldObject[prop],
             oldCache = global.cache;
-        if (_typeof(value) != "object" && _typeof(oldValue) != "object") watcher.set(oldCache, cache, we);
+        if (_typeof(value) != "object" && _typeof(oldValue) != "object") watcher.set(oldCache, cache, prop, we);
         setValue(value, oldValue, watcher, we);
       });
     }
@@ -703,13 +702,13 @@ var view = (function (exports) {
     return View;
   }();
   var watcher = {
-    set: function set(cache, newCache, we) {
+    set: function set(cache, newCache, prop, we) {
       cache.forEach(function (caches) {
         caches.forEach(function (param, func) {
           var childNodes = param.child;
           param.child = [];
           var element = childNodes[0];
-          var funcNodes = func(param.scope, func);
+          var funcNodes = func.name == "forFunc" ? func(param.scope, prop, func) : func(param.scope, func);
           if (!element) return;
           funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
           funcNodes.forEach(function (funcNode) {
