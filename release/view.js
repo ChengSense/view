@@ -182,29 +182,24 @@ var view = (function (exports) {
       this.func = func;
       this.scope = scope;
       this.status = null;
-      this.value = new Map();
+      this.value = [];
     }
 
     _createClass(Render, [{
       key: "when",
       value: function when(status, children) {
-        var map = this.value,
-            list = [];
+        var list = this.value;
         var scope = this.scope;
 
         if (this.status == null && status) {
           this.status = status;
-          setCache(global.cache, this.func, scope, list);
-          global.cache = new Map();
-          map.set(scope, list);
+          setCache(this.func, scope, list);
           children.forEach(function (func) {
             return render(list, scope, func);
           });
         } else if (this.status == null && status == undefined) {
           this.status = status;
-          setCache(global.cache, this.func, scope, list);
-          global.cache = new Map();
-          map.set(scope, list);
+          setCache(this.func, scope, list);
           children.forEach(function (func) {
             return render(list, scope, func);
           });
@@ -217,25 +212,23 @@ var view = (function (exports) {
       value: function forEach$1(object, field, id, children) {
         var _this = this;
 
-        var map = this.value,
-            arr = [],
+        var arr = this.value,
             _forFunc;
 
-        setCache(global.cache, this.func, this.scope, arr);
-        global.cache = new Map();
+        setCache(this.func, this.scope, arr);
 
         forEach(object, _forFunc = function forFunc(value, index) {
-          var list = [];
           var scope = Object.create(_this.scope.$target);
           scope[id] = index;
           scope = new Proxy(scope, handler(_this.scope, object, field, index));
-          setCache(global.cache, _forFunc, scope, list);
-          global.cache = new Map();
-          map.set(scope, list);
+          var list = [];
+          setCache(_forFunc, scope, list);
           children.forEach(function (func) {
             return render(list, scope, func);
           });
-          arr.push.apply(list);
+          list.forEach(function (a) {
+            return arr.push(a);
+          });
           return list;
         });
 
@@ -255,7 +248,9 @@ var view = (function (exports) {
     var child = funcNode(scope, funcNode);
 
     if (child instanceof Render) {
-      list.push.apply(child.value);
+      child.value.forEach(function (a) {
+        return list.push(a);
+      });
     } else {
       list.push(child);
     }
@@ -295,8 +290,7 @@ var view = (function (exports) {
     createElement: function createElement(name, scope, func, attr) {
       if (attr) {
         var element = document.createElement(name);
-        setCache(global.cache, func, scope, [element]);
-        global.cache = new Map();
+        setCache(func, scope, [element]);
 
         for (var _len3 = arguments.length, children = new Array(_len3 > 4 ? _len3 - 4 : 0), _key3 = 4; _key3 < _len3; _key3++) {
           children[_key3 - 4] = arguments[_key3];
@@ -305,9 +299,7 @@ var view = (function (exports) {
         children.forEach(function (funcNode) {
           var child = funcNode(scope, funcNode);
           child instanceof Render ? child.value.forEach(function (a) {
-            return a.forEach(function (c) {
-              return element.appendChild(c);
-            });
+            return element.appendChild(a);
           }) : element.appendChild(child);
         });
         setAttribute(element, attr);
@@ -315,8 +307,7 @@ var view = (function (exports) {
       } else {
         var _element = document.createTextNode(name);
 
-        setCache(global.cache, func, scope, [_element]);
-        global.cache = new Map();
+        setCache(func, scope, [_element]);
         return _element;
       }
     }
@@ -348,7 +339,8 @@ var view = (function (exports) {
     }
   }
 
-  function setCache(caches, func, scope, child) {
+  function setCache(func, scope, child) {
+    var caches = global.cache;
     caches.forEach(function (cache) {
       var value = cache.get(func);
 
@@ -361,6 +353,7 @@ var view = (function (exports) {
         });
       }
     });
+    global.cache = new Map();
   }
 
   function ReactCode(express) {
@@ -695,7 +688,7 @@ var view = (function (exports) {
         this.view = Transfer(this.view);
         console.warn(this.view);
         var func = RenderCode(this.view, this);
-        this.node = RenderCode(this.view, this)(this.model, func);
+        this.node = func(this.model, func);
       }
     }]);
 
@@ -712,13 +705,10 @@ var view = (function (exports) {
           if (!element) return;
           funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
           funcNodes.forEach(function (funcNode) {
-            //let child = funcNode(param.scope, funcNode);
             if (funcNode instanceof Render) {
               funcNode.value.forEach(function (a) {
-                return a.forEach(function (c) {
-                  param.child.push(c);
-                  element.before(c);
-                });
+                param.child.push(a);
+                element.before(a);
               });
             } else {
               param.child.push(funcNode);
@@ -726,7 +716,7 @@ var view = (function (exports) {
             }
           });
           childNodes.forEach(function (a) {
-            return a.parentNode.removeChild(a);
+            if (a.parentNode) a.parentNode.removeChild(a);
           });
         });
       });

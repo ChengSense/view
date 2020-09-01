@@ -117,41 +117,34 @@ class Render {
     this.func = func;
     this.scope = scope;
     this.status = null;
-    this.value = new Map();
+    this.value = [];
   }
   when(status, children) {
-    let map = this.value, list = [];
+    let list = this.value;
     let scope = this.scope;
     if (this.status == null && status) {
       this.status = status;
-      setCache(global.cache, this.func, scope, list);
-      global.cache = new Map();
-      map.set(scope, list);
+      setCache(this.func, scope, list);
       children.forEach(func => render(list, scope, func));
     }
     else if (this.status == null && status == undefined) {
       this.status = status;
-      setCache(global.cache, this.func, scope, list);
-      global.cache = new Map();
-      map.set(scope, list);
+      setCache(this.func, scope, list);
       children.forEach(func => render(list, scope, func));
     }
     return this;
   }
   forEach(object, field, id, children) {
-    let map = this.value, arr = [], forFunc;
-    setCache(global.cache, this.func, this.scope, arr);
-    global.cache = new Map();
+    let arr = this.value, forFunc;
+    setCache(this.func, this.scope, arr);
     forEach(object, forFunc = (value, index) => {
-      let list = [];
       let scope = Object.create(this.scope.$target);
       scope[id] = index;
       scope = new Proxy(scope, handler(this.scope, object, field, index));
-      setCache(global.cache, forFunc, scope, list);
-      global.cache = new Map();
-      map.set(scope, list);
+      let list = [];
+      setCache(forFunc, scope, list);
       children.forEach(func => render(list, scope, func));
-      arr.push.apply(list);
+      list.forEach(a => arr.push(a));
       return list;
     });
     return this;
@@ -164,7 +157,7 @@ class Render {
 function render(list, scope, funcNode) {
   let child = funcNode(scope, funcNode);
   if (child instanceof Render) {
-    list.push.apply(child.value);
+    child.value.forEach(a => list.push(a));
   } else {
     list.push(child);
   }
@@ -198,19 +191,17 @@ let React = {
   createElement(name, scope, func, attr, ...children) {
     if (attr) {
       let element = document.createElement(name);
-      setCache(global.cache, func, scope, [element]);
-      global.cache = new Map();
+      setCache(func, scope, [element]);
       children.forEach(funcNode => {
         let child = funcNode(scope, funcNode);
-        child instanceof Render ? child.value.forEach(a => a.forEach(c => element.appendChild(c))) : element.appendChild(child);
+        child instanceof Render ? child.value.forEach(a => element.appendChild(a)) : element.appendChild(child);
       });
       setAttribute(element, attr);
       return element;
     }
     else {
       let element = document.createTextNode(name);
-      setCache(global.cache, func, scope, [element]);
-      global.cache = new Map();
+      setCache(func, scope, [element]);
       return element;
     }
   }
@@ -241,7 +232,8 @@ function bind(owner, key, value, action) {
   }
 }
 
-function setCache(caches, func, scope, child) {
+function setCache(func, scope, child) {
+  let caches = global.cache;
   caches.forEach(cache => {
     let value = cache.get(func);
     if (value) {
@@ -250,6 +242,7 @@ function setCache(caches, func, scope, child) {
       cache.set(func, { scope, child });
     }
   });
+  global.cache = new Map();
 }
 
 function ReactCode(express) {
@@ -586,7 +579,7 @@ class View {
     this.view = Transfer(this.view);
     console.warn(this.view);
     let func = RenderCode(this.view, this);
-    this.node = RenderCode(this.view, this)(this.model, func);
+    this.node = func(this.model, func);
   }
 }
 
@@ -600,18 +593,20 @@ let watcher = {
         if (!element) return;
         funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
         funcNodes.forEach(funcNode => {
-          //let child = funcNode(param.scope, funcNode);
           if (funcNode instanceof Render) {
-            funcNode.value.forEach(a => a.forEach(c => {
-              param.child.push(c);
-              element.before(c);
-            }));
+            funcNode.value.forEach(a => {
+              param.child.push(a);
+              element.before(a);
+            });
           } else {
             param.child.push(funcNode);
             element.before(funcNode);
           }
         });
-        childNodes.forEach(a => a.parentNode.removeChild(a));
+        childNodes.forEach(a => {
+          if (a.parentNode)
+            a.parentNode.removeChild(a);
+        });
       });
     });
   },

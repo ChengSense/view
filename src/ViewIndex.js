@@ -20,7 +20,7 @@ export class View {
     this.view = Transfer(this.view);
     console.warn(this.view);
     let func = RenderCode(this.view, this);
-    this.node = RenderCode(this.view, this)(this.model, func);
+    this.node = func(this.model, func);
   }
 }
 
@@ -34,18 +34,20 @@ let watcher = {
         if (!element) return;
         funcNodes = Array.isArray(funcNodes) ? funcNodes : [funcNodes];
         funcNodes.forEach(funcNode => {
-          //let child = funcNode(param.scope, funcNode);
           if (funcNode instanceof Render) {
-            funcNode.value.forEach(a => a.forEach(c => {
-              param.child.push(c);
-              element.before(c);
-            }))
+            funcNode.value.forEach(a => {
+              param.child.push(a);
+              element.before(a);
+            })
           } else {
             param.child.push(funcNode);
             element.before(funcNode);
           }
         })
-        childNodes.forEach(a => a.parentNode.removeChild(a));
+        childNodes.forEach(a => {
+          if (a.parentNode)
+            a.parentNode.removeChild(a)
+        });
       });
     });
   },
